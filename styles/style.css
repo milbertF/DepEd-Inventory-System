@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css");
+@import url(sidebar.css);
+
+
+/* div{
+    border: red solid 1px;
+} */
+
+*{
+    margin: 0;
+    padding: 0;
+    font-family: "Lexend", sans-serif;
+    color: white;
+}
+
+body{
+    background-color: rgb(12, 12, 12);
+}
+
+.wrapMain{
+    min-height: 100vh;
+    display: flex;
+    padding: 1rem;
+    box-sizing: border-box;
+    gap: 1rem;
+
+    .con{
+        flex-grow: 1;
+        border: rgba(255, 255, 255, 0.1) solid 1px;
+        background-color: rgb(23, 23, 23);
+        border-radius: 0.3rem;
+        padding: 1rem;
+        box-sizing: border-box;
+        
+    }
+}
+

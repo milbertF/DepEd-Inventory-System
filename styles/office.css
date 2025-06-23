@@ -1,0 +1,13 @@
+@import url(style.css);
+
+
+.sidebar{
+    .part{
+        .iconOffice{
+            background-color: white;
+            i{
+                color: black;
+            }
+        }
+    }
+}

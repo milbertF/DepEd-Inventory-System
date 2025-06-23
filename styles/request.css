@@ -1,0 +1,13 @@
+@import url(style.css);
+
+
+.sidebar{
+    .part{
+        .iconRequest{
+            background-color: white;
+            i{
+                color: black;
+            }
+        }
+    }
+}

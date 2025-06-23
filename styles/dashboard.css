@@ -1,0 +1,13 @@
+@import url(style.css);
+
+
+.sidebar{
+    .part{
+        .iconDashboard{
+            background-color: white;
+            i{
+                color: black;
+            }
+        }
+    }
+}
