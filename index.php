@@ -34,6 +34,18 @@ switch ($request) {
         require __DIR__ . '/templates/request/request.html';
         break;
 
+    case '/forgot':
+        require __DIR__ . '/templates/auth/forgot.html';
+        break;
+
+    case '/code':
+        require __DIR__ . '/templates/auth/code.html';
+        break;
+
+    case '/reset':
+        require __DIR__ . '/templates/auth/reset.html';
+        break;
+
     case '/401':
         http_response_code(401);
         require __DIR__ . '/templates/errors/401.html';
