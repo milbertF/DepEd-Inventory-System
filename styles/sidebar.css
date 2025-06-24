@@ -12,6 +12,7 @@
     
 
     .part{
+        all: unset;
         position: relative;
         display: flex;
         flex-direction: column;
@@ -19,6 +20,10 @@
         cursor: pointer;
         /* border: blue solid 1px; */
         transition: scale 0.3s ease;
+
+        &:focus{
+            border: red solid 1px;
+        }
 
         &:hover{
             scale: 1.08;
@@ -97,9 +102,8 @@
             p{
                 font-size: 0.8rem;
             }
-            button{
+            a{
                 font-size: 0.8rem;
-                width: 100%;
                 cursor: pointer;
                 padding: 0.2rem;
                 background-color: rgb(200, 200, 200);

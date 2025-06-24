@@ -61,12 +61,19 @@ body{
         flex-direction: column;
         gap: 1rem;
         backdrop-filter: blur(3rem);
+        > p{
+            font-size: 0.75rem;
+            font-weight: normal;
+            text-align: center;
+        }
+        
 
         .inputContainer{
             position: relative;
             display: flex;
             flex-direction: column;
             gap: 0.2rem;
+            
 
             .input{
                 display: flex;
@@ -93,6 +100,26 @@ body{
                 font-weight: normal;
                 color: #3C93F8;
                 cursor: pointer;
+                text-decoration: none;
+            }
+        }
+        .inpAuth{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+
+            input{
+                text-align: center;
+                
+            }
+            input[type=number]::-webkit-outer-spin-button,
+            input[type=number]::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            input[type=number] {
+                -moz-appearance: textfield;
             }
         }
 
@@ -102,6 +129,15 @@ body{
             height: 2rem;
             background-color: green;
             cursor: pointer;
+        }
+        > a{
+            text-align: center;
+            font-size: 0.7rem;
+            text-decoration: none;
+            color: #3C93F8;
+            &:hover{
+                text-decoration: underline;
+            }
         }
     }
     .credits{
