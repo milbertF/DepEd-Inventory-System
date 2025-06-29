@@ -1,13 +1,39 @@
 @import url(style.css);
 
 
-.sidebar{
-    .part{
-        .iconDashboard{
-            background-color: white;
-            i{
-                color: black;
+.wrapMain{
+    .sidebar{
+        .part{
+            .iconDashboard{
+                background-color: var(--accentColor);
+                i{
+                    color: white;
+                }
+            }
+        }
+    }
+    .quickAccess{
+        margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+
+        .access{
+            display: flex;
+            background-color: hsl(from var(--accentColor)h s l / 0.15);
+            align-items: center;
+            padding: 0.3rem 0.5rem;
+            gap: 0.5rem;
+            border-radius: 0.5rem;
+            border: var(--accentColor) solid 1px;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover{
+                background-color: hsl(from var(--accentColor)h s l / 0.3);
+                scale: 1.01;
             }
         }
     }
 }
+

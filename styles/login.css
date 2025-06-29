@@ -1,13 +1,13 @@
 @import url(style.css);
 
-body {
+/* body {
     overflow-x: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
-}
+} */
 
 /* ✅ Global SweetAlert2 Styling (Dark Theme) */
 .swal2-popup {
@@ -29,13 +29,14 @@ body {
 }
 
 .index {
-    width: 100%;
-    max-width: 1200px;
+    /* width: 100%;
+    max-width: 1200px; */
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1rem;
     padding: 2rem;
     box-sizing: border-box;
     position: relative;
@@ -44,14 +45,14 @@ body {
         position: absolute;
         z-index: -1;
         width: 70%;
-        max-width: 800px;
-        filter: blur(3rem) brightness(0.3);
+        /* max-width: 800px; */
+        filter: blur(7vh) brightness(0.3);
         opacity: 0.8;
     }
 
     .logo {
         position: relative;
-        height: 6rem;
+        height: 5rem;
         margin-bottom: 1rem;
         z-index: -1;
 
@@ -64,9 +65,11 @@ body {
 
     .titletext {
         h1 {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 600;
             text-align: center;
+            color: white;
+            text-shadow: hsl(from var(--textColor)h s l / 0.3) 0rem 2px 0.1rem;
 
             span:nth-child(1) {
                 color: #034F8B;
@@ -82,18 +85,17 @@ body {
     
 
     .container {
-        width: 100%;
-        max-width: 24rem;
+        width: 21rem;
         border-radius: 1rem;
-        background-color: rgba(20, 20, 20, 0.8);
-        border: rgba(255, 255, 255, 0.1) solid 1px;
-        padding: 2rem;
+        background-color: var(--containerColor);
+        border: var(--border);
+        padding: 1.5rem;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
         backdrop-filter: blur(3rem);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        box-shadow: var(--boxShadow);
         
         > p {
             font-size: 0.9rem;
@@ -116,14 +118,17 @@ body {
                     width: 100%;
                     border-radius: 0.5rem;
                     border: none;
-                    background-color: rgba(255, 255, 255, 0.2);
+                    background-color: var(--backgroundColor);
                     padding: 0 1rem;
                     font-size: 0.9rem;
-                    color: white;
+                    color: var(--textColor);
                     
                     &:focus {
                         outline: 1px solid #3C93F8;
                     }
+                }
+                i{
+                    color: var(--textColor);
                 }
             }
 

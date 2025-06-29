@@ -62,13 +62,20 @@ class Sidebar extends HTMLElement {
             <label for="">Report</label>
         </button>
 
-        <button class="acc" onclick="showSidebarAccountTooltip()">
-            <img src="/images/user-profile/default-image.jpg" alt="">
-            <div id="sidebarAccountTooltip" class="tooltip" style="display: none">
-                <p>Bruce Wayne</p>
-                <a tabindex="1" type="button">Logout</a>
-            </div>
-        </button>
+        <div class="set">
+            <button>
+                <i class="fa-solid fa-gear"></i>
+            </button>
+            <button class="acc" onclick="showSidebarAccountTooltip()">
+                <img src="/images/user-profile/default-image.jpg" alt="">
+                <div id="sidebarAccountTooltip" class="tooltip" style="display: none">
+                    <p>Bruce Wayne</p>
+                    <a tabindex="1" type="button">Logout</a>
+                </div>
+            </button>
+        </div>
+
+        
 
         `;
   }

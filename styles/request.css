@@ -4,9 +4,9 @@
 .sidebar{
     .part{
         .iconRequest{
-            background-color: white;
+            background-color: var(--accentColor);
             i{
-                color: black;
+                color: white;
             }
         }
     }

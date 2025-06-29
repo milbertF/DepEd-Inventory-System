@@ -1,14 +1,15 @@
 .sidebar{
     position: relative;
     width: 4.5rem;
-    background-color: rgb(23, 23, 23);
+    background-color: var(--containerColor);
     border-radius: 0.3rem;
     padding: 1rem;
     box-sizing: border-box;
-    border: rgba(255, 255, 255, 0.1) solid 1px;
+    border: var(--border);
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    box-shadow: var(--boxShadow);
     
 
     .part{
@@ -22,7 +23,7 @@
         transition: scale 0.3s ease;
 
         &:focus{
-            border: red solid 1px;
+            border: red dashed 1px;
         }
 
         &:hover{
@@ -37,13 +38,14 @@
         .icon{
             width: 100%;
             aspect-ratio: 1/1;
-            background-color: rgba(255, 255, 255, 0.05);
+            background-color: var(--backgroundColor);
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50%;
             border: rgba(255, 255, 255, 0.05) solid 1px;
             i{
+                color: hsl(from var(--textColor)h s l / 0.5);
                 font-size: 1rem;
             }
         }
@@ -52,7 +54,7 @@
             pointer-events: none;
             background-color: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(1rem);
-            color: white;
+            color: var(--textColor);
             padding: 0.3rem 0.5rem;
             position: absolute;
             left: calc(100%);
@@ -61,56 +63,78 @@
             opacity: 0;
             transition: all 0.3s ease;
             border-radius: 0.2rem;
-            border: rgba(255, 255, 255, 0.1) solid 1px;
+            border: var(--border);
+            box-shadow: var(--boxShadow);
         }
     }
 
-    .acc{
+    .set{
         position: absolute;
         bottom: 1rem;
         width: calc(100% - 2rem);
-        aspect-ratio: 1/1;
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 50%;
-        background-color: white;
-        cursor: pointer;
         display: flex;
-        /* overflow: hidden; */
+        flex-direction: column;
+        gap: 1rem;
 
-        img{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
+        button{
+            /* width: 100%; */
+            all: unset;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+
+            i{
+                font-size: 1.5rem;
+            }
         }
 
-        .tooltip{
-            position: absolute;
-            left: calc(100% + 0.5rem);
-            width: 10rem;
-            bottom: 0;
+        .acc{
+            aspect-ratio: 1/1;
+            border-radius: 50%;
             background-color: white;
-            padding: 0.3rem;
-            box-sizing: border-box;
-            flex-direction: column;
-            gap: 0.5rem;
-            border-radius: 0.2rem;
-            > *{
-                color: black;
+            cursor: pointer;
+            display: flex;
+            border: var(--border);
+            box-shadow: var(--boxShadow);
+    
+            img{
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 50%;
             }
-            p{
-                font-size: 0.8rem;
-            }
-            a{
-                font-size: 0.8rem;
-                cursor: pointer;
-                padding: 0.2rem;
-                background-color: rgb(200, 200, 200);
-                border: rgba(0, 0, 0, 0.3) solid 1px;
+    
+            .tooltip{
+                position: absolute;
+                left: calc(100% + 0.5rem);
+                width: 10rem;
+                bottom: 0;
+                background-color: var(--containerColor);
+                border: var(--border);
+                box-shadow: var(--boxShadow);
+                padding: 0.3rem;
+                box-sizing: border-box;
+                flex-direction: column;
+                gap: 0.5rem;
+                border-radius: 0.2rem;
+                > *{
+                    color: black;
+                }
+                p{
+                    font-size: 0.8rem;
+                }
+                a{
+                    font-size: 0.8rem;
+                    cursor: pointer;
+                    padding: 0.2rem;
+                    background-color: rgb(200, 200, 200);
+                    border: rgba(0, 0, 0, 0.3) solid 1px;
+                }
             }
         }
     }
+
+    
 
     
 }

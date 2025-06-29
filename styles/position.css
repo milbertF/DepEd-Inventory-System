@@ -4,9 +4,9 @@
 .sidebar{
     .part{
         .iconPosition{
-            background-color: white;
+            background-color: var(--accentColor);
             i{
-                color: black;
+                color: white;
             }
         }
     }
