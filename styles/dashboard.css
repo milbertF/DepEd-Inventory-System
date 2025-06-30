@@ -1,39 +1,61 @@
 @import url(style.css);
 
-
-.wrapMain{
-    .sidebar{
-        .part{
-            .iconDashboard{
-                background-color: var(--accentColor);
-                i{
-                    color: white;
-                }
-            }
-        }
-    }
-    .quickAccess{
-        margin-top: 1rem;
-        display: flex;
-        gap: 1rem;
-
-        .access{
-            display: flex;
-            background-color: hsl(from var(--accentColor)h s l / 0.15);
-            align-items: center;
-            padding: 0.3rem 0.5rem;
-            gap: 0.5rem;
-            border-radius: 0.5rem;
-            border: var(--accentColor) solid 1px;
-            box-sizing: border-box;
-            cursor: pointer;
-            transition: all 0.3s ease;
-
-            &:hover{
-                background-color: hsl(from var(--accentColor)h s l / 0.3);
-                scale: 1.01;
-            }
-        }
-    }
+.wrapMain {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 1rem;
+  min-height: 100vh;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
+.wrapMain .sidebar .part .iconDashboard {
+  background-color: var(--accentColor);
+}
+.wrapMain .sidebar .part .iconDashboard i {
+  color: white;
+}
+
+.wrapMain .quickAccess {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.wrapMain .quickAccess .access {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background-color: hsl(from var(--accentColor) h s l / 0.15);
+  border: var(--accentColor) solid 1px;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wrapMain .quickAccess .access:hover {
+  background-color: hsl(from var(--accentColor) h s l / 0.3);
+  scale: 1.01;
+}
+
+
+@media screen and (max-width: 767px) {
+  .wrapMain {
+    flex-direction: column;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
+  .wrapMain .quickAccess {
+    justify-content: center;
+  }
+
+  .wrapMain .quickAccess .access {
+    flex: 1 1 45%;
+    justify-content: center;
+  }
+}

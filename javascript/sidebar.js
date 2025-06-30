@@ -70,7 +70,7 @@ class Sidebar extends HTMLElement {
                 <img src="/images/user-profile/default-image.jpg" alt="">
                 <div id="sidebarAccountTooltip" class="tooltip" style="display: none">
                     <p>Bruce Wayne</p>
-                    <a tabindex="1" type="button">Logout</a>
+                    <a tabindex="1" href= "/logout" type="button">Logout</a>
                 </div>
             </button>
         </div>
