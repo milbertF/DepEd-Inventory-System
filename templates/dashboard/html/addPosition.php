@@ -1,5 +1,6 @@
 <?php
-include __DIR__ . '/../function/addPositionFunction.php';
+require __DIR__ . '/../function/addPositionFunction.php';
+require_once __DIR__ . '/../../../config/authProtect.php';
 ?>
 
 <!DOCTYPE html>
@@ -59,7 +60,7 @@ include __DIR__ . '/../function/addPositionFunction.php';
         </div>
 
         <div class="btnSave">
-          <button type="submit" name="submit_position" id="submitPositionBtn">Save All Positions</button>
+          <button type="submit" name="submit_position" id="submitPositionBtn">Submit All Positions</button>
         </div>
       </form>
     </div>

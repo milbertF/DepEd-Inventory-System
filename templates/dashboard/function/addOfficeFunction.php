@@ -53,8 +53,9 @@ if (isset($_POST['submit_office'])) {
 
          
                 $office_id = generateOfficeID($conn);
-                $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_location) VALUES (?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_location, created_at) VALUES (?, ?, ?, NOW())");
                 $stmt->bind_param("sss", $office_id, $name, $location);
+                
 
                 if ($stmt->execute()) {
                     $successCount++;
@@ -86,13 +87,14 @@ if (isset($_POST['submit_office'])) {
                     'Office Exists',
                     $duplicateMessage
                 );
-                exit;
+                return;
             }
 
          
             $office_id = generateOfficeID($conn);
-            $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_location) VALUES (?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_location, created_at) VALUES (?, ?, ?, NOW())");
             $stmt->bind_param("sss", $office_id, $name, $location);
+            
 
             if ($stmt->execute()) {
                 showSweetAlert(
@@ -108,7 +110,7 @@ if (isset($_POST['submit_office'])) {
                     'Error adding office: ' . addslashes($conn->error)
                 );
             }
-            exit;
+            return;
         }
     }
 

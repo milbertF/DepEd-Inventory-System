@@ -36,6 +36,8 @@
     left: calc(100% + 0.5rem);
 }
 
+
+
 .sidebar .icon {
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -47,10 +49,10 @@
     border: rgba(255, 255, 255, 0.05) solid 1px;
 }
 
-.sidebar .icon i {
-    color: hsl(from var(--textColor) h s l / 0.5);
-    font-size: 1rem;
-}
+    .sidebar .icon i {
+        color: hsl(from var(--textColor) h s l / 0.5);
+        font-size: 1rem;
+    }
 
 .sidebar .part label {
     font-size: 0.7rem;
@@ -124,6 +126,16 @@
     display: none;
 }
 
+.sidebar .icon img {
+    width: 120%;
+    height: 120%;
+
+
+    object-fit: contain;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
 .sidebar .set .acc .tooltip > * {
     color: black;
 }
@@ -138,6 +150,12 @@
     padding: 0.2rem;
     background-color: rgb(200, 200, 200);
     border: rgba(0, 0, 0, 0.3) solid 1px;
+}
+
+
+.out{
+
+    text-decoration: none;
 }
 
 

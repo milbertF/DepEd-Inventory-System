@@ -52,7 +52,7 @@
 
     .logo {
         position: relative;
-        height: 5rem;
+        height: 8rem;
         margin-bottom: 1rem;
         z-index: -1;
 
@@ -72,7 +72,7 @@
             text-shadow: hsl(from var(--textColor)h s l / 0.3) 0rem 2px 0.1rem;
 
             span:nth-child(1) {
-                color: #034F8B;
+                color: #E11C38;
             }
 
             span:nth-child(2) {

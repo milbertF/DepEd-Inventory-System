@@ -11,7 +11,7 @@ require __DIR__ . '/../function/loginController.php';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/images/assets/DepEd.png" />
+    <link rel="icon" href="/images/assets/baliwasan.png" />
     <title>DIS-Login</title>
     <link rel="stylesheet" href="/styles/login.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -22,11 +22,11 @@ require __DIR__ . '/../function/loginController.php';
         <img src="/images/assets/DepEd.png" alt="DepEd Logo Background" />
 
         <div class="logo">
-            <img src="/images/assets/DepEd.png" alt="DepEd Logo" />
+            <img src="/images/assets/baliwasan.png" alt="DepEd Logo" />
         </div>
 
         <div class="titletext">
-            <h1><span>Dep</span><span>Ed</span> Inventory System</h1>
+            <h1><span>Baliwasan</span> Inventory System</h1>
         </div>
 
         <form id="loginForm" method="POST">
@@ -57,23 +57,15 @@ require __DIR__ . '/../function/loginController.php';
     </div>
 
 
-    <script src="/javascript/login.js"></script>
-    <script>
-<?php if (isset($errorMessage)): ?>
-Swal.fire({
-    icon: 'error',
-    title: 'Login Failed',
-    text: '<?= addslashes($errorMessage) ?>'
-}).then(() => {
 
-    const loginBtn = document.getElementById("login-btn");
-    if (loginBtn) {
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Sign in";
-    }
-});
+    <?php if (isset($errorMessage)): ?>
+    <div id="login-error" data-message="<?= htmlspecialchars($errorMessage, ENT_QUOTES) ?>" style="display:none;"></div>
 <?php endif; ?>
-</script>
+
+
+
+    <script src="/javascript/login.js"></script>
+  
 
 
 </body>

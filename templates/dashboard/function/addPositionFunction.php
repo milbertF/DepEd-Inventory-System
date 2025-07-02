@@ -13,6 +13,8 @@ function generatePositionID($conn) {
     return $id;
 }
 
+
+
 if (isset($_POST['submit_position'])) {
     $successCount = 0;
     $errorCount = 0;
@@ -53,8 +55,9 @@ if (isset($_POST['submit_position'])) {
 
              
                 $position_id = generatePositionID($conn);
-                $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_position (position_id, position_title, position_description) VALUES (?, ?, ?)");
+                $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_position (position_id, position_title, position_description, created_at) VALUES (?, ?, ?, NOW())");
                 $stmt->bind_param("sss", $position_id, $title, $desc);
+                
 
                 if ($stmt->execute()) {
                     $successCount++;
@@ -86,13 +89,14 @@ if (isset($_POST['submit_position'])) {
                     'Position Exists',
                     $duplicateMessage
                 );
-                exit;
+                return;
             }
 
          
             $position_id = generatePositionID($conn);
-            $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_position (position_id, position_title, position_description) VALUES (?, ?, ?)");
+            $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_position (position_id, position_title, position_description, created_at) VALUES (?, ?, ?, NOW())");
             $stmt->bind_param("sss", $position_id, $title, $desc);
+            
 
             if ($stmt->execute()) {
                 showSweetAlert(
@@ -108,7 +112,7 @@ if (isset($_POST['submit_position'])) {
                     'Error adding position: ' . addslashes($conn->error)
                 );
             }
-            exit;
+            return;
         }
     }
 

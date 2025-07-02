@@ -1,10 +1,13 @@
 
 <?php
 
+ require __DIR__ . '/addEmployee.php'; 
+ require  __DIR__ . '/addPosition.php'; 
+ require __DIR__ . '/addOffice.php'; 
 
-session_start();
-
+require_once __DIR__ . '/../../../config/authProtect.php';
 ?>
+
 
 
 <!DOCTYPE html>
@@ -17,35 +20,100 @@ session_start();
 </head>
 <body>
 
-  <?php require __DIR__ . '/addEmployee.php'; ?>
-  <?php require  __DIR__ . '/addPosition.php'; ?>
-  <?php require __DIR__ . '/addOffice.php'; ?>
+<style>
+  .sidebar{
+  .part{
+      .iconDashboard{
+          background-color: var(--accentColor);
+          i{
+              color: #ffffff;
+          }
+      }
+  }
+}
+
+</style>
+
 
 
   <div class="wrapMain">
   <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
     <div class="con">
       <h3>Dashboard</h3>
-      <div class="quickAccess">
-        <div class="access">
-          <i class="fas fa-list"></i>
-          <p>Add Items</p>
-        </div>
-        <div class="access" onclick="addEmployee()">
-          <i class="fas fa-user-tie"></i>
-          <p>Add Employee</p>
-        </div>
-        <div class="access" onclick="addPosition()">
-          <i class="fa-solid fa-street-view"></i>
-          <p>Add Position</p>
-        </div>
-        <div class="access" onclick="addOffice()">
-          <i class="fa-solid fa-building"></i>
-          <p>Add Office</p>
-        </div>
-      </div>
-    </div>
+
+      <?php require __DIR__ . '/../../quick-access/access.php'; ?>
+      
+      
+
+  
+<div class="summaryCards">
+  <div class="card">
+    <h4>Total Items</h4>
+    <p>1,240</p>
   </div>
+  <div class="card">
+    <h4>In Stock</h4>
+    <p>980</p>
+  </div>
+  <div class="card">
+    <h4>Low Stock</h4>
+    <p>12</p>
+  </div>
+  <div class="card">
+    <h4>Employees</h4>
+    <p>28</p>
+  </div>
+</div>
+
+<!-- Low Stock Table -->
+<div class="section">
+  <h4>Low Stock Items</h4>
+  <table class="dashboardTable">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Quantity</th>
+        <th>Threshold</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Printer Ink</td>
+        <td>2</td>
+        <td>5</td>
+        <td><span class="tag danger">Low</span></td>
+      </tr>
+      <tr>
+        <td>A4 Bond Paper</td>
+        <td>3</td>
+        <td>10</td>
+        <td><span class="tag warning">Below Limit</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Recent Activity -->
+<div class="section">
+  <h4>Recent Activity</h4>
+  <ul class="activityLog">
+  <li><strong>July 01:</strong> Pogi si JD</li>
+
+
+    <li><strong>June 30:</strong> Mark borrowed 1 projector.</li>
+    <li><strong>June 29:</strong> Admin added 5 laptops to ICT Room.</li>
+    <li><strong>June 28:</strong> Item "Speaker" marked as damaged.</li>
+  </ul>
+</div>
+
+    </div>
+
+    
+  </div>
+  
+
+  
 
   <script src="/javascript/script.js"></script>
   <script src="/javascript/header.js"></script>

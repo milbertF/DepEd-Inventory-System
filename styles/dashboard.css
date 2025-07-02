@@ -1,5 +1,8 @@
 @import url(style.css);
 
+
+
+
 .wrapMain {
   display: flex;
   flex-direction: row;
@@ -10,12 +13,7 @@
   overflow-x: hidden;
 }
 
-.wrapMain .sidebar .part .iconDashboard {
-  background-color: var(--accentColor);
-}
-.wrapMain .sidebar .part .iconDashboard i {
-  color: white;
-}
+
 
 .wrapMain .quickAccess {
   margin-top: 1rem;
@@ -41,6 +39,102 @@
   background-color: hsl(from var(--accentColor) h s l / 0.3);
   scale: 1.01;
 }
+
+
+
+.summaryCards {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.summaryCards .card {
+  flex: 1 1 200px;
+  background-color: #f7f7f7;
+ 
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.summaryCards .card h4 {
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+.summaryCards .card p {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: var(--accentColor);
+  margin: 0;
+}
+
+
+.section {
+  margin-top: 2rem;
+}
+
+.section h4 {
+  margin-bottom: 0.8rem;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.3rem;
+}
+
+.dashboardTable {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.dashboardTable th, .dashboardTable td {
+  text-align: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.95rem;
+}
+
+.dashboardTable th {
+  background-color: #f2f2f2;
+}
+
+.tag {
+  padding: 0.25rem 0.6rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.tag.danger {
+  background-color: #ffebeb;
+  color: #d10000;
+}
+
+.tag.warning {
+  background-color: #fff7e6;
+  color: #c07800;
+}
+
+
+.activityLog {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.activityLog li {
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #ddd;
+  font-size: 0.95rem;
+  color: #333;
+}
+
 
 
 @media screen and (max-width: 767px) {

@@ -11,3 +11,124 @@
         }
     }
 }
+
+
+
+.tableContainer {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  background-color: white;
+  box-shadow: var(--boxShadow);
+  padding: 1rem;
+}
+
+.positionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.positionTable thead {
+    background-color: #f2f2f2;
+  color: white;
+}
+
+.positionTable th, .positionTable td {
+    text-align: center;
+    padding: 0.5rem 0.75rem; 
+    border-bottom: 1px solid #eee;
+    font-size: 0.95rem;
+}
+
+.positionTable tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.positionTable td {
+  color: #333;
+}
+
+.action-btn {
+    border: none;
+    padding: 0.4rem 0.6rem;
+    margin-right: 0.25rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+  }
+  
+  .action-btn i {
+    pointer-events: none;
+  }
+  
+
+  .action-btn.edit {
+
+    color: white;
+  }
+  
+
+  .searchContainer {
+    margin-bottom: 1rem;
+  }
+  
+  #searchPosition {
+    padding: 8px 12px;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+  #searchOffice{
+    padding: 8px 12px;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  
+  .pagination a {
+    padding: 0.4rem 0.8rem;
+    background-color: var(--backgroundColor);
+    border: var(--border);
+    border-radius: 0.3rem;
+    color: var(--textColor);
+    text-decoration: none;
+    transition: background 0.3s;
+  }
+  
+  .pagination a:hover {
+    background-color: var(--accentColor);
+    color: white;
+  }
+  
+  .pagination a.active {
+    background-color: var(--accentColor);
+    color: white;
+    pointer-events: none;
+  }
+  
+  
+  
+
+
+@media screen and (max-width: 768px) {
+  .positionTable {
+    font-size: 0.85rem;
+  }
+}

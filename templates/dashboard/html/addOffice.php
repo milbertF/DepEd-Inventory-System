@@ -1,5 +1,6 @@
 <?php
 include __DIR__ . '/../function/addOfficeFunction.php';
+require_once __DIR__ . '/../../../config/authProtect.php';
 ?>
 
 <!DOCTYPE html>
@@ -7,7 +8,6 @@ include __DIR__ . '/../function/addOfficeFunction.php';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Add Office</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="/styles/dashboard.css">
   <link rel="stylesheet" href="/styles/addOffPos.css">
@@ -58,7 +58,7 @@ include __DIR__ . '/../function/addOfficeFunction.php';
         </div>
 
         <div class="btnSave">
-          <button type="submit" name="submit_office" id="submitBtn">Save All Offices</button>
+          <button type="submit" name="submit_office" id="submitBtn">Submit All Offices</button>
         </div>
       </form>
     </div>
