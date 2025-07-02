@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 30, 2025 at 01:16 PM
+-- Generation Time: Jul 02, 2025 at 07:36 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `deped-inventory-db`
+-- Database: `deped_inventory_db`
 --
 
 -- --------------------------------------------------------
@@ -40,7 +40,14 @@ CREATE TABLE `deped_inventory_employee_office` (
 --
 
 INSERT INTO `deped_inventory_employee_office` (`office_id`, `office_name`, `office_location`, `created_at`, `updated_at`) VALUES
-('643198', '123', '123', NULL, NULL);
+('239628', 'Top', '', '2025-07-02 20:56:24', NULL),
+('422882', '123', '', '2025-07-02 21:39:44', NULL),
+('426334', 'Mid', '', '2025-07-02 20:56:24', NULL),
+('675829', 'Jungle', '', '2025-07-02 20:56:24', NULL),
+('715433', 'My Office', '', '2025-07-03 01:32:27', NULL),
+('754260', 'Bot', '', '2025-07-02 20:56:24', NULL),
+('838296', 'Sideline', '', '2025-07-02 20:56:24', NULL),
+('970316', 'Office of The President', '', '2025-07-03 01:32:27', NULL);
 
 -- --------------------------------------------------------
 
@@ -61,8 +68,11 @@ CREATE TABLE `deped_inventory_employee_position` (
 --
 
 INSERT INTO `deped_inventory_employee_position` (`position_id`, `position_title`, `position_description`, `created_at`, `updated_at`) VALUES
-('000034', '143', '143', NULL, NULL),
-('565491', '153', '154', NULL, NULL);
+('221375', 'Pos 5', 'Tank', '2025-07-02 20:56:00', NULL),
+('422801', 'Pos 1', 'Gold Lane', '2025-07-02 20:56:00', NULL),
+('451426', 'Pos 3', 'Exp', '2025-07-02 20:56:00', NULL),
+('489639', 'Pos 4', 'Mid', '2025-07-02 20:56:00', NULL),
+('876124', 'Pos 2', 'Jungle', '2025-07-02 20:56:00', NULL);
 
 -- --------------------------------------------------------
 
@@ -85,7 +95,8 @@ CREATE TABLE `deped_inventory_users` (
 --
 
 INSERT INTO `deped_inventory_users` (`user_id`, `email`, `username`, `password`, `role`, `created_at`, `updated_at`) VALUES
-('874354', 'S2lJOWxLUWJVNHhFRjJtQ29jaXRLdWRPUTRERFFTbk91OHoyRTB4ZzZkOD06OgEBb7u5VXI0urHNBA0PnFY=', 'jdaguidan', '$2y$10$idFqMvnGvph9pjltypjPtO2jnHuhbhFOHQH1lvtzs/m4LNXRm023O', 'Admin', '2025-06-30 18:23:58', NULL);
+('428651', 'Z3dKS3NPdnRIdG1lMUJtWTVoQWl4QT09OjqVQ8cg1dju0RXTsHt/mM4I', 'miku', '$2y$10$ESJ4ihbK3bn0sAwnEEHb7OFRcaB2B.5dgAhq6WGkuO/rfd.iEZ.xK', 'Employee', '2025-07-02 16:20:33', NULL),
+('979342', 'Z0xPdCtJOWRkS095anRMSG50NFBSclZ1c3dyYm5wZ2xXUFdzOWN3NElsST06OmtzrGXM2SqboerVx/h6kl0=', 'ronson', '$2y$10$LYySZe5oIEt05I8Bd0Xapupnr170ATwdyixb93D4khlBGhBIAO8Fq', 'Deactivate', '2025-07-02 15:15:13', NULL);
 
 -- --------------------------------------------------------
 
@@ -113,7 +124,8 @@ CREATE TABLE `deped_inventory_user_info` (
 --
 
 INSERT INTO `deped_inventory_user_info` (`info_id`, `user_id`, `first_name`, `middle_name`, `last_name`, `contact_number`, `address`, `profile_photo`, `position_id`, `office_id`, `created_at`, `updated_at`) VALUES
-(821614, '874354', 'ZXNzUk5Lalp3Y3orSFpMZ3VlUjdFdz09Ojpm76tp8zYPtwOc7ghztNal', 'QkNQUlRjRVYvM0ZDYUI5dnNJa1l1dz09OjpYXGHTfI29rKFvwBeMmlFN', 'dzNKWGlZMUdWWktHUFlJOFhXZTNXQT09OjqUYQ0/QjobsksioR3aCSaw', 'MjZ1ZnRMbTJZN3AvVG1veDFTaG85Zz09Ojpkuh8ZoGrkM2AvrKYId5VT', 'Z2I5RkpBRjBZWE1LNEpRRXFmWEQrQT09OjqUZMdSVXWkMKijgG5sH6C0', 'images/user-profile/ronson_delena.jpg', '565491', '643198', '2025-06-30 18:23:58', NULL);
+(234887, '979342', 'Sm9lTE1Dc2FESENwcjhlaEZwd1dLQT09Ojr8HMHHGBI/FMCHpE1r0/kU', 'NEd4SzMrQTNQTkxtQTVUMnBFSGJVZz09Ojoy34Xr+KD293qZGSO794Sd', 'MUIwNDN2R01YS0E5a2xnMUZXSWxEdz09OjpC9jZQlJ7ljQvBGk0IRdhJ', 'd0t4YnBPZ1ZuaHNJcWY1TThzRm96dz09OjraYHB/UB6zXQJ0Dmi8YIO8', 'ZGgyVlAzZ0JYNEdjbjRjM053NmNRdz09OjpQAPO3yCRmx62iAZpzsEk9', '/images/user-profile/ronson_delena.png', '876124', '675829', '2025-07-02 15:15:13', NULL),
+(889896, '428651', 'V2xQR1dkY2poMEV4cElwdWZmeVI3dz09OjppwkpxL/4IQdrB+4zOLONM', 'YnN6SGJYNlUyQWlUeC92Z3RVd1RCUT09OjrOMKtdxyn6jx/DMMH6E+D+', 'QzBuMHBQUDdIbDF4YkJZNzhlNjludz09OjqWhcaXfALaufuu0W780YhJ', 'NlNaNjVwOUwyZXdPaU5MUHZoM3p6QT09Ojp9EUYJzXof8v/nQnNfmq1x', 'aHlCSWVtaHlxcmNkL2lHSGtvb0NoQXV4Z1FKcWFVZytmS09BRE0vV2I3OTk5Q0pHWDIrK0x1RFA2Y0Jja1BIazo6p9JjUNWbFqRh4L+moK29ww==', '/images/user-profile/miku_delena_2.jpg', '876124', '754260', '2025-07-02 16:20:33', NULL);
 
 --
 -- Indexes for dumped tables
@@ -154,7 +166,7 @@ ALTER TABLE `deped_inventory_user_info`
 -- AUTO_INCREMENT for table `deped_inventory_user_info`
 --
 ALTER TABLE `deped_inventory_user_info`
-  MODIFY `info_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=821615;
+  MODIFY `info_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=972898;
 
 --
 -- Constraints for dumped tables
