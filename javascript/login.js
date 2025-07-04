@@ -30,23 +30,3 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-document.addEventListener('DOMContentLoaded', function () {
-  const errorDiv = document.getElementById("login-error");
-  if (errorDiv) {
-      const errorMessage = errorDiv.dataset.message;
-
-      Swal.fire({
-          icon: 'error',
-          title: 'Login Failed',
-          text: errorMessage
-      }).then(() => {
-          const loginBtn = document.getElementById("login-btn");
-          if (loginBtn) {
-              loginBtn.disabled = false;
-              loginBtn.textContent = "Sign in";
-          }
-      });
-  }
-});
-
-

@@ -28,7 +28,7 @@ switch ($request) {
         break;
 
     case '/report':
-        require __DIR__ . '/templates/inventory/html/report.html';
+        require __DIR__ . '/templates/report/html/report.php';
         break;
 
     case '/office':
@@ -36,7 +36,7 @@ switch ($request) {
         break;
 
     case '/request':
-        require __DIR__ . '/templates/request/html/request.html';
+        require __DIR__ . '/templates/request/html/request.php';
         break;
 
     case '/forgot':

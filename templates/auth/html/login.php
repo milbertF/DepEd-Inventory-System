@@ -26,7 +26,7 @@ require __DIR__ . '/../function/loginController.php';
         </div>
 
         <div class="titletext">
-            <h1><span>Baliwasan</span> Inventory System</h1>
+            <h1><span>Baliwasan</span> <span style="color:orange;"> Central School</span> Inventory System</h1>
         </div>
 
         <form id="loginForm" method="POST">

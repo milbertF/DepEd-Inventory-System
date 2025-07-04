@@ -22,6 +22,7 @@
   }
   
   .employeeTable {
+    margin-top: 1.5rem;
     width: 100%;
     border-collapse: collapse;
     font-size: 0.95rem;
@@ -46,6 +47,14 @@
   .employeeTable td {
     color: #333;
   }
+
+
+  .employeeTable th:nth-child(1)
+
+ {
+  width: 5%;
+}
+
   
   .action-btn {
       border: none;
