@@ -1,3 +1,14 @@
+<?php
+
+
+require __DIR__ . '/../../dashboard/html/addEmployee.php'; 
+require  __DIR__ . '/../../dashboard/html/addPosition.php';
+require __DIR__ . '/../../dashboard/html/addOffice.php'; 
+
+require_once __DIR__ . '/../../../config/authProtect.php';
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,9 +19,11 @@
 </head>
 <body>
     <div class="wrapMain">
-        <main-sidebar class="sidebar"></main-sidebar>
+    <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
         <div class="con">
             <h3>Item</h3>
+
+            <?php require __DIR__ . '/../../quick-access/access.php'; ?>
             
         </div>
          

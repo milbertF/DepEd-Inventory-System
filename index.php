@@ -3,47 +3,52 @@ $request = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
 switch ($request) {
     case '/login':
-        require __DIR__ . '/templates/auth/login.html';
+        require __DIR__ . '/templates/auth/html/login.php';
         break;
 
     case '/dashboard':
-        require __DIR__ . '/templates/dashboard/dashboard.html';
+        require __DIR__ . '/templates/dashboard/html/dashboard.php';
         break;
 
     case '/employee':
-        require __DIR__ . '/templates/employee/employee.html';
+        require __DIR__ . '/templates/employee/html/employee.php';
         break;
 
-    case '/position':
-        require __DIR__ . '/templates/employee/position.html';
-        break;
+
+        case '/addEmployee':
+            require __DIR__ . '/templates/employee/html/addEmployee.html';
+            break;
+
+            case '/position':
+                require __DIR__ . '/templates/position/html/position.php';
+                break;
 
     case '/items':
-        require __DIR__ . '/templates/inventory/items.html';
+        require __DIR__ . '/templates/inventory/html/items.php';
         break;
 
     case '/report':
-        require __DIR__ . '/templates/inventory/report.html';
+        require __DIR__ . '/templates/report/html/report.php';
         break;
 
     case '/office':
-        require __DIR__ . '/templates/office/office.html';
+        require __DIR__ . '/templates/office/html/office.php';
         break;
 
     case '/request':
-        require __DIR__ . '/templates/request/request.html';
+        require __DIR__ . '/templates/request/html/request.php';
         break;
 
     case '/forgot':
-        require __DIR__ . '/templates/auth/forgot.html';
+        require __DIR__ . '/templates/auth/html/forgot.html';
         break;
 
     case '/code':
-        require __DIR__ . '/templates/auth/code.html';
+        require __DIR__ . '/templates/auth/html/code.html';
         break;
 
     case '/reset':
-        require __DIR__ . '/templates/auth/reset.html';
+        require __DIR__ . '/templates/auth/html/reset.html';
         break;
 
     case '/401':
@@ -60,6 +65,12 @@ switch ($request) {
         http_response_code(404);
         require __DIR__ . '/templates/errors/404.html';
         break;
+
+
+        case '/logout':
+            require __DIR__ . '/templates/auth/function/logout.php';
+            break;
+        
 
     case '/':
     case '/index.php':

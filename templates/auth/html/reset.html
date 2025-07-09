@@ -4,13 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="icon" href="/images/assets/DepEd.png" />
-    <title>DIS-Login</title>
+    <link rel="icon" href="/images/assets/baliwasan.png" />
+    <title>DIS-Reset Password</title>
+
 
     <link rel="stylesheet" href="/styles/login.css" />
 
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <link
       rel="stylesheet"
@@ -19,39 +20,40 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-  
-  </head>
 
+   
+  </head>
   <body>
     <div class="index">
       <img src="/images/assets/DepEd.png" alt="" />
 
       <div class="logo">
-        <img src="/images/assets/DepEd.png" alt="" />
+        <img src="/images/assets/baliwasan.png" alt="" />
       </div>
 
       <div class="titletext">
-        <h1><span>Dep</span><span>Ed</span> Inventory System</h1>
+       <h1>Reset Password!</h1>
       </div>
 
       <div class="container">
         <div class="inputContainer">
-          <label for="login-email">Email</label>
+          <label for="new-password">New Password</label>
           <div class="input">
-            <input id="login-email" type="email" required />
+            <input id="new-password" type="password" required />
+            <i id="toggleNewPassword" class="fa-solid fa-eye-slash" style="display: none;"></i>
           </div>
         </div>
 
         <div class="inputContainer">
-          <label for="login-password">Password</label>
+          <label for="confirm-password">Confirm Password</label>
           <div class="input">
-            <input id="login-password" type="password" required />
-            <i class="fa-solid fa-eye" id="togglePassword"></i>
+            <input id="confirm-password" type="password" required />
+            <i id="toggleConfirmPassword" class="fa-solid fa-eye-slash" style="display: none;"></i>
           </div>
-          <a href="forgot" class="forgotPassword">Forgot password?</a>
         </div>
 
-        <button id="login-btn">Sign in</button>
+        <button id="reset-btn">Reset Password</button>
+        <a href="login">Back to Login</a>
       </div>
 
       <div class="credits">
@@ -59,7 +61,10 @@
       </div>
     </div>
 
-    <script src="/javascript/login.js"></script>
-  
+ <script src="/javascript/reset.js"></script>
+
+ <script>
+    
+ </script>
   </body>
 </html>

@@ -12,6 +12,16 @@ function showSidebarAccountTooltip() {
     }
 }
 
+const existingicon = document.querySelector("link[rel~='icon']");
+    if (!existingicon) {
+      const link = document.createElement("link");
+      link.rel = "icon";
+      link.href = "/images/assets/baliwasan.png";
+
+      link.type = "image/png";
+      document.head.appendChild(link);
+    }
+
 // const inputs = document.querySelectorAll(".inpAuth input");
 
 // inputs.forEach((input, idx) => {

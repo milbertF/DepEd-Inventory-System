@@ -1,13 +1,24 @@
 @import url(style.css);
+@import url(officePosTable.css);
 
 
 .sidebar{
     .part{
         .iconOffice{
-            background-color: white;
+            background-color: var(--accentColor);
             i{
-                color: black;
+                color: white;
             }
         }
     }
+}
+
+
+
+#searchOffice{
+  padding: 8px 12px;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
 }

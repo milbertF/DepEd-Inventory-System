@@ -18,44 +18,15 @@ togglePassword.addEventListener("click", () => {
 });
 
 
-loginBtn.addEventListener("click", async () => {
-  const email = document.getElementById("login-email").value.trim();
-  const password = passwordInput.value.trim();
 
-  loginBtn.disabled = true;
-  loginBtn.textContent = "Signing in...";
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("loginForm");
+  const loginBtn = document.getElementById("login-btn");
 
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  if (email === "" || password === "") {
-    Swal.fire({
-      icon: "error",
-      title: "Missing Fields",
-      text: "Please enter both email and password.",
-    }).then(() => {
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Sign in";
-    });
-    return;
-  }
-
-  // for the eme login
-  if (email === "admin@deped.gov" && password === "admin123") {
-    Swal.fire({
-      icon: "success",
-      title: "Login Successful",
-      text: "Welcome back!",
-    }).then(() => {
-      window.location.href = "/dashboard";
-    });
-  } else {
-    Swal.fire({
-      icon: "error",
-      title: "Login Failed",
-      text: "Invalid email or password.",
-    }).then(() => {
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Sign in";
-    });
-  }
+  loginForm.addEventListener("submit", (e) => {
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Logging In...";
+  });
 });
+
+
