@@ -7,26 +7,28 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/styles/dashboard.css">
-  
+  <!-- <link rel="stylesheet" href="/styles/dashboard.css"> -->
+
 </head>
+
 <body>
 
   <div class="addEmployee" style="display:none" id="addEmployee">
     <div class="esc">
       <button id="btnEsc" onclick="escEmployee()">
         <i class="fa-solid fa-xmark"></i>
-      </button> 
+      </button>
     </div>
 
     <div class="con">
       <h4>Add Employee</h4>
 
-   
+
 
       <form method="POST" enctype="multipart/form-data" id="employee-form">
         <!-- Account Info -->
@@ -38,32 +40,32 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
 
           <div class="inpart">
             <label for="addEmployee-photo">Profile Photo</label>
-            
-      <div class="info">
-        <p>Note: Only PNG,JPG and GIF file type is only allowed.</p>
-      </div>
+
+            <div class="info">
+              <p>Note: Only PNG,JPG and GIF file type is only allowed.</p>
+            </div>
             <div class="photo-upload-wrapper">
               <label class="custom-file-upload">
                 <input type="file" id="addEmployee-photo" name="photo" accept="image/*" onchange="previewPhoto(event)" />
                 <i class="fa-solid fa-upload"></i> Choose Photo
               </label>
               <div class="photo-preview" id="photo-preview">
-                <img  id="photoOutput" src="" alt="Preview" />
+                <img id="photoOutput" src="" alt="Preview" />
               </div>
             </div>
           </div>
 
 
           <div class="inpart">
-            <label for="addEmployee-firstName">Email</label>
+            <label for="addEmployee-firstName">Email <span>*</span> </label>
             <div class="inputs">
-            <input type="email" id="addEmployee-email" name="email" required />
+              <input type="email" id="addEmployee-email" name="email" required />
 
             </div>
           </div>
 
           <div class="inpart">
-            <label for="addEmployee-firstName">First Name</label>
+            <label for="addEmployee-firstName">First Name <span>*</span> </label>
             <div class="inputs">
               <input type="text" id="addEmployee-firstName" name="firstName" required />
             </div>
@@ -77,39 +79,39 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
           </div>
 
 
-          
+
 
           <div class="inpart">
-            <label for="addEmployee-lastName">Last Name</label>
+            <label for="addEmployee-lastName">Last Name <span>*</span> </label>
             <div class="inputs">
               <input type="text" id="addEmployee-lastName" name="lastName" required />
             </div>
           </div>
 
           <div class="inpart">
-            <label for="addEmployee-contact">Contact #</label>
+            <label for="addEmployee-contact">Contact # <span>*</span> </label>
             <div class="inputs">
               <input type="text" id="addEmployee-contact" name="contact" required />
             </div>
           </div>
 
 
-          
+
 
           <div class="inpart">
-          <div class="info">
-          <p><strong>Note:</strong> Address should include street name, barangay, and city or municipality.</p>
+            <div class="info">
+              <p><strong>Note:</strong> Address should include street name, barangay, and city or municipality.</p>
 
-      </div>
-            <label for="addEmployee-address">Address</label>
-            
+            </div>
+            <label for="addEmployee-address">Address <span>*</span> </label>
+
             <div class="inputs">
               <input type="text" id="addEmployee-address" name="address" required />
             </div>
           </div>
 
           <div class="inpart">
-            <label for="addEmployee-position">Position</label>
+            <label for="addEmployee-position">Position <span>*</span> </label>
             <div class="inputs">
               <select id="addEmployee-position" name="employee_position" required>
                 <?php if (!empty($positions)): ?>
@@ -129,7 +131,7 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
           <div class="inpart">
             <label for="addEmployee-office">Office</label>
             <div class="inputs">
-              <select id="addEmployee-office" name="employee_office" >
+              <select id="addEmployee-office" name="employee_office">
                 <?php if (!empty($offices)): ?>
                   <option value="" disabled selected hidden>Select an office</option>
                   <?php foreach ($offices as $office): ?>
@@ -152,12 +154,12 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
             <span>Account Credentials</span>
           </div>
           <div class="info">
-        <p>Note: If username and password fields are left blank, default credentials will be set to employee's firstname and lastname.</p>
-      </div>
+            <p>Note: If username and password fields are left blank, default credentials will be set to employee's firstname and lastname.</p>
+          </div>
 
 
           <div class="inpart">
-            <label for="addEmployee-accountType">Account Role</label>
+            <label for="addEmployee-accountType">Account Role <span>*</span> </label>
             <div class="inputs">
               <select id="addEmployee-accountType" name="account_role" required>
                 <option value="" disabled selected>Select a role</option>
@@ -173,8 +175,8 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
               <input type="text" id="addEmployee-username" name="username" />
             </div>
           </div>
-          
-         
+
+
 
           <div class="inpart">
             <label for="addEmployee-password">Password</label>
@@ -201,4 +203,5 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
   <script src="/javascript/addEmployee.js"></script>
 
 </body>
+
 </html>

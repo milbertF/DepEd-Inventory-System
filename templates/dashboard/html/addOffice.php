@@ -5,14 +5,16 @@ require_once __DIR__ . '/../../../config/authProtect.php';
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/styles/dashboard.css">
+  <!-- <link rel="stylesheet" href="/styles/dashboard.css"> -->
   <link rel="stylesheet" href="/styles/addOffPos.css">
 
 </head>
+
 <body>
 
   <div class="addEmployee" style="display: none;" id="addOffice">
@@ -26,10 +28,10 @@ require_once __DIR__ . '/../../../config/authProtect.php';
       <h4>Add Office(s)</h4>
 
       <form method="POST" autocomplete="off" id="office-form">
-      
+
         <div class="info">
-          Note: You can add multiple offices at once. 
-          Fill in the first office details, then click "Add Another Office" 
+          Note: You can add multiple offices at once.
+          Fill in the first office details, then click "Add Another Office"
           to include additional offices before submitting.
         </div>
 
@@ -66,4 +68,5 @@ require_once __DIR__ . '/../../../config/authProtect.php';
 
   <script src="/javascript/addOffice.js"></script>
 </body>
+
 </html>

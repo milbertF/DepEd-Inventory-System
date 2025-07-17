@@ -1,14 +1,16 @@
 <?php
-require __DIR__ . '/../../dashboard/html/addEmployee.php'; 
+require __DIR__ . '/../../dashboard/html/addEmployee.php';
 require __DIR__ . '/../../dashboard/html/addPosition.php';
-require __DIR__ . '/../../dashboard/html/addOffice.php'; 
+require __DIR__ . '/../../dashboard/html/addOffice.php';
 require __DIR__ . '/../function/fetchOff.php';
 require __DIR__ . '/../function/editOffFunction.php';
 require_once __DIR__ . '/../../../config/authProtect.php';
+require __DIR__ . '/../../settings/settings.php';
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,9 +19,10 @@ require_once __DIR__ . '/../../../config/authProtect.php';
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
 
-<?php require __DIR__ . '/editOff.php'; ?>
+  <?php require __DIR__ . '/editOff.php'; ?>
 
   <div class="wrapMain">
     <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
@@ -52,17 +55,16 @@ require_once __DIR__ . '/../../../config/authProtect.php';
                   <td><?= htmlspecialchars($office['office_location']) ?: '<em>No description</em>' ?></td>
                   <td><?= isset($office['created_at']) ? date("M-d-Y", strtotime($office['created_at'])) : 'N/A' ?></td>
                   <td>
-                    <button 
+                    <button
                       class="action-btn edit"
                       data-id="<?= $office['office_id'] ?>"
                       data-title="<?= htmlspecialchars($office['office_name']) ?>"
-                      data-description="<?= htmlspecialchars($office['office_location']) ?>"
-                    >
+                      data-description="<?= htmlspecialchars($office['office_location']) ?>">
                       <i class="fas fa-edit"></i>
                     </button>
 
-                    <button class="action-btn delete" 
-                      data-id="<?= $office['office_id'] ?>" 
+                    <button class="action-btn delete"
+                      data-id="<?= $office['office_id'] ?>"
                       data-title="<?= htmlspecialchars($office['office_name']) ?>">
                       <i class="fas fa-trash-alt"></i>
                     </button>
@@ -78,16 +80,16 @@ require_once __DIR__ . '/../../../config/authProtect.php';
         </table>
 
         <?php if ($totalPages > 1): ?>
-  <div class="pagination">
-    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-      <a 
-        href="?page=<?= $i ?>" 
-        class="<?= ($i == $page) ? 'active' : '' ?>">
-        <?= $i ?>
-      </a>
-    <?php endfor; ?>
-  </div>
-<?php endif; ?>
+          <div class="pagination">
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+              <a
+                href="?page=<?= $i ?>"
+                class="<?= ($i == $page) ? 'active' : '' ?>">
+                <?= $i ?>
+              </a>
+            <?php endfor; ?>
+          </div>
+        <?php endif; ?>
 
       </div>
 
@@ -99,4 +101,5 @@ require_once __DIR__ . '/../../../config/authProtect.php';
   <script src="/javascript/script.js"></script>
   <script src="/javascript/office.js"></script>
 </body>
+
 </html>

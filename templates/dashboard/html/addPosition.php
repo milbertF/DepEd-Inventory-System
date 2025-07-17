@@ -5,17 +5,19 @@ require_once __DIR__ . '/../../../config/authProtect.php';
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/styles/dashboard.css">
+  <!-- <link rel="stylesheet" href="/styles/dashboard.css"> -->
   <link rel="stylesheet" href="/styles/addOffPos.css">
   <style>
-   
+
   </style>
 </head>
+
 <body>
 
   <div class="addEmployee" id="addPosition" style="display: none;">
@@ -27,10 +29,10 @@ require_once __DIR__ . '/../../../config/authProtect.php';
 
     <div class="con">
       <h4>Add Position(s)</h4>
-      
+
       <div class="info">
-        Note: You can add multiple positions at once. 
-        Fill in the first position details, then click "Add Another Position" 
+        Note: You can add multiple positions at once.
+        Fill in the first position details, then click "Add Another Position"
         to include additional positions before submitting.
       </div>
 
@@ -70,4 +72,5 @@ require_once __DIR__ . '/../../../config/authProtect.php';
 
   <script src="/javascript/addPosition.js"></script>
 </body>
+
 </html>

@@ -1,0 +1,24 @@
+.wrapMain .quickAccess {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.wrapMain .quickAccess .access {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  background-color: hsl(from var(--accentColor) h s l / 0.15);
+  border: var(--accentColor) solid 1px;
+  border-radius: 0.5rem;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wrapMain .quickAccess .access:hover {
+  background-color: hsl(from var(--accentColor) h s l / 0.3);
+  scale: 1.01;
+}

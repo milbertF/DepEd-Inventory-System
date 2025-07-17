@@ -1,15 +1,14 @@
-
 <div class="sidebar">
 
 
-<div class="part" >
-    <div class="icon dashboardlogo" style = "background:transparent;"  >
-    <img src="/images/assets/baliwasan.png" alt="">
+  <div class="part">
+    <div class="icon dashboardlogo" style="background:transparent;">
+      <img src="/images/assets/baliwasan.png" alt="">
     </div>
-  
-</div>
 
-  <button class="part" onclick="redirect('dashboard')" tabindex="1">
+  </div>
+
+  <button class="part" onclick="redirect('dashboard')">
     <div class="icon iconDashboard">
       <i class="fa-solid fa-table-columns"></i>
     </div>
@@ -59,23 +58,25 @@
   </button>
 
   <div class="set">
-    <button>
+    <button onclick="openSettings()">
       <i class="fa-solid fa-gear"></i>
     </button>
-    <button class="acc" onclick="showSidebarAccountTooltip()">
-    <img 
-  src="<?php echo isset($_SESSION['user']['profile_photo']) && !empty($_SESSION['user']['profile_photo']) 
-    ? htmlspecialchars($_SESSION['user']['profile_photo']) 
-    : '/images/user-profile/default-image.jpg'; ?>" 
-  alt="Profile">
+    <button class="acc" title="<?php echo isset($_SESSION['user']['first_name'], $_SESSION['user']['last_name'])
+                                  ? htmlspecialchars($_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'])
+                                  : 'Unknown User'; ?>" onclick="showSidebarAccountTooltip()">
+      <img
+        src="<?php echo isset($_SESSION['user']['profile_photo']) && !empty($_SESSION['user']['profile_photo'])
+                ? htmlspecialchars($_SESSION['user']['profile_photo'])
+                : '/images/user-profile/default-image.jpg'; ?>"
+        alt="Profile">
       <div id="sidebarAccountTooltip" class="tooltip" style="display: none;">
-      <p>
-  <?php 
-    echo isset($_SESSION['user']['first_name'], $_SESSION['user']['last_name']) 
-      ? htmlspecialchars($_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name']) 
-      : 'Unknown User'; 
-  ?>
-</p>
+        <p>
+          <?php
+          echo isset($_SESSION['user']['first_name'], $_SESSION['user']['last_name'])
+            ? htmlspecialchars($_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'])
+            : 'Unknown User';
+          ?>
+        </p>
 
         <a class="out" tabindex="1" href="/logout" type="button">Logout</a>
       </div>
@@ -83,4 +84,3 @@
   </div>
 
 </div>
-

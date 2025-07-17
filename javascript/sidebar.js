@@ -1,6 +1,5 @@
 class Sidebar extends HTMLElement {
   connectedCallback() {
-
     const existingicon = document.querySelector("link[rel~='icon']");
     if (!existingicon) {
       const link = document.createElement("link");
