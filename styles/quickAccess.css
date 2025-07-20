@@ -1,3 +1,4 @@
+
 .wrapMain .quickAccess {
   margin-top: 1rem;
   display: flex;
@@ -21,4 +22,35 @@
 .wrapMain .quickAccess .access:hover {
   background-color: hsl(from var(--accentColor) h s l / 0.3);
   scale: 1.01;
+}
+
+
+@media (max-width: 768px) {
+  .wrapMain .quickAccess {
+    gap: 0.8rem;
+  }
+  
+  .wrapMain .quickAccess .access {
+    flex: 1 0 calc(50% - 1rem); 
+    min-width: 0; 
+    justify-content: center;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapMain .quickAccess {
+    gap: 0.6rem;
+  }
+  
+  .wrapMain .quickAccess .access {
+    flex: 1 0 100%; 
+    text-align: center;
+  }
+  
+
+  .wrapMain .quickAccess .access {
+    flex-direction: column;
+    gap: 0.3rem;
+  }
 }

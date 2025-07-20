@@ -1,11 +1,7 @@
 <?php
-require __DIR__ . '/../../dashboard/html/addEmployee.php';
-require __DIR__ . '/../../dashboard/html/addPosition.php';
-require __DIR__ . '/../../dashboard/html/addOffice.php';
-require __DIR__ . '/../function/fetchOff.php';
+require  __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/editOffFunction.php';
-require_once __DIR__ . '/../../../config/authProtect.php';
-require __DIR__ . '/../../settings/settings.php';
+
 ?>
 
 <!DOCTYPE html>
@@ -16,7 +12,6 @@ require __DIR__ . '/../../settings/settings.php';
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DIS-Office</title>
   <link rel="stylesheet" href="/styles/office.css" />
-
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -29,7 +24,13 @@ require __DIR__ . '/../../settings/settings.php';
     <div class="con">
       <h3>Office</h3>
 
-      <?php require __DIR__ . '/../../quick-access/access.php'; ?>
+      <?php 
+      
+      require __DIR__ . '/../../quick-access/access.php'; 
+      require __DIR__ . '/../function/fetchOff.php';
+      
+      ?>
+
 
       <div class="tableContainer">
         <div class="searchContainer">
@@ -50,7 +51,8 @@ require __DIR__ . '/../../settings/settings.php';
             <?php if (!empty($offices)): ?>
               <?php foreach ($offices as $index => $office): ?>
                 <tr>
-                  <td><?= $index + 1 ?></td>
+                <td><?= ($page - 1) * $limit + $index + 1 ?></td>
+
                   <td><?= htmlspecialchars($office['office_name']) ?></td>
                   <td><?= htmlspecialchars($office['office_location']) ?: '<em>No description</em>' ?></td>
                   <td><?= isset($office['created_at']) ? date("M-d-Y", strtotime($office['created_at'])) : 'N/A' ?></td>
@@ -80,16 +82,54 @@ require __DIR__ . '/../../settings/settings.php';
         </table>
 
         <?php if ($totalPages > 1): ?>
-          <div class="pagination">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-              <a
-                href="?page=<?= $i ?>"
-                class="<?= ($i == $page) ? 'active' : '' ?>">
-                <?= $i ?>
-              </a>
-            <?php endfor; ?>
-          </div>
-        <?php endif; ?>
+  <div class="pagination">
+    <?php if ($page > 1): ?>
+      <a href="?page=<?= $page - 1 ?>" class="prev-next" title="Previous">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    <?php else: ?>
+      <a class="prev-next disabled" title="Previous">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    <?php endif; ?>
+
+    <?php 
+   
+    if ($page > 3): ?>
+      <a href="?page=1">1</a>
+      <?php if ($page > 4): ?>
+        <span class="ellipsis">...</span>
+      <?php endif; ?>
+    <?php endif; ?>
+
+    <?php 
+    
+    for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
+      <a href="?page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
+        <?= $i ?>
+      </a>
+    <?php endfor; ?>
+
+    <?php 
+
+    if ($page < $totalPages - 2): ?>
+      <?php if ($page < $totalPages - 3): ?>
+        <span class="ellipsis">...</span>
+      <?php endif; ?>
+      <a href="?page=<?= $totalPages ?>"><?= $totalPages ?></a>
+    <?php endif; ?>
+
+    <?php if ($page < $totalPages): ?>
+      <a href="?page=<?= $page + 1 ?>" class="prev-next" title="Next">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    <?php else: ?>
+      <a class="prev-next disabled" title="Next">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
 
       </div>
 

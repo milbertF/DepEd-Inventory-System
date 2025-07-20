@@ -1,13 +1,5 @@
 <?php
-
-
-require __DIR__ . '/../../dashboard/html/addEmployee.php';
-require  __DIR__ . '/../../dashboard/html/addPosition.php';
-require __DIR__ . '/../../dashboard/html/addOffice.php';
-require __DIR__ . '/../../settings/settings.php';
-
-
-require_once __DIR__ . '/../../../config/authProtect.php';
+require  __DIR__ . '/../../header/html/header.php';
 ?>
 
 

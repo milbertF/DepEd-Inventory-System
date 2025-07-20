@@ -1,14 +1,11 @@
 <?php
 
 
-require __DIR__ . '/../../dashboard/html/addEmployee.php';
-require  __DIR__ . '/../../dashboard/html/addPosition.php';
-require __DIR__ . '/../../dashboard/html/addOffice.php';
-require  __DIR__ . '/../function/fetchPos.php';
+require  __DIR__ . '/../../header/html/header.php';
+
 require  __DIR__ . '/../function/editPosFunction.php';
 require  __DIR__ . '/../function/deletePos.php';
-require_once __DIR__ . '/../../../config/authProtect.php';
-require __DIR__ . '/../../settings/settings.php';
+
 ?>
 
 
@@ -22,6 +19,9 @@ require __DIR__ . '/../../settings/settings.php';
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DIS-Position</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
 
   <link rel="stylesheet" href="/styles/position.css">
 </head>
@@ -44,7 +44,14 @@ require __DIR__ . '/../../settings/settings.php';
 
 
 
-      <?php require __DIR__ . '/../../quick-access/access.php'; ?>
+      <?php require __DIR__ . '/../../quick-access/access.php'; 
+
+require  __DIR__ . '/../function/fetchPos.php';
+      
+      
+      
+      ?>
+      
       <div class="tableContainer">
 
         <div class="searchContainer">
@@ -65,7 +72,8 @@ require __DIR__ . '/../../settings/settings.php';
             <?php if (!empty($positions)): ?>
               <?php foreach ($positions as $index => $position): ?>
                 <tr>
-                  <td><?= $index + 1 ?></td>
+                <td><?= ($page - 1) * $limit + $index + 1 ?></td>
+
                   <td><?= htmlspecialchars($position['position_title']) ?></td>
                   <td><?= htmlspecialchars($position['position_description']) ?: '<em>No description</em>' ?></td>
                   <td><?= isset($position['created_at']) ? date("M-d-Y", strtotime($position['created_at'])) : 'N/A' ?></td>
@@ -95,16 +103,54 @@ require __DIR__ . '/../../settings/settings.php';
         </table>
 
         <?php if ($totalPages > 1): ?>
-          <div class="pagination">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-              <a
-                href="?page=<?= $i ?>"
-                class="<?= ($i == $page) ? 'active' : '' ?>">
-                <?= $i ?>
-              </a>
-            <?php endfor; ?>
-          </div>
-        <?php endif; ?>
+  <div class="pagination">
+    <?php if ($page > 1): ?>
+      <a href="?page=<?= $page - 1 ?>" class="prev-next" title="Previous">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    <?php else: ?>
+      <a class="prev-next disabled" title="Previous">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    <?php endif; ?>
+
+    <?php 
+    // Show first page and ellipsis if needed
+    if ($page > 3): ?>
+      <a href="?page=1">1</a>
+      <?php if ($page > 4): ?>
+        <span class="ellipsis">...</span>
+      <?php endif; ?>
+    <?php endif; ?>
+
+    <?php 
+    // Show page numbers around current page
+    for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
+      <a href="?page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
+        <?= $i ?>
+      </a>
+    <?php endfor; ?>
+
+    <?php 
+    // Show last page and ellipsis if needed
+    if ($page < $totalPages - 2): ?>
+      <?php if ($page < $totalPages - 3): ?>
+        <span class="ellipsis">...</span>
+      <?php endif; ?>
+      <a href="?page=<?= $totalPages ?>"><?= $totalPages ?></a>
+    <?php endif; ?>
+
+    <?php if ($page < $totalPages): ?>
+      <a href="?page=<?= $page + 1 ?>" class="prev-next" title="Next">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    <?php else: ?>
+      <a class="prev-next disabled" title="Next">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
 
       </div>
 

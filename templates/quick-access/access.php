@@ -1,5 +1,13 @@
+
+                    
+
 <div class="quickAccess">
-  <div class="access" title="Add Items">
+
+<div class="access" title="Add Item Category" onclick="addCategory()">
+    <i class="fas fa-tags"></i>
+    <p>Add Category</p>
+  </div>
+  <div class="access" title="Add Items" onclick="addItem()">
     <i class="fas fa-list"></i>
     <p>Add Items</p>
   </div>
@@ -15,4 +23,5 @@
     <i class="fa-solid fa-building"></i>
     <p>Add Office</p>
   </div>
+  
 </div>

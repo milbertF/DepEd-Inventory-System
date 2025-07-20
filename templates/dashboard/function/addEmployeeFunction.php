@@ -4,6 +4,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_employee'])) {
     require_once __DIR__ . '/../../../config/security.php';
     require_once __DIR__ . '/../../../config/encryption.php';
     require_once  __DIR__ . '/../../../sweetalert/sweetalert.php';
+
+
+    
     function generateUniqueID($conn, $table, $column) {
         do {
             $id = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);

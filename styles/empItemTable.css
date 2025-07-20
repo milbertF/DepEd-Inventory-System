@@ -1,14 +1,4 @@
-
-.officeTable,
-.positionTable {
-  width: 100%;
-  border-collapse: collapse; 
-  font-size: 0.875rem;
-  line-height: 1.5;
-  background-color: white;
-}
-
-
+/* Table Container - Universal Styles */
 .tableContainer {
   margin-top: 1.5rem;
   overflow-x: auto;
@@ -19,16 +9,25 @@
   border: 1px solid #f0f0f0;
 }
 
+/* Base Table Styles */
+.employeeTable,
+.itemTable {
+  width: 100%;
+  border-collapse: collapse; /* Changed from separate to collapse for cleaner borders */
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
 
-.officeTable thead,
-.positionTable thead {
+/* Table Header Styles */
+.employeeTable thead,
+.itemTable thead {
   background-color: #f8fafc;
   position: sticky;
   top: 0;
 }
 
-.officeTable th,
-.positionTable th {
+.employeeTable th,
+.itemTable th {
   padding: 0.875rem 1rem;
   text-align: left;
   font-weight: 600;
@@ -37,9 +36,9 @@
   white-space: nowrap;
 }
 
-
-.officeTable td,
-.positionTable td {
+/* Table Data Cells */
+.employeeTable td,
+.itemTable td {
   padding: 0.875rem 1rem;
   border-bottom: 1px solid #f1f5f9;
   color: #475569;
@@ -47,67 +46,60 @@
   text-align: left;
 }
 
-
-.officeTable tbody tr:nth-child(odd),
-.positionTable tbody tr:nth-child(odd) {
-  background-color: #ffffff;
+/* Zebra Striping with Better Contrast */
+.employeeTable tbody tr:nth-child(odd),
+.itemTable tbody tr:nth-child(odd) {
+  background-color: #ffffff; /* Pure white for odd rows */
 }
 
-.officeTable tbody tr:nth-child(even),
-.positionTable tbody tr:nth-child(even) {
-  background-color: #f8fafc;
+.employeeTable tbody tr:nth-child(even),
+.itemTable tbody tr:nth-child(even) {
+  background-color: #f8fafc; /* Slightly darker for even rows */
 }
 
-
-.officeTable tbody tr:hover,
-.positionTable tbody tr:hover {
+/* Hover Effect */
+.employeeTable tbody tr:hover,
+.itemTable tbody tr:hover {
   background-color: #f1f5f9 !important;
 }
 
-
-
-.officeTable th:nth-child(1),
-.officeTable td:nth-child(1),
-.positionTable th:nth-child(1),
-.positionTable td:nth-child(1) {
-  width: 5%;
-  text-align: center;
+/* Employee Table Specific Styles */
+.employeeTable {
+  min-width: 1000px;
 }
 
-
-.officeTable th:nth-child(2),
-.officeTable td:nth-child(2),
-.positionTable th:nth-child(2),
-.positionTable td:nth-child(2) {
-  width: 25%;
-}
-
-
-.officeTable th:nth-child(3),
-.officeTable td:nth-child(3),
-.positionTable th:nth-child(3),
-.positionTable td:nth-child(3) {
-  width: 30%;
-}
-
-
-.officeTable th:nth-child(4),
-.officeTable td:nth-child(4),
-.positionTable th:nth-child(4),
-.positionTable td:nth-child(4) {
-  width: 20%;
-}
-
-
-.officeTable th:nth-child(5),
-.officeTable td:nth-child(5),
-.positionTable th:nth-child(5),
-.positionTable td:nth-child(5) {
-  width: 20%;
+.employeeTable th:nth-child(1) { width: 4%; }
+.employeeTable th:nth-child(2) { width: 8%; }
+.employeeTable th:nth-child(3) { width: 18%; }
+.employeeTable th:nth-child(4) { width: 12%; }
+.employeeTable th:nth-child(5) { width: 14%; }
+.employeeTable th:nth-child(6) { width: 12%; }
+.employeeTable th:nth-child(9) { width: 12%; }
+.employeeTable th:nth-child(10) { 
+  width: 16%;
   min-width: 180px;
 }
 
+/* Item Table Specific Styles */
+.itemTable {
+  min-width: 600px;
+}
 
+.itemTable th:nth-child(1) { width: 10%; }
+.itemTable th:nth-child(2) { width: 50%; }
+.itemTable th:nth-child(3) { width: 20%; }
+.itemTable th:nth-child(4) { 
+  width: 20%; 
+  min-width: 180px;
+}
+
+/* Action Buttons Container */
+.employeeTable td:last-child,
+.itemTable td:last-child {
+  white-space: nowrap;
+}
+
+/* Action Buttons - Improved Alignment */
 .action-btn {
   border: none;
   padding: 0.45rem 0.65rem;
@@ -117,7 +109,7 @@
   font-size: 0.8rem;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center; /* Center icons and text */
   transition: all 0.2s ease;
   background-color: white;
   color: #64748b;
@@ -129,7 +121,12 @@
 .action-btn i {
   margin-right: 0.15rem;
   font-size: 0.85rem;
-  pointer-events: none;
+}
+
+/* Button Variations */
+.action-btn.view {
+  color: #3b82f6;
+  border-color: #bfdbfe;
 }
 
 .action-btn.edit {
@@ -137,17 +134,9 @@
   border-color: #bfdbfe;
 }
 
-.action-btn.edit:hover {
-  background-color: #eff6ff;
-}
-
 .action-btn.delete {
   color: #ef4444;
   border-color: #fecaca;
-}
-
-.action-btn.delete:hover {
-  background-color: #fef2f2;
 }
 
 .action-btn:hover {
@@ -156,8 +145,27 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-#searchOffice,
-#searchPosition {
+
+.employee-photo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin: 0 auto;
+}
+
+
+.searchContainer {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+#searchEmployee,
+#searchCategory {
   padding: 0.6rem 1rem;
   width: 100%;
   max-width: 300px;
@@ -166,11 +174,10 @@
   font-size: 0.9rem;
   transition: all 0.2s ease;
   background-color: #f8fafc;
-  margin-bottom: 1.5rem;
 }
 
-#searchOffice:focus,
-#searchPosition:focus {
+#searchEmployee:focus,
+#searchCategory:focus {
   border-color: #93c5fd;
   outline: 0;
   box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.2);
@@ -255,22 +262,37 @@
 }
 
 
+.table-empty-state {
+  padding: 2.5rem;
+  text-align: left;
+  color: #94a3b8;
+  border-radius: 0.5rem;
+  background-color: #f8fafc;
+  margin: 1rem 0;
+}
+
+.table-empty-state i {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #e2e8f0;
+}
+
+
 @media (max-width: 768px) {
   .tableContainer {
     padding: 1rem;
     border-radius: 0.5rem;
   }
   
-  .officeTable,
-  .positionTable {
+  .employeeTable,
+  .itemTable {
     min-width: 100%;
-    font-size: 0.85rem;
   }
   
-  .officeTable th,
-  .officeTable td,
-  .positionTable th,
-  .positionTable td {
+  .employeeTable th,
+  .employeeTable td,
+  .itemTable th,
+  .itemTable td {
     padding: 0.75rem;
   }
   
@@ -285,8 +307,17 @@
     font-size: 0.8rem;
   }
   
-  #searchOffice,
-  #searchPosition {
+  .action-btn span {
+    display: none;
+  }
+  
+  .employee-photo {
+    width: 36px;
+    height: 36px;
+  }
+  
+  #searchEmployee,
+  #searchCategory {
     max-width: 100%;
   }
 }

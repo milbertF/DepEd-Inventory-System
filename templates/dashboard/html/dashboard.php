@@ -1,11 +1,6 @@
 <?php
+require  __DIR__ . '/../../header/html/header.php';
 
-require __DIR__ . '/addEmployee.php';
-require  __DIR__ . '/addPosition.php';
-require __DIR__ . '/addOffice.php';
-require __DIR__ . '/../../settings/settings.php';
-
-require_once __DIR__ . '/../../../config/authProtect.php';
 ?>
 
 

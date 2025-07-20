@@ -1,9 +1,7 @@
 <?php
 
 
-require __DIR__ . '/../../dashboard/html/addEmployee.php';
-require  __DIR__ . '/../../dashboard/html/addPosition.php';
-require __DIR__ . '/../../dashboard/html/addOffice.php';
+require  __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/fetchEmp.php';
 require_once __DIR__ . '/../../../config/authProtect.php';
 require  __DIR__ . '/../function/editEmpFunction.php';
@@ -22,6 +20,7 @@ require __DIR__ . '/../../settings/settings.php';
   <title>DIS-Employee</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="/styles/employee.css">
+  <link rel="stylesheet" href="/styles/empItemTable.css">
   <link rel="stylesheet" href="/styles/empModal.css">
   <link rel="stylesheet" href="/styles/addEmployee.css">
 
@@ -63,7 +62,8 @@ require __DIR__ . '/../../settings/settings.php';
             <?php if (!empty($employees)): ?>
               <?php foreach ($employees as $index => $employee): ?>
                 <tr>
-                  <td><?= $start + $index + 1 ?></td>
+                <td><?= ($page - 1) * $limit + $index + 1 ?></td>
+
 
 
                   <td>
@@ -131,18 +131,55 @@ require __DIR__ . '/../../settings/settings.php';
             <?php endif; ?>
           </tbody>
         </table>
-
         <?php if ($totalPages > 1): ?>
-          <div class="pagination">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-              <a
-                href="?page=<?= $i ?>"
-                class="<?= ($i == $page) ? 'active' : '' ?>">
-                <?= $i ?>
-              </a>
-            <?php endfor; ?>
-          </div>
-        <?php endif; ?>
+  <div class="pagination">
+    <?php if ($page > 1): ?>
+      <a href="?page=<?= $page - 1 ?>" class="prev-next" title="Previous">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    <?php else: ?>
+      <a class="prev-next disabled" title="Previous">
+        <i class="fas fa-chevron-left"></i>
+      </a>
+    <?php endif; ?>
+
+    <?php 
+
+    if ($page > 3): ?>
+      <a href="?page=1">1</a>
+      <?php if ($page > 4): ?>
+        <span class="ellipsis">...</span>
+      <?php endif; ?>
+    <?php endif; ?>
+
+    <?php 
+    
+    for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
+      <a href="?page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
+        <?= $i ?>
+      </a>
+    <?php endfor; ?>
+
+    <?php 
+   
+    if ($page < $totalPages - 2): ?>
+      <?php if ($page < $totalPages - 3): ?>
+        <span class="ellipsis">...</span>
+      <?php endif; ?>
+      <a href="?page=<?= $totalPages ?>"><?= $totalPages ?></a>
+    <?php endif; ?>
+
+    <?php if ($page < $totalPages): ?>
+      <a href="?page=<?= $page + 1 ?>" class="prev-next" title="Next">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    <?php else: ?>
+      <a class="prev-next disabled" title="Next">
+        <i class="fas fa-chevron-right"></i>
+      </a>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
 
       </div>
 

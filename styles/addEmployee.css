@@ -80,8 +80,9 @@
   color: #3498db;
 }
 
+/* Take note etong aprt na to lahat ng forms natin connected dito sa addEmployee */
 .addEmployee {
-  position: absolute;
+  position: fixed;
   z-index: 100;
   width: 100%;
   height: 100%;
