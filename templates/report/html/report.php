@@ -12,7 +12,7 @@ require  __DIR__ . '/../../header/html/header.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIS-Report</title>
+    <title>BCSI-Report</title>
     <link rel="stylesheet" href="/styles/report.css">
 </head>
 

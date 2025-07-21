@@ -24,8 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
     $quantity = intval($_POST['quantity']);
     $unit = trim($_POST['unit']);
     $unit_cost = floatval($_POST['unit_cost']);
+    $date_acquired = !empty($_POST['date_acquired']) ? $_POST['date_acquired'] : null;
 
-    // Upload item image
+ 
     $photo_path = '';
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $photo_tmp = $_FILES['photo']['tmp_name'];
@@ -52,17 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         }
     }
 
-
     $stmt = $conn->prepare("
         INSERT INTO deped_inventory_items (
             item_id, item_photo, item_name, category_id, description,
-            brand, model, serial_number, quantity, unit, unit_cost
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            brand, model, serial_number, quantity, unit, unit_cost, date_acquired
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
     if ($stmt) {
         $stmt->bind_param(
-            "sssssssssds",
+            "sssssssssdds",
             $item_id,
             $photo_path,
             $item_name,
@@ -73,7 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
             $serial_number,
             $quantity,
             $unit,
-            $unit_cost
+            $unit_cost,
+            $date_acquired
         );
 
         if ($stmt->execute()) {

@@ -1,9 +1,16 @@
+document.addEventListener('DOMContentLoaded', function () {
+  const tableBody = document.querySelector('.officeTable tbody');
+  const searchInput = document.getElementById('searchOffice');
+  let debounceTimer;
 
-document.querySelectorAll('.action-btn.delete').forEach(button => {
-    button.addEventListener('click', function () {
-      const officeId = this.getAttribute('data-id');
-      const officeName = this.getAttribute('data-title');
-  
+  tableBody.addEventListener('click', function (e) {
+    const deleteBtn = e.target.closest('.action-btn.delete');
+    const editBtn = e.target.closest('.action-btn.edit');
+
+    if (deleteBtn) {
+      const officeId = deleteBtn.getAttribute('data-id');
+      const officeName = deleteBtn.getAttribute('data-title');
+
       Swal.fire({
         title: 'Are you sure?',
         text: `You are about to delete "${officeName}".`,
@@ -19,9 +26,35 @@ document.querySelectorAll('.action-btn.delete').forEach(button => {
           window.location.href = `/templates/office/function/deleteOff.php?id=${officeId}`;
         }
       });
-    });
+    }
+
+    if (editBtn) {
+      const officeId = editBtn.getAttribute('data-id');
+      const name = editBtn.getAttribute('data-title');
+      const description = editBtn.getAttribute('data-description');
+
+      document.getElementById('edit-office-id').value = officeId;
+      document.getElementById('edit-office-name').value = name;
+      document.getElementById('edit-office-description').value = description;
+
+      document.getElementById('editOfficeModal').style.display = 'flex';
+    }
   });
-  
+
+  searchInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const searchTerm = searchInput.value.trim();
+      const searchUrl = `/templates/office/function/searchOffice.php?search=${encodeURIComponent(searchTerm)}`;
+
+      fetch(searchUrl)
+        .then(response => response.text())
+        .then(html => {
+          tableBody.innerHTML = html;
+        })
+        .catch(error => console.error('Search failed:', error));
+    }, 400);
+  });
 
   const deletedOfficeName = sessionStorage.getItem('deletedOfficeName');
   if (deletedOfficeName) {
@@ -36,43 +69,12 @@ document.querySelectorAll('.action-btn.delete').forEach(button => {
       url.searchParams.delete('id');
       window.history.replaceState({}, document.title, url.pathname);
     });
-  
+
     sessionStorage.removeItem('deletedOfficeName');
   }
-  
+});
 
-  document.querySelectorAll('.action-btn.edit').forEach(button => {
-    button.addEventListener('click', function () {
-      const officeId = this.getAttribute('data-id');
-      const name = this.getAttribute('data-title');
-      const location = this.getAttribute('data-description');
-  
-      document.getElementById('edit-office-id').value = officeId;
-      document.getElementById('edit-office-name').value = name;
-      document.getElementById('edit-office-location').value = location;
-  
-      document.getElementById('editOfficeModal').style.display = 'flex';
-    });
-  });
-  
-  function closeEditModal() {
-    document.getElementById('editOfficeModal').style.display = 'none';
-  }
-  
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('searchOffice');
-    const tableRows = document.querySelectorAll('.officeTable tbody tr');
-  
-    searchInput.addEventListener('input', function () {
-      const query = this.value.toLowerCase();
-  
-      tableRows.forEach(row => {
-        const name = row.children[1].textContent.toLowerCase();
-        const location = row.children[2].textContent.toLowerCase();
-        const matches = name.includes(query) || location.includes(query);
-        row.style.display = matches ? '' : 'none';
-      });
-    });
-  });
-  
+// Close edit modal
+function closeEditModal() {
+  document.getElementById('editOfficeModal').style.display = 'none';
+}

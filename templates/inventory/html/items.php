@@ -11,7 +11,7 @@ require __DIR__ . '/../function/fetchCategory.php';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DIS-Item</title>
+    <title>BCSI-Item</title>
     <link rel="stylesheet" href="/styles/items.css" />
  
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -28,16 +28,17 @@ require __DIR__ . '/../function/fetchCategory.php';
             <?php require __DIR__ . '/../../quick-access/access.php'; ?>
 
             <div class="tableContainer">
-                <div class="searchContainer">
-                    <input type="text" id="searchCategory" placeholder="Search category.." />
-                </div>
+            <div class="searchContainer">
+          <input type="text" id="searchCategory" placeholder="Search Categorys..." 
+                 value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" />
+        </div>
 
                 <table class="itemTable">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Category Name</th>
-                            <th>Date Added</th>
+                       
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -48,22 +49,21 @@ require __DIR__ . '/../function/fetchCategory.php';
                                 <td><?= ($page - 1) * $limit + $index + 1 ?></td>
 
                                     <td><?= htmlspecialchars($category['category_name']) ?></td>
-                                    <td>
-                                        <?= isset($category['created_at']) ? date("M-d-Y", strtotime($category['created_at'])) : 'N/A' ?>
-                                    </td>
+                                   
                                     <td>
                                     <button class="action-btn view" title="View Items"
   onclick="window.location.href='/itemsByCategory?category_id=<?= $category['category_id'] ?>'">
   <i class="fas fa-eye"></i>
 </button>
 
-                                        <button
+<button
   class="action-btn edit"
   data-id="<?= $category['category_id'] ?>"
-  data-title="<?= htmlspecialchars($category['category_name']) ?>"
+  data-name="<?= htmlspecialchars($category['category_name']) ?>"
 >
   <i class="fas fa-edit"></i>
 </button>
+
 
 
                                         <button class="action-btn delete" title="Delete"
@@ -83,57 +83,60 @@ require __DIR__ . '/../function/fetchCategory.php';
                 </table>
 
                 <?php if ($totalPages > 1): ?>
-  <div class="pagination">
-    <?php if ($page > 1): ?>
-      <a href="?page=<?= $page - 1 ?>" class="prev-next" title="Previous">
-        <i class="fas fa-chevron-left"></i>
-      </a>
-    <?php else: ?>
-      <a class="prev-next disabled" title="Previous">
-        <i class="fas fa-chevron-left"></i>
-      </a>
-    <?php endif; ?>
+          <div class="pagination">
+            <?php 
+            // Build base URL with search parameter if it exists
+            $baseUrl = '?';
+            if (isset($_GET['search'])) {
 
-    <?php 
-    
-    if ($page > 3): ?>
-      <a href="?page=1">1</a>
-      <?php if ($page > 4): ?>
-        <span class="ellipsis">...</span>
-      <?php endif; ?>
-    <?php endif; ?>
+              $baseUrl .= 'search=' . urlencode($_GET['search']) . '&';
+            }
+            ?>
+            
+            <?php if ($page > 1): ?>
+              <a href="<?= $baseUrl ?>page=<?= $page - 1 ?>" class="prev-next" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            <?php else: ?>
+              <a class="prev-next disabled" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            <?php endif; ?>
 
-    <?php 
+            <?php if ($page > 3): ?>
+              <a href="<?= $baseUrl ?>page=1">1</a>
+              <?php if ($page > 4): ?>
+                <span class="ellipsis">...</span>
+              <?php endif; ?>
+            <?php endif; ?>
 
-    for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
-      <a href="?page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
-        <?= $i ?>
-      </a>
-    <?php endfor; ?>
+            <?php for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
+              <a href="<?= $baseUrl ?>page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
+                <?= $i ?>
+              </a>
+            <?php endfor; ?>
 
-    <?php 
+            <?php if ($page < $totalPages - 2): ?>
+              <?php if ($page < $totalPages - 3): ?>
+                <span class="ellipsis">...</span>
+              <?php endif; ?>
+              <a href="<?= $baseUrl ?>page=<?= $totalPages ?>"><?= $totalPages ?></a>
+            <?php endif; ?>
 
-    if ($page < $totalPages - 2): ?>
-      <?php if ($page < $totalPages - 3): ?>
-        <span class="ellipsis">...</span>
-      <?php endif; ?>
-      <a href="?page=<?= $totalPages ?>"><?= $totalPages ?></a>
-    <?php endif; ?>
-
-    <?php if ($page < $totalPages): ?>
-      <a href="?page=<?= $page + 1 ?>" class="prev-next" title="Next">
-        <i class="fas fa-chevron-right"></i>
-      </a>
-    <?php else: ?>
-      <a class="prev-next disabled" title="Next">
-        <i class="fas fa-chevron-right"></i>
-      </a>
-    <?php endif; ?>
-  </div>
-<?php endif; ?>
-            </div>
-        </div>
+            <?php if ($page < $totalPages): ?>
+              <a href="<?= $baseUrl ?>page=<?= $page + 1 ?>" class="prev-next" title="Next">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            <?php else: ?>
+              <a class="prev-next disabled" title="Next">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
+  </div>
 
     <script src="/javascript/header.js"></script>
     <script src="/javascript/sidebar.js"></script>

@@ -20,7 +20,7 @@
           <div class="inputs">
             <input type="text" id="edit-category-name" name="category_name" placeholder="Enter new category name" required />
           </div>
-        </div>
+        </div> 
 
         <div class="btnSave">
           <button type="submit" name="submit_edit_category" id="editCategoryBtn">Save Changes</button>

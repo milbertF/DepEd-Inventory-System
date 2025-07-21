@@ -1,35 +1,75 @@
+document.addEventListener('DOMContentLoaded', function () {
+  const tableBody = document.querySelector('.itemTable tbody');
+  const searchInput = document.getElementById('searchCategory');
+  const editModal = document.getElementById('editCategory');
+  const editCategoryIdInput = document.getElementById('edit-category-id');
+  const editCategoryNameInput = document.getElementById('edit-category-name');
+  let debounceTimer;
+
+  if (tableBody) {
+    tableBody.addEventListener('click', function (e) {
+      const deleteBtn = e.target.closest('.action-btn.delete');
+      const editBtn = e.target.closest('.action-btn.edit');
 
 
-  document.querySelectorAll('.action-btn.delete').forEach(button => {
-    button.addEventListener('click', function () {
-      const categoryId = this.getAttribute('data-id');
-      const categoryName = this.getAttribute('data-name');
+      if (deleteBtn) {
+        const categoryId = deleteBtn.getAttribute('data-id');
+        const categoryName = deleteBtn.getAttribute('data-name');
 
-      Swal.fire({
-        title: 'Are you sure?',
-        text: `You are about to delete "${categoryName}".`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!',
-        cancelButtonText: 'Cancel'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          sessionStorage.setItem('deletedCategoryName', categoryName);
-          window.location.href = `/templates/inventory/function/deleteCategory.php?id=${categoryId}`;
-        }
-      });
+        Swal.fire({
+          title: 'Are you sure?',
+          text: `You are about to delete "${categoryName}".`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Yes, delete it!',
+          cancelButtonText: 'Cancel'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            sessionStorage.setItem('deletedCategoryName', categoryName);
+            window.location.href = `/templates/inventory/function/deleteCategory.php?id=${categoryId}`;
+          }
+        });
+      }
+
+   
+      if (editBtn && editModal && editCategoryIdInput && editCategoryNameInput) {
+        const categoryId = editBtn.getAttribute('data-id');
+        const categoryName = editBtn.getAttribute('data-name');
+
+        editCategoryIdInput.value = categoryId;
+        editCategoryNameInput.value = categoryName;
+        editModal.style.display = 'flex';
+      }
     });
-  });
+  }
 
 
-  const deletedCategoryName = sessionStorage.getItem('deletedCategoryName');
-  if (deletedCategoryName) {
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const searchTerm = searchInput.value.trim();
+        const searchUrl = `/templates/inventory/function/searchCategory.php?search=${encodeURIComponent(searchTerm)}`;
+
+        fetch(searchUrl)
+          .then(response => response.text())
+          .then(html => {
+            tableBody.innerHTML = html;
+          })
+          .catch(error => console.error('Search failed:', error));
+      }, 400);
+    });
+  }
+
+
+  const deletedName = sessionStorage.getItem('deletedCategoryName');
+  if (deletedName) {
     Swal.fire({
       icon: 'success',
       title: 'Deleted!',
-      html: `Category <b>${deletedCategoryName}</b> was deleted successfully.`,
+      html: `Category <b>${deletedName}</b> was deleted successfully.`,
       confirmButtonColor: '#3085d6'
     }).then(() => {
       const url = new URL(window.location.href);
@@ -40,43 +80,12 @@
 
     sessionStorage.removeItem('deletedCategoryName');
   }
+});
 
 
-
-
-document.querySelectorAll('.action-btn.edit').forEach(button => {
-    button.addEventListener('click', function () {
-      const categoryId = this.getAttribute('data-id');
-      const categoryTitle = this.getAttribute('data-title');
-  
-      document.getElementById('edit-category-id').value = categoryId;
-      document.getElementById('edit-category-name').value = categoryTitle;
-  
-      document.getElementById('editCategory').style.display = 'flex';
-    });
-  });
-  
-  
-
-  function escEditCategory() {
-    document.getElementById('editCategory').style.display = 'none';
+function escEditCategory() {
+  const editModal = document.getElementById('editCategory');
+  if (editModal) {
+    editModal.style.display = 'none';
   }
-  
-
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('searchCategory');
-    const tableRows = document.querySelectorAll('.itemTable tbody tr');
-  
-    searchInput.addEventListener('input', function () {
-      const query = this.value.toLowerCase();
-  
-      tableRows.forEach(row => {
-        const categoryName = row.children[1]?.textContent.toLowerCase() || '';
-        const dateAdded = row.children[2]?.textContent.toLowerCase() || '';
-        const matches = categoryName.includes(query) || dateAdded.includes(query);
-        row.style.display = matches ? '' : 'none';
-      });
-    });
-  });
-  
+}

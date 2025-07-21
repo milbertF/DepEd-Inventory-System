@@ -10,7 +10,7 @@ require __DIR__ . '/../function/editOffFunction.php';
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DIS-Office</title>
+  <title>BCSI-Office</title>
   <link rel="stylesheet" href="/styles/office.css" />
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -32,9 +32,10 @@ require __DIR__ . '/../function/editOffFunction.php';
       ?>
 
 
-      <div class="tableContainer">
+<div class="tableContainer">
         <div class="searchContainer">
-          <input type="text" id="searchOffice" placeholder="Search offices..." />
+          <input type="text" id="searchOffice" placeholder="Search office..." 
+                 value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" />
         </div>
 
         <table class="officeTable">
@@ -42,8 +43,7 @@ require __DIR__ . '/../function/editOffFunction.php';
             <tr>
               <th>#</th>
               <th>Office Name</th>
-              <th>Location</th>
-              <th>Date Added</th>
+              <th>Description</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -54,14 +54,14 @@ require __DIR__ . '/../function/editOffFunction.php';
                 <td><?= ($page - 1) * $limit + $index + 1 ?></td>
 
                   <td><?= htmlspecialchars($office['office_name']) ?></td>
-                  <td><?= htmlspecialchars($office['office_location']) ?: '<em>No description</em>' ?></td>
-                  <td><?= isset($office['created_at']) ? date("M-d-Y", strtotime($office['created_at'])) : 'N/A' ?></td>
+                  <td><?= htmlspecialchars($office['office_description']) ?: '<em>No description</em>' ?></td>
+          
                   <td>
                     <button
                       class="action-btn edit"
                       data-id="<?= $office['office_id'] ?>"
                       data-title="<?= htmlspecialchars($office['office_name']) ?>"
-                      data-description="<?= htmlspecialchars($office['office_location']) ?>">
+                      data-description="<?= htmlspecialchars($office['office_description']) ?>">
                       <i class="fas fa-edit"></i>
                     </button>
 
@@ -82,57 +82,58 @@ require __DIR__ . '/../function/editOffFunction.php';
         </table>
 
         <?php if ($totalPages > 1): ?>
-  <div class="pagination">
-    <?php if ($page > 1): ?>
-      <a href="?page=<?= $page - 1 ?>" class="prev-next" title="Previous">
-        <i class="fas fa-chevron-left"></i>
-      </a>
-    <?php else: ?>
-      <a class="prev-next disabled" title="Previous">
-        <i class="fas fa-chevron-left"></i>
-      </a>
-    <?php endif; ?>
+          <div class="pagination">
+            <?php 
+            // Build base URL with search parameter if it exists
+            $baseUrl = '?';
+            if (isset($_GET['search'])) {
 
-    <?php 
-   
-    if ($page > 3): ?>
-      <a href="?page=1">1</a>
-      <?php if ($page > 4): ?>
-        <span class="ellipsis">...</span>
-      <?php endif; ?>
-    <?php endif; ?>
+              $baseUrl .= 'search=' . urlencode($_GET['search']) . '&';
+            }
+            ?>
+            
+            <?php if ($page > 1): ?>
+              <a href="<?= $baseUrl ?>page=<?= $page - 1 ?>" class="prev-next" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            <?php else: ?>
+              <a class="prev-next disabled" title="Previous">
+                <i class="fas fa-chevron-left"></i>
+              </a>
+            <?php endif; ?>
 
-    <?php 
-    
-    for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
-      <a href="?page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
-        <?= $i ?>
-      </a>
-    <?php endfor; ?>
+            <?php if ($page > 3): ?>
+              <a href="<?= $baseUrl ?>page=1">1</a>
+              <?php if ($page > 4): ?>
+                <span class="ellipsis">...</span>
+              <?php endif; ?>
+            <?php endif; ?>
 
-    <?php 
+            <?php for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
+              <a href="<?= $baseUrl ?>page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>">
+                <?= $i ?>
+              </a>
+            <?php endfor; ?>
 
-    if ($page < $totalPages - 2): ?>
-      <?php if ($page < $totalPages - 3): ?>
-        <span class="ellipsis">...</span>
-      <?php endif; ?>
-      <a href="?page=<?= $totalPages ?>"><?= $totalPages ?></a>
-    <?php endif; ?>
+            <?php if ($page < $totalPages - 2): ?>
+              <?php if ($page < $totalPages - 3): ?>
+                <span class="ellipsis">...</span>
+              <?php endif; ?>
+              <a href="<?= $baseUrl ?>page=<?= $totalPages ?>"><?= $totalPages ?></a>
+            <?php endif; ?>
 
-    <?php if ($page < $totalPages): ?>
-      <a href="?page=<?= $page + 1 ?>" class="prev-next" title="Next">
-        <i class="fas fa-chevron-right"></i>
-      </a>
-    <?php else: ?>
-      <a class="prev-next disabled" title="Next">
-        <i class="fas fa-chevron-right"></i>
-      </a>
-    <?php endif; ?>
-  </div>
-<?php endif; ?>
-
+            <?php if ($page < $totalPages): ?>
+              <a href="<?= $baseUrl ?>page=<?= $page + 1 ?>" class="prev-next" title="Next">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            <?php else: ?>
+              <a class="prev-next disabled" title="Next">
+                <i class="fas fa-chevron-right"></i>
+              </a>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
       </div>
-
     </div>
   </div>
 

@@ -29,7 +29,7 @@ if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $categories[] = [
             'category_id' => $row['category_id'] ?? '',
-            'category_name' => $row['category_name'] ?? '',
+            'category_name' => ucfirst($row['category_name'] ?? ''),
             'created_at' => $row['created_at'] ?? ''
         ];
     }

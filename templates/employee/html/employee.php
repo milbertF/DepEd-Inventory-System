@@ -17,7 +17,7 @@ require __DIR__ . '/../../settings/settings.php';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIS-Employee</title>
+  <title>BCSI-Employee</title>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <link rel="stylesheet" href="/styles/employee.css">
   <link rel="stylesheet" href="/styles/empItemTable.css">

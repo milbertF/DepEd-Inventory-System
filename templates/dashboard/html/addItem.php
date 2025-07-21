@@ -99,6 +99,14 @@ require __DIR__ . '/../function/addItemFunction.php';
       </div>
 
       <div class="inpart">
+  <label for="date-acquired">Date Acquired <span>*</span></label>
+  <div class="inputs">
+    <input type="date" id="date-acquired" name="date_acquired" />
+  </div>
+</div>
+
+
+      <div class="inpart">
         <label for="item-quantity">Quantity <span>*</span></label>
         <div class="inputs">
           <input type="number" id="item-quantity" name="quantity" min="1" required />
@@ -106,9 +114,9 @@ require __DIR__ . '/../function/addItemFunction.php';
       </div>
 
       <div class="inpart">
-        <label for="item-unit">Unit of Measurement <span>*</span></label>
+        <label for="item-unit">Unit of Measurement </label>
         <div class="inputs">
-          <input type="text" id="item-unit" name="unit" placeholder="e.g., pcs, boxes, sets" required />
+          <input type="text" id="item-unit" name="unit" placeholder="e.g., pcs, boxes, sets" />
         </div>
       </div>
 

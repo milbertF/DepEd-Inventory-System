@@ -45,9 +45,9 @@ require_once __DIR__ . '/../../../config/authProtect.php';
             </div>
 
             <div class="inpart">
-              <label for="office-location-0">Location (optional)</label>
+              <label for="office-description-0">Description(optional)</label>
               <div class="inputs">
-                <input type="text" id="office-location-0" name="offices[0][location]" placeholder="e.g., Building A, 2nd Floor" />
+                <input type="text" id="office-description-0" name="offices[0][description]" placeholder="Short Description" />
               </div>
             </div>
           </div>
