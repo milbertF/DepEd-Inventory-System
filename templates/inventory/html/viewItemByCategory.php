@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/fetchItemsByCategory.php';
+require __DIR__ . '/../function/editItemFunction.php';
 ?>
 
 <!DOCTYPE html>
@@ -14,23 +15,17 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
   <link rel="stylesheet" href="/styles/viewItemByCategoryTable.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <style>
-    /* Search and Filter Wrapper */
-    
-
-  
-
-    /* Filter Controls */
-   
- 
-
-
-  </style>
+                  
 </head>
 
 <body>
+<?php require __DIR__ . '/viewItemModal.php'; ?>
+<?php require __DIR__ . '/editItem.php'; ?>
+
   <div class="wrapMain">
+  <?php require __DIR__ . '/viewItemModal.php'; ?>
     <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
+    
     
     <div class="con">
       <h3>Items under category: <?= htmlspecialchars($category['category_name']) ?></h3>
@@ -133,6 +128,7 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
             <thead>
               <tr>
                 <th>#</th>
+                <th>Serial Number</th>
                 <th>Image</th>
                 <th>Item Name</th>
                 <th>Brand</th>
@@ -146,6 +142,8 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
               <?php foreach ($items as $index => $item): ?>
                 <tr>
                   <td><?= ($page - 1) * $limit + $index + 1 ?></td>
+                  <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
+
                   <td>
                     <img
                       src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>"
@@ -154,20 +152,60 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
                     />
                   </td>
                   <td><?= htmlspecialchars($item['item_name']) ?></td>
-                  <td><?= htmlspecialchars($item['brand']) ?></td>
-                  <td><?= htmlspecialchars($item['model']) ?></td>
+                  <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
+<td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
+
                   <td><?= htmlspecialchars($item['quantity']) ?></td>
                   <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
                   <td>
-                    <button class="action-btn view" title="View Items">
-                      <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="action-btn edit" title="Edit Item">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="action-btn delete" title="Delete Item">
-                      <i class="fas fa-trash-alt"></i>
-                    </button>
+                  <button class="action-btn view" title="View Item"
+  data-id="<?= $item['item_id'] ?>"
+  data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
+  data-category="<?= htmlspecialchars($category['category_name']) ?>"
+  data-description="<?= htmlspecialchars($item['description']) ?>"
+  data-name="<?= htmlspecialchars($item['item_name']) ?>"
+  data-brand="<?= htmlspecialchars($item['brand']) ?>"
+  data-model="<?= htmlspecialchars($item['model']) ?>"
+  data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
+  data-qty="<?= $item['quantity'] ?>"
+  data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
+  data-unit="<?= $item['unit'] ?>"
+  data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
+  data-totalcost="<?= $item['total_cost'] ?? 0 ?>"
+  data-created="<?= $item['created_at'] ?>"
+>
+  <i class="fas fa-eye"></i>
+  <span class="tooltip">View Item</span>
+</button>
+
+                    <button class="action-btn edit" title="Edit Item"
+        data-id="<?= $item['item_id'] ?>"
+        data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
+        data-category-id="<?= $item['category_id'] ?>" 
+        data-description="<?= $item['description'] ?>"
+        data-name="<?= $item['item_name'] ?>"
+        data-brand="<?= $item['brand'] ?>"
+        data-model="<?= $item['model'] ?>"
+        data-serial="<?= $item['serial_number'] ?>"
+        data-qty="<?= $item['quantity'] ?>"
+        data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
+
+        data-unit="<?= $item['unit'] ?>"
+        data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
+        data-totalcost="<?= $item['total_cost'] ?? 0 ?>">
+    <i class="fas fa-edit"></i>
+    <span class="tooltip">Edit Item</span>
+</button>
+
+
+                    <button class="action-btn delete"
+  data-id="<?= $item['item_id'] ?>"
+  data-name="<?= htmlspecialchars($item['item_name']) ?>">
+  <i class="fas fa-trash-alt"></i>
+  <span class="tooltip">Delete Item</span>
+</button>
+
+
                   </td>
                 </tr>
               <?php endforeach; ?>
@@ -220,8 +258,8 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
         <?php endif; ?>
         
         <div class="backBtnContainer">
-          <a href="/items" class="backBtn">
-            <i class="fas fa-arrow-left"></i> Back to Inventory
+          <a href="/inventory" class="backBtn">
+            <i class="fas fa-arrow-left"></i> Back to Category
           </a>
         </div>
       </div>
@@ -231,126 +269,8 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
   <script src="/javascript/header.js"></script>
   <script src="/javascript/sidebar.js"></script>
   <script src="/javascript/script.js"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-     
-      const brandToggle = document.getElementById("toggleBrandFilter");
-      const brandFilter = document.getElementById("brandFilterContainer");
-      
-      const qtyToggle = document.getElementById("toggleQtyFilter");
-      const qtyFilter = document.getElementById("quantityFilterContainer");
-      
-      const dateToggle = document.getElementById("toggleDateFilter");
-      const dateFilter = document.getElementById("dateFilterContainer");
-
- 
-      function closeAllFilters() {
-        brandFilter.classList.add("hidden");
-        qtyFilter.classList.add("hidden");
-        dateFilter.classList.add("hidden");
-      }
-
-     
-      brandToggle.addEventListener("click", function(e) {
-        e.stopPropagation();
-        if (brandFilter.classList.contains("hidden")) {
-          closeAllFilters();
-          brandFilter.classList.remove("hidden");
-        } else {
-          brandFilter.classList.add("hidden");
-        }
-      });
-
-      
-      qtyToggle.addEventListener("click", function(e) {
-        e.stopPropagation();
-        if (qtyFilter.classList.contains("hidden")) {
-          closeAllFilters();
-          qtyFilter.classList.remove("hidden");
-        } else {
-          qtyFilter.classList.add("hidden");
-        }
-      });
-
-   
-      dateToggle.addEventListener("click", function(e) {
-        e.stopPropagation();
-        if (dateFilter.classList.contains("hidden")) {
-          closeAllFilters();
-          dateFilter.classList.remove("hidden");
-        } else {
-          dateFilter.classList.add("hidden");
-        }
-      });
-
- 
-      document.addEventListener('click', function() {
-        closeAllFilters();
-      });
-
- 
-      [brandFilter, qtyFilter, dateFilter].forEach(filter => {
-        filter.addEventListener('click', function(e) {
-          e.stopPropagation();
-        });
-      });
+  <script src="/javascript/viewItemByCategory.js"></script>
 
 
-      document.getElementById("sortLowToHigh").addEventListener("click", function() {
-      
-        qtyFilter.classList.add("hidden");
-        console.log("Sorting Low to High");
-    
-      });
-
-      document.getElementById("sortHighToLow").addEventListener("click", function() {
- 
-        qtyFilter.classList.add("hidden");
-        console.log("Sorting High to Low");
-    
-      });
-
-      document.getElementById("showOutOfStock").addEventListener("click", function() {
-       
-        qtyFilter.classList.add("hidden");
-        console.log("Showing Out of Stock items");
-   
-      });
-
- 
-      document.getElementById("filterByBrandBtn").addEventListener("click", function() {
- 
-        brandFilter.classList.add("hidden");
-        console.log("Applying brand filter");
-      
-      });
-
-      document.getElementById("resetBrandFilterBtn").addEventListener("click", function() {
-    
-        document.getElementById("brandSelect").selectedIndex = -1;
-        brandFilter.classList.add("hidden");
-        console.log("Resetting brand filter");
-       
-      });
-
- 
-      document.getElementById("filterByDateBtn").addEventListener("click", function() {
-      
-        dateFilter.classList.add("hidden");
-        console.log("Applying date filter");
-       
-      });
-
-      document.getElementById("resetDateFilterBtn").addEventListener("click", function() {
-    
-        document.getElementById("dateFrom").value = "";
-        document.getElementById("dateTo").value = "";
-        dateFilter.classList.add("hidden");
-        console.log("Resetting date filter");
-      
-      });
-    });
-  </script>
 </body>
 </html>

@@ -63,12 +63,14 @@ require __DIR__ . '/../function/editOffFunction.php';
                       data-title="<?= htmlspecialchars($office['office_name']) ?>"
                       data-description="<?= htmlspecialchars($office['office_description']) ?>">
                       <i class="fas fa-edit"></i>
+                      <span class="tooltip">Edit office</span>
                     </button>
 
                     <button class="action-btn delete"
                       data-id="<?= $office['office_id'] ?>"
                       data-title="<?= htmlspecialchars($office['office_name']) ?>">
                       <i class="fas fa-trash-alt"></i>
+                      <span class="tooltip">Delete Office</span>
                     </button>
                   </td>
                 </tr>
@@ -84,7 +86,7 @@ require __DIR__ . '/../function/editOffFunction.php';
         <?php if ($totalPages > 1): ?>
           <div class="pagination">
             <?php 
-            // Build base URL with search parameter if it exists
+    
             $baseUrl = '?';
             if (isset($_GET['search'])) {
 

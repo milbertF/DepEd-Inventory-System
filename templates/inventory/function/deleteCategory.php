@@ -8,10 +8,10 @@ if (isset($_GET['id'])) {
     $stmt->bind_param("s", $category_id);
 
     if ($stmt->execute()) {
-        header("Location: /items?deleted=1");
+        header("Location: /inventory?deleted=1");
         exit;
     } else {
-        header("Location: /items?deleted=0");
+        header("Location: /inventory?deleted=0");
         exit;
     }
 }

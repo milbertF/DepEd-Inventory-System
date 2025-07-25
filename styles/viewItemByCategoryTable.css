@@ -1,3 +1,8 @@
+@import url(itemModal.css);
+@import url(actionBtnToolTip.css);
+
+
+
 .item-photo {
     width: 40px;
     height: 40px;
@@ -17,6 +22,7 @@
     padding: 1.5rem;
     border: 1px solid #f0f0f0;
   }
+  
   
   .itemTable {
     width: 100%;
@@ -60,12 +66,7 @@
     background-color: #f1f5f9 !important;
   }
   
-  .itemTable td:nth-child(2) {
-    display: flex !important;
-    align-items: center !important;
-    gap: 0.5rem !important;
-    white-space: nowrap !important;
-  }
+
   
   .itemTable td:last-child {
     white-space: nowrap;
@@ -529,4 +530,5 @@
       transform: translateX(50%);
     }
   }
+  
   

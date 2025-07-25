@@ -4,6 +4,9 @@ require __DIR__ . '/../function/addItemFunction.php';
 
 ?>
 
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +17,10 @@ require __DIR__ . '/../function/addItemFunction.php';
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/styles/addOffPos.css" />
 </head>
+
+
 <body>
+
 
 <div class="addEmployee" style="display: none;" id="addItem">
   <div class="esc">
@@ -90,6 +96,9 @@ require __DIR__ . '/../function/addItemFunction.php';
         </div>
       </div>
 
+      <div class="info">
+  <p>For items with identical details (same item details), you can add multiple serial numbers to track individual units.</p>
+</div>
 
       <div class="inpart">
         <label for="serial-number">Serial Number</label>
@@ -97,6 +106,18 @@ require __DIR__ . '/../function/addItemFunction.php';
           <input type="text" id="serial-number" name="serial_number" placeholder="Unique identifier" />
         </div>
       </div>
+
+
+   
+      <div class="inpart">
+  <label>Multiple Serial Numbers</label>
+  <div class="inputs">
+    <button type="button" id="add-multiple-serials" onclick="openSerialModal()"  style ="min-width:100%  ; border:none;" class="custom-file-upload">
+      Add Multiple Serial Numbers
+    </button>
+    <div id="serial-numbers-list" style="margin-top: 8px;"></div>
+  </div>
+</div>
 
       <div class="inpart">
   <label for="date-acquired">Date Acquired <span>*</span></label>
@@ -136,15 +157,63 @@ require __DIR__ . '/../function/addItemFunction.php';
       </div>
 
       <div class="btnSave">
-        <button type="submit" name="submit_item">Add Item</button>
-      </div>
+  <button type="submit" name="submit_item">Save</button>
+ 
+
+  </button>
+</div>
     </form>
   </div>
 </div>
 
 
+<div id="serialModal" class="addEmployee" style="display: none; z-index: 1001;">
+  <div class="esc">
+    <button onclick="closeSerialModal()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <div class="con">
+    <h4>Add Multiple Serial Numbers</h4>
+    <div class="info">
+      Enter all serial numbers for this item. Each serial will be saved as a separate entry.
+    </div>
+    
+    <div id="serial-inputs-container">
+   
+      <div class="serial-entry">
+        <div class="inpart">
+          <label>Serial Number #2</label>
+          <div class="inputs">
+            <input type="text" name="serials[0]" placeholder="Enter serial number" required>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="btn-group">
+      <button type="button" class="add-more" onclick="addMoreSerial()">
+        <i class="fas fa-plus"></i> Add Another Serial
+      </button>
+    </div>
+    
+    <div class="btnSave">
+      <button type="button" id="save-serials">Save All Serials</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
 
 <script src="/javascript/addItem.js"></script>
+
+
+
+
+
 
 </body>
 </html>

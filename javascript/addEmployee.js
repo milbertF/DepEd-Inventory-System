@@ -4,7 +4,21 @@ function addEmployee() {
 }
 
 function escEmployee() {
-  document.getElementById("addEmployee").style.display = "none";
+  const addEmployee = document.getElementById("addEmployee");
+  addEmployee.style.display = "none";
+
+
+  const form = addEmployee.querySelector('form');
+  if (form) {
+    form.reset();
+  }
+
+
+  const preview = document.getElementById("photoOutput");
+  if (preview) {
+    preview.src = "";
+    preview.style.display = "none";
+  }
 }
 
 function previewPhoto(event) {

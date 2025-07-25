@@ -244,6 +244,37 @@
   color: #94a3b8;
 }
 
+.viewAllContainer {
+  display: flex;
+  justify-content: flex-start;
+  margin: 1rem 0 0 0.5rem;
+}
+
+.viewAll {
+  background-color: #f5f5f5;
+  color: #333;
+  padding: 0.5rem 1rem;
+  border-radius: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #ccc;
+  transition: all 0.2s ease;
+}
+
+.viewAll i {
+  color: #333;
+}
+
+.viewAll:hover {
+  background-color: #e2e2e2;
+  color: black;
+  border-color: #aaa;
+}
+
 
 @media (max-width: 768px) {
   .pagination {

@@ -29,9 +29,10 @@ require __DIR__ . '/../function/fetchCategory.php';
 
             <div class="tableContainer">
             <div class="searchContainer">
-          <input type="text" id="searchCategory" placeholder="Search Categorys..." 
+          <input type="text" id="searchCategory" placeholder="Search Category..." 
                  value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" />
         </div>
+        
 
                 <table class="itemTable">
                     <thead>
@@ -51,26 +52,33 @@ require __DIR__ . '/../function/fetchCategory.php';
                                     <td><?= htmlspecialchars($category['category_name']) ?></td>
                                    
                                     <td>
-                                    <button class="action-btn view" title="View Items"
-  onclick="window.location.href='/itemsByCategory?category_id=<?= $category['category_id'] ?>'">
-  <i class="fas fa-eye"></i>
+                                 
+
+<button class="action-btn view" 
+        onclick="window.location.href='/itemsByCategory?category_id=<?= $category['category_id'] ?>'">
+  <i class="fas fa-external-link-alt"></i>
+  <span class="tooltip">View Items</span>
 </button>
 
-<button
-  class="action-btn edit"
-  data-id="<?= $category['category_id'] ?>"
-  data-name="<?= htmlspecialchars($category['category_name']) ?>"
->
+
+<button class="action-btn edit" 
+        data-id="<?= $category['category_id'] ?>"
+        data-name="<?= htmlspecialchars($category['category_name']) ?>">
   <i class="fas fa-edit"></i>
+  <span class="tooltip">Edit Category</span>
 </button>
 
 
 
-                                        <button class="action-btn delete" title="Delete"
-                                            data-id="<?= $category['category_id'] ?>"
-                                            data-name="<?= htmlspecialchars($category['category_name']) ?>">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
+<button class="action-btn delete" 
+        data-id="<?= $category['category_id'] ?>"
+        data-name="<?= htmlspecialchars($category['category_name']) ?>">
+  <i class="fas fa-trash-alt"></i>
+  <span class="tooltip">Delete Category</span>
+</button>
+
+
+
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -85,7 +93,7 @@ require __DIR__ . '/../function/fetchCategory.php';
                 <?php if ($totalPages > 1): ?>
           <div class="pagination">
             <?php 
-            // Build base URL with search parameter if it exists
+         
             $baseUrl = '?';
             if (isset($_GET['search'])) {
 
@@ -134,13 +142,20 @@ require __DIR__ . '/../function/fetchCategory.php';
             <?php endif; ?>
           </div>
         <?php endif; ?>
+
+        <div class="viewAllContainer">
+          <a href="/allItems" class="viewAll">
+          <i class="fas fa-boxes"></i> View All Items
+
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
     <script src="/javascript/header.js"></script>
     <script src="/javascript/sidebar.js"></script>
-    <script src="/javascript/item.js"></script>
+    <script src="/javascript/inventory.js"></script>
     <script src="/javascript/script.js"></script>
 </body>
 

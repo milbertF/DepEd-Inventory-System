@@ -11,7 +11,7 @@ switch ($request) {
         break;
 
     case '/employee':
-        require __DIR__ . '/templates/employee/html/employee.php';
+        require __DIR__ . '/templates/employee/html/employee.php';  
         break;
 
 
@@ -23,13 +23,13 @@ switch ($request) {
                 require __DIR__ . '/templates/position/html/position.php';
                 break;
 
-    case '/items':
-        require __DIR__ . '/templates/inventory/html/items.php';
+    case '/inventory':
+        require __DIR__ . '/templates/inventory/html/inventory.php';
         break;
 
 
         case '/itemsByCategory':
-            require __DIR__ . '/templates/inventory/html/viewItemsByCategory.php';
+            require __DIR__ . '/templates/inventory/html/viewItemByCategory.php';
             break;
 
     case '/report':

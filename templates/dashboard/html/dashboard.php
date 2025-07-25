@@ -24,6 +24,9 @@ require  __DIR__ . '/../../header/html/header.php';
       <?php require __DIR__ . '/../../quick-access/access.php'; ?>
 
 
+      
+
+
 
 
       <div class="summaryCards">
@@ -92,6 +95,7 @@ require  __DIR__ . '/../../header/html/header.php';
 
   </div>
 
+  
 
 
 

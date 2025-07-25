@@ -54,11 +54,13 @@ require __DIR__ . '/../function/fetchPos.php';
                       data-title="<?= htmlspecialchars($position['position_title']) ?>"
                       data-description="<?= htmlspecialchars($position['position_description']) ?>">
                       <i class="fas fa-edit"></i>
+                      <span class="tooltip">Edit Position</span>
                     </button>
                     <button class="action-btn delete"
                       data-id="<?= $position['position_id'] ?>"
                       data-title="<?= htmlspecialchars($position['position_title']) ?>">
                       <i class="fas fa-trash-alt"></i>
+                      <span class="tooltip">Delete Position</span>
                     </button>
                   </td>
                 </tr>

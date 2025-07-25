@@ -96,6 +96,7 @@ require __DIR__ . '/../../settings/settings.php';
                       data-user-id="<?= $employee['user_id'] ?>"
                       title="View Employee">
                       <i class="fas fa-eye"></i>
+                      <span class="tooltip">View Profile</span>
                     </button>
                     <button
                       class="action-btn edit"
@@ -108,6 +109,7 @@ require __DIR__ . '/../../settings/settings.php';
                       data-office-id="<?= $employee['office_id'] ?>"
                       title="Edit Employee">
                       <i class="fas fa-edit"></i>
+                      <span class="tooltip">Edit Employee</span>
                     </button>
 
 
@@ -120,6 +122,7 @@ require __DIR__ . '/../../settings/settings.php';
                       data-name="<?= htmlspecialchars("{$employee['first_name']} {$employee['last_name']}") ?>"
                       title="Delete Employee">
                       <i class="fas fa-trash-alt"></i>
+                      <span class="tooltip">Delete Employee</span>
                     </button>
                   </td>
                 </tr>

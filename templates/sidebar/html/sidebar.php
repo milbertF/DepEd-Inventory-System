@@ -15,7 +15,7 @@
     <label>Dashboard</label>
   </button>
 
-  <button class="part" onclick="redirect('items')">
+  <button class="part" onclick="redirect('inventory')">
     <div class="icon iconItems">
       <i class="fas fa-list"></i>
     </div>

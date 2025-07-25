@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// Close the edit modal
+
 function closeEditModal() {
   document.getElementById('editPositionModal').style.display = 'none';
 }

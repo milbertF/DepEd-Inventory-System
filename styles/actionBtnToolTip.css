@@ -1,0 +1,67 @@
+
+.action-btn {
+    position: relative; 
+    overflow: visible; 
+  }
+  
+  .action-btn .tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #334155;
+    color: white;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 8px;
+  }
+  
+  /* Tooltip Arrow */
+  .action-btn .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: #334155 transparent transparent transparent;
+  }
+  
+
+  .action-btn:hover .tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+  }
+  
+
+  .action-btn.view .tooltip
+   {
+    background-color: #3b82f6;
+  }
+  .action-btn.view .tooltip::after
+  {
+    border-color: #3b82f6 transparent transparent transparent;
+  }
+  
+  .action-btn.delete .tooltip {
+    background-color: #ef4444;
+  }
+  .action-btn.delete .tooltip::after {
+    border-color: #ef4444 transparent transparent transparent;
+  }
+  
+
+  @media (max-width: 768px) {
+    .action-btn .tooltip {
+      display: none; 
+    }
+  }
