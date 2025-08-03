@@ -1,9 +1,33 @@
-
 document.addEventListener('DOMContentLoaded', function () {
   const tableBody = document.querySelector('.positionTable tbody');
   const searchInput = document.getElementById('searchPosition');
+  const pagination = document.querySelector('.pagination');
   let debounceTimer;
 
+  // Search functionality with debounce
+  searchInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const searchTerm = searchInput.value.trim();
+      const searchUrl = `/templates/position/function/searchPosition.php?search=${encodeURIComponent(searchTerm)}`;
+
+      fetch(searchUrl)
+        .then(response => response.json())
+        .then(data => {
+          tableBody.innerHTML = data.html;
+          pagination.innerHTML = data.pagination;
+
+          if (data.total <= 10) {
+            pagination.style.display = 'none';
+          } else {
+            pagination.style.display = '';
+          }
+        })
+        .catch(error => console.error('Search failed:', error));
+    }, 400);
+  });
+
+  // Delete and Edit button handling
   tableBody.addEventListener('click', function (e) {
     const deleteBtn = e.target.closest('.action-btn.delete');
     const editBtn = e.target.closest('.action-btn.edit');
@@ -42,23 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-
-  searchInput.addEventListener('input', function () {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      const searchTerm = searchInput.value.trim();
-      const searchUrl = `/templates/position/function/searchPosition.php?search=${encodeURIComponent(searchTerm)}`;
-
-      fetch(searchUrl)
-        .then(response => response.text())
-        .then(html => {
-          tableBody.innerHTML = html;
-        })
-        .catch(error => console.error('Search failed:', error));
-    }, 400);
-  });
-
-
+  // Show success alert for deleted position
   const deletedTitle = sessionStorage.getItem('deletedPositionTitle');
   if (deletedTitle) {
     Swal.fire({
@@ -75,9 +83,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     sessionStorage.removeItem('deletedPositionTitle');
   }
+
+  // Preserve search when paginating
+  document.addEventListener('click', function (e) {
+    const link = e.target.closest('.pagination a');
+    if (link) {
+      e.preventDefault();
+      const url = new URL(link.href, window.location.origin);
+      const searchValue = searchInput.value.trim();
+      if (searchValue) {
+        url.searchParams.set('search', searchValue);
+      }
+      window.location.href = url.toString();
+    }
+  });
 });
 
-
+// Close Edit Modal
 function closeEditModal() {
   document.getElementById('editPositionModal').style.display = 'none';
 }

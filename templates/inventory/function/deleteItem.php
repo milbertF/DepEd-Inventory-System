@@ -1,19 +1,28 @@
 <?php
 require __DIR__ . '/../../../database/dbConnection.php';
 
-if (isset($_GET['id'], $_GET['category_id'])) {
+if (isset($_GET['id'])) {
     $item_id = $_GET['id'];
-    $category_id = $_GET['category_id'];
+    $category_id = $_GET['category_id'] ?? null;
+    $source = $_GET['source'] ?? 'category'; 
 
     $stmt = $conn->prepare("DELETE FROM deped_inventory_items WHERE item_id = ?");
     $stmt->bind_param("s", $item_id);
 
     if ($stmt->execute()) {
-        header("Location: /itemsByCategory?category_id=$category_id&deleted=1");
-        return;
+        if ($source === 'all') {
+            header("Location: /allItems?deleted=1");
+        } else {
+            header("Location: /itemsByCategory?category_id=$category_id&deleted=1");
+        }
+        exit;
     } else {
-        header("Location: /itemsByCategory?category_id=$category_id&deleted=0");
-        return;
+        if ($source === 'all') {
+            header("Location: /allItems?deleted=0");
+        } else {
+            header("Location: /itemsByCategory?category_id=$category_id&deleted=0");
+        }
+        exit;
     }
 }
-?>      
+?>

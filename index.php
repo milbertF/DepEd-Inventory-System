@@ -32,6 +32,10 @@ switch ($request) {
             require __DIR__ . '/templates/inventory/html/viewItemByCategory.php';
             break;
 
+            case '/allItems':
+                require __DIR__ . '/templates/inventory/html/viewAllItems.php';
+                break;
+
     case '/report':
         require __DIR__ . '/templates/report/html/report.php';
         break;

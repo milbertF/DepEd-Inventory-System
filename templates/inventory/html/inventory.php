@@ -11,7 +11,7 @@ require __DIR__ . '/../function/fetchCategory.php';
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BCSI-Item</title>
+    <title>BCSI-Inventory</title>
     <link rel="stylesheet" href="/styles/items.css" />
  
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -23,7 +23,7 @@ require __DIR__ . '/../function/fetchCategory.php';
     <div class="wrapMain">
         <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
         <div class="con">
-            <h3>Item</h3>
+            <h3>Inventory</h3>
 
             <?php require __DIR__ . '/../../quick-access/access.php'; ?>
 

@@ -17,7 +17,7 @@
         </div>
         <div class="photo-upload-wrapper">
           <label class="custom-file-upload">
-            <input type="file" id="edit-item-photo" name="photo" accept="image/*" onchange="previewItemPhoto(event)" />
+            <input type="file" id="edit-item-photo" name="photo" accept="image/*" onchange="previewItemEditPhoto(event)" />
             <i class="fa-solid fa-upload"></i> Choose Photo
           </label>
           <div class="photo-preview" id="edit-item-photo-preview">
@@ -91,11 +91,13 @@
       </div>
 
       <div class="inpart">
-        <label for="edit-item-unit">Unit of Measurement</label>
-        <div class="inputs">
-          <input type="text" id="edit-item-unit" name="unit" placeholder="e.g., pcs, boxes, sets" />
-        </div>
-      </div>
+    <label for="edit-item-unit">Unit of Measurement</label>
+    <div class="inputs">
+        <input type="text" id="edit-item-unit" name="unit" 
+               placeholder="e.g., pcs, boxes, sets" 
+               value="<?= htmlspecialchars($item['unit'] ?? '') ?>" />
+    </div>
+</div>
 
       <div class="inpart">
         <label for="edit-item-unit-cost">Unit Cost (₱) <span>*</span></label>

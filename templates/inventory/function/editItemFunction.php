@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
 
     if ($stmt) {
         $stmt->bind_param(
-            "ssisssssdsss",
+            "ssissssisdss",
             $photo_path,
             $item_name,
             $category_id,

@@ -14,19 +14,22 @@ function generateUniqueID($conn, $table, $column) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
-    $item_id = generateUniqueID($conn, 'deped_inventory_items', 'item_id');
     $item_name = trim($_POST['item_name']);
     $category_id = intval($_POST['category_id']);
     $description = trim($_POST['description'] ?? '');
-    $brand = trim($_POST['brand'] ?? '');
-    $model = trim($_POST['model'] ?? '');
-    $serial_number = trim($_POST['serial_number'] ?? '');
-    $quantity = intval($_POST['quantity']);
-    $unit = trim($_POST['unit']);
+    $brand = isset($_POST['brand']) && trim($_POST['brand']) !== '' ? trim($_POST['brand']) : null;
+    $model = isset($_POST['model']) && trim($_POST['model']) !== '' ? trim($_POST['model']) : null;
+    $unit  = isset($_POST['unit'])  && trim($_POST['unit'])  !== '' ? trim($_POST['unit'])  : null;
+    
     $unit_cost = floatval($_POST['unit_cost']);
     $date_acquired = !empty($_POST['date_acquired']) ? $_POST['date_acquired'] : null;
+    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
 
- 
+    if ($quantity < 1) {
+        showSweetAlert('error', 'Invalid Quantity', 'Quantity must be at least 1.');
+        return;
+    }
+
     $photo_path = '';
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $photo_tmp = $_FILES['photo']['tmp_name'];
@@ -53,44 +56,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         }
     }
 
-    $stmt = $conn->prepare("
-        INSERT INTO deped_inventory_items (
-            item_id, item_photo, item_name, category_id, description,
-            brand, model, serial_number, quantity, unit, unit_cost, date_acquired
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ");
+    $serials = [];
 
-    if ($stmt) {
-        $stmt->bind_param(
-            "sssssssssdds",
-            $item_id,
-            $photo_path,
-            $item_name,
-            $category_id,
-            $description,
-            $brand,
-            $model,
-            $serial_number,
-            $quantity,
-            $unit,
-            $unit_cost,
-            $date_acquired
-        );
+    if (!empty($_POST['serial_number'])) {
+        $serials[] = trim($_POST['serial_number']);
+    }
 
-        if ($stmt->execute()) {
-            showSweetAlert(
-                'success',
-                'Item Added',
-                "Item <b>$item_name</b> successfully added with ID: <b>$item_id</b>",
-                $_SERVER['HTTP_REFERER']
-            );
-        } else {
-            showSweetAlert('error', 'Insert Failed', 'Failed to add item. Please try again.');
+    if (!empty($_POST['additional_serials']) && is_array($_POST['additional_serials'])) {
+        foreach ($_POST['additional_serials'] as $s) {
+            if (trim($s)) {
+                $serials[] = trim($s);
+            }
         }
+    }
 
-        $stmt->close();
+  
+    if (empty($serials)) {
+        $serials[] = null;
+    }
+    
+
+    $success_count = 0;
+
+    foreach ($serials as $serial) {
+        $item_id = generateUniqueID($conn, 'deped_inventory_items', 'item_id');
+    
+        $stmt = $conn->prepare("
+            INSERT INTO deped_inventory_items (
+                item_id, item_photo, item_name, category_id, description,
+                brand, model, serial_number, quantity, unit, unit_cost, date_acquired
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+    
+        if ($stmt) {
+           
+            $stmt->bind_param(
+                "sssissssisds",  
+                $item_id,
+                $photo_path,
+                $item_name,
+                $category_id,
+                $description,
+                $brand,
+                $model,
+                $serial,
+                $quantity,
+                $unit,
+                $unit_cost,
+                $date_acquired
+            );
+    
+            if ($stmt->execute()) {
+                $success_count++;
+            }
+    
+            $stmt->close();
+        }
+    }
+
+    if ($success_count > 0) {
+        showSweetAlert(
+            'success',
+            'Items Added',
+            "$success_count item(s) successfully added.",
+            $_SERVER['HTTP_REFERER']
+        );
     } else {
-        showSweetAlert('error', 'Database Error', $conn->error);
+        showSweetAlert('error', 'Insert Failed', 'Failed to add any items.');
     }
 
     $conn->close();

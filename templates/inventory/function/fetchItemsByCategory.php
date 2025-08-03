@@ -11,6 +11,7 @@ if (!$categoryId) {
     exit;
 }
 
+
 $categoryQuery = $conn->prepare("SELECT category_name FROM deped_inventory_item_category WHERE category_id = ?");
 $categoryQuery->bind_param("i", $categoryId);
 $categoryQuery->execute();
@@ -33,16 +34,15 @@ $totalItems = $countResult->fetch_assoc()['total'];
 $totalPages = ceil($totalItems / $limit);
 
 
-$itemQuery = $conn->prepare("SELECT item_id, item_name, category_id,brand, model, serial_number, quantity, unit, description, unit_cost, total_cost, created_at, date_acquired, item_photo 
+$itemQuery = $conn->prepare("SELECT item_id, item_name, category_id, brand, model, serial_number, quantity, unit, description, unit_cost, total_cost, created_at, date_acquired, item_photo 
                              FROM deped_inventory_items 
                              WHERE category_id = ? 
                              LIMIT ? OFFSET ?");
-
 $itemQuery->bind_param("iii", $categoryId, $limit, $offset);
 $itemQuery->execute();
 $itemsResult = $itemQuery->get_result();
-$items = [];
 
+$items = [];
 while ($row = $itemsResult->fetch_assoc()) {
     $items[] = [
         'item_id' => $row['item_id'] ?? '',
@@ -60,6 +60,27 @@ while ($row = $itemsResult->fetch_assoc()) {
         'date_acquired' => $row['date_acquired'] ?? '',
         'item_photo' => $row['item_photo'] ?? ''
     ];
-    
 }
+
+
+$brandQuery = $conn->prepare("SELECT DISTINCT brand FROM deped_inventory_items WHERE category_id = ? AND brand IS NOT NULL AND brand != '' ORDER BY brand ASC");
+$brandQuery->bind_param("i", $categoryId);
+$brandQuery->execute();
+$brandResult = $brandQuery->get_result();
+
+$brands = [];
+while ($row = $brandResult->fetch_assoc()) {
+    $brands[] = $row['brand'];
+}
+
+$modelQuery = $conn->prepare("SELECT DISTINCT model FROM deped_inventory_items WHERE category_id = ? AND model IS NOT NULL AND model != '' ORDER BY model ASC");
+$modelQuery->bind_param("i", $categoryId);
+$modelQuery->execute();
+$modelResult = $modelQuery->get_result();
+
+$models = [];
+while ($row = $modelResult->fetch_assoc()) {
+    $models[] = $row['model'];
+}
+
 ?>

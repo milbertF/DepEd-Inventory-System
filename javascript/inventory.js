@@ -4,17 +4,19 @@ document.addEventListener('DOMContentLoaded', function () {
   const editModal = document.getElementById('editCategory');
   const editCategoryIdInput = document.getElementById('edit-category-id');
   const editCategoryNameInput = document.getElementById('edit-category-name');
+  const pagination = document.querySelector('.pagination');
   let debounceTimer;
 
+  // --- Handle Edit & Delete Actions ---
   if (tableBody) {
     tableBody.addEventListener('click', function (e) {
       const deleteBtn = e.target.closest('.action-btn.delete');
       const editBtn = e.target.closest('.action-btn.edit');
 
-
+      // --- Delete Category ---
       if (deleteBtn) {
-        const categoryId = deleteBtn.getAttribute('data-id');
-        const categoryName = deleteBtn.getAttribute('data-name');
+        const categoryId = deleteBtn.dataset.id;
+        const categoryName = deleteBtn.dataset.name;
 
         Swal.fire({
           title: 'Are you sure?',
@@ -33,10 +35,10 @@ document.addEventListener('DOMContentLoaded', function () {
         });
       }
 
-   
+      // --- Edit Category ---
       if (editBtn && editModal && editCategoryIdInput && editCategoryNameInput) {
-        const categoryId = editBtn.getAttribute('data-id');
-        const categoryName = editBtn.getAttribute('data-name');
+        const categoryId = editBtn.dataset.id;
+        const categoryName = editBtn.dataset.name;
 
         editCategoryIdInput.value = categoryId;
         editCategoryNameInput.value = categoryName;
@@ -45,8 +47,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-
-  if (searchInput) {
+  // --- Live Search with Debounce & JSON Handling ---
+  if (searchInput && tableBody) {
     searchInput.addEventListener('input', function () {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
@@ -54,9 +56,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const searchUrl = `/templates/inventory/function/searchCategory.php?search=${encodeURIComponent(searchTerm)}`;
 
         fetch(searchUrl)
-          .then(response => response.text())
-          .then(html => {
-            tableBody.innerHTML = html;
+          .then(response => response.json())
+          .then(data => {
+            tableBody.innerHTML = data.html;
+
+        
+            if (pagination) {
+              pagination.style.display = searchTerm ? 'none' : 'flex';
+            }
           })
           .catch(error => console.error('Search failed:', error));
       }, 400);
@@ -82,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-
+// --- ESC Close Function ---
 function escEditCategory() {
   const editModal = document.getElementById('editCategory');
   if (editModal) {

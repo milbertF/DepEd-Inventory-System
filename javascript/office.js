@@ -1,9 +1,40 @@
 document.addEventListener('DOMContentLoaded', function () {
   const tableBody = document.querySelector('.officeTable tbody');
   const searchInput = document.getElementById('searchOffice');
+  const pagination = document.querySelector('.pagination');
   let debounceTimer;
 
-  tableBody.addEventListener('click', function (e) {
+  searchInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      fetchOffices(1);
+    }, 400);
+  });
+
+  function fetchOffices(page) {
+    const searchTerm = searchInput.value.trim();
+    const searchUrl = `/templates/office/function/searchOffice.php?search=${encodeURIComponent(searchTerm)}&page=${page}`;
+
+    fetch(searchUrl)
+      .then(response => response.json())
+      .then(data => {
+        tableBody.innerHTML = data.html;
+        pagination.innerHTML = data.pagination;
+
+        pagination.style.display = (data.total > 10) ? '' : 'none';
+      })
+      .catch(error => console.error('Search failed:', error));
+  }
+
+  document.addEventListener('click', function (e) {
+    const link = e.target.closest('.pagination a');
+    if (link && !link.classList.contains('disabled')) {
+      e.preventDefault();
+      const url = new URL(link.href);
+      const page = url.searchParams.get('page');
+      fetchOffices(parseInt(page));
+    }
+
     const deleteBtn = e.target.closest('.action-btn.delete');
     const editBtn = e.target.closest('.action-btn.edit');
 
@@ -41,21 +72,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  searchInput.addEventListener('input', function () {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      const searchTerm = searchInput.value.trim();
-      const searchUrl = `/templates/office/function/searchOffice.php?search=${encodeURIComponent(searchTerm)}`;
-
-      fetch(searchUrl)
-        .then(response => response.text())
-        .then(html => {
-          tableBody.innerHTML = html;
-        })
-        .catch(error => console.error('Search failed:', error));
-    }, 400);
-  });
-
   const deletedOfficeName = sessionStorage.getItem('deletedOfficeName');
   if (deletedOfficeName) {
     Swal.fire({
@@ -74,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// Close edit modal
 function closeEditModal() {
   document.getElementById('editOfficeModal').style.display = 'none';
 }
