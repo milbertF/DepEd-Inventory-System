@@ -1,7 +1,8 @@
 <?php
 require __DIR__ . '/../../header/html/header.php';
-require __DIR__ . '/../function/fetchAllItems.php'; // New file
+require __DIR__ . '/../function/fetchAllItems.php'; 
 require __DIR__ . '/../function/editItemFunction.php';
+
 ?>
 
 <!DOCTYPE html>
@@ -26,6 +27,7 @@ require __DIR__ . '/../function/editItemFunction.php';
 
   <div class="con">
     <h3>All Items</h3>
+    
 
     <?php require __DIR__ . '/../../quick-access/access.php'; ?>
 
@@ -41,50 +43,35 @@ require __DIR__ . '/../function/editItemFunction.php';
         </div>
 
         <div class="filterControls">
-          <button id="toggleBrandFilter" class="filter-btn" title="Filter by Brand">
-            <i class="fas fa-tags"></i>
-          </button>
-          <button id="toggleQtyFilter" class="filter-btn" title="Filter by Quantity">
+         
+          <button id="toggleQtyFilterAll" class="filter-btn" title="Filter by Quantity">
             <i class="fas fa-sort-amount-up-alt"></i>
           </button>
-          <button id="toggleDateFilter" class="filter-btn" title="Filter by Date">
+          <button id="toggleDateFilterAll" class="filter-btn" title="Filter by Date">
             <i class="fas fa-calendar-alt"></i>
           </button>
         </div>
 
         <!-- Brand Filter -->
-        <div class="filterContainer hidden" id="brandFilterContainer">
-          <div class="filter-header">
-            <i class="fas fa-tags"></i>
-            <span>Filter by Brand</span>
-          </div>
-          <select id="brandSelect" multiple>
-  <?php foreach ($brands as $brand): ?>
-    <option value="<?= htmlspecialchars($brand) ?>"><?= htmlspecialchars($brand) ?></option>
-  <?php endforeach; ?>
-</select>
-
-          <div class="filter-actions">
-            <button id="filterByBrandBtn">Apply</button>
-            <button id="resetBrandFilterBtn">Reset</button>
-          </div>
+        <div class="filterContainer hidden" >
+        
         </div>
 
         <!-- Quantity Filter -->
-        <div class="filterContainer hidden" id="quantityFilterContainer">
+        <div class="filterContainer hidden" id="quantityFilterContainerAll">
           <div class="filter-header">
             <i class="fas fa-sort-amount-up-alt"></i>
             <span>Filter by Quantity</span>
           </div>
           <div class="quantity-options">
-            <button id="sortLowToHigh" class="quantity-option"><i class="fas fa-sort-amount-up"></i> Low to High</button>
-            <button id="sortHighToLow" class="quantity-option"><i class="fas fa-sort-amount-down"></i> High to Low</button>
-            <button id="showOutOfStock" class="quantity-option"><i class="fas fa-box-open"></i> Out of Stock</button>
+            <button id="sortLowToHighAll" class="quantity-option"><i class="fas fa-sort-amount-up"></i> Low to High</button>
+            <button id="sortHighToLowAll" class="quantity-option"><i class="fas fa-sort-amount-down"></i> High to Low</button>
+            <button id="showOutOfStockAll" class="quantity-option"><i class="fas fa-box-open"></i> Out of Stock</button>
           </div>
         </div>
 
         <!-- Date Filter -->
-        <div class="dateFilterContainer hidden" id="dateFilterContainer">
+        <div class="dateFilterContainer hidden" id="dateFilterContainerAll">
           <div class="date-filter-header">
             <i class="fas fa-filter"></i>
             <span>Filter by acquire date</span>
@@ -94,11 +81,18 @@ require __DIR__ . '/../function/editItemFunction.php';
           <label for="dateTo">To:</label>
           <input type="date" id="dateTo" name="dateTo">
           <div class="filter-actions">
-            <button id="filterByDateBtn" class="filter-btn">Apply</button>
-            <button id="resetDateFilterBtn" class="filter-btn">Reset</button>
+            <button id="filterByDateBtnAll" class="filter-btn">Apply</button>
+            <button id="resetDateFilterBtnAll" class="filter-btn">Reset</button>
           </div>
         </div>
       </div>
+
+      <button class="excel-export-btn" style ="margin-bottom:1rem" onclick="document.getElementById('exportModal').style.display='flex'">
+    <i class="fas fa-file-excel"></i>
+    Export to Excel
+  </button>
+  <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
+
 
       <!-- Items Table -->
       <table class="itemTable">
@@ -214,7 +208,7 @@ require __DIR__ . '/../function/editItemFunction.php';
       <?php endif; ?>
 
       <div class="backBtnContainer">
-        <a href="/inventory" class="backBtn"><i class="fas fa-arrow-left"></i> Back to Inventory</a>
+        <a href="/inventory" class="backBtn"><i class="fas fa-arrow-left"></i> Back to Category</a>
       </div>
     </div>
   </div>
@@ -224,7 +218,8 @@ require __DIR__ . '/../function/editItemFunction.php';
 <script src="/javascript/sidebar.js"></script>
 <script src="/javascript/script.js"></script>
 
-<script src="/javascript/viewItemByCategory.js"></script>
+<script src="/javascript/viewAllitems.js"></script>\
+
 
 </body>
 </html>

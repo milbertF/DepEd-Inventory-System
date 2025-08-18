@@ -63,7 +63,7 @@ function handleLogin() {
             $userInfo = $infoResult->fetch_assoc();
 
             $_SESSION['user'] = [
-                'id' => $user['user_id'],
+                'user_id' => $user['user_id'],
                 'username' => $user['username'],
                 'role' => $user['role'],
                 'first_name' => decryptData($userInfo['first_name'], APP_ENCRYPTION_KEY),

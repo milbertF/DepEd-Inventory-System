@@ -11,3 +11,4 @@ if (
     header('Location: /login');
     exit;
 }
+

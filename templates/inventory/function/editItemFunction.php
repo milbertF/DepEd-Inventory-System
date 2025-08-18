@@ -49,10 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             }
 
        
-            $old_file_path = __DIR__ . '/../../../' . $existing_photo;
-            if (is_file($old_file_path)) {
-                unlink($old_file_path);
-            }
+           
         } else {
             showSweetAlert('error', 'Invalid File', 'Only JPG, JPEG, PNG, and GIF are allowed.');
             return;

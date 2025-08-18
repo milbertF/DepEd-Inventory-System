@@ -37,7 +37,9 @@ $totalPages = ceil($totalItems / $limit);
 $itemQuery = $conn->prepare("SELECT item_id, item_name, category_id, brand, model, serial_number, quantity, unit, description, unit_cost, total_cost, created_at, date_acquired, item_photo 
                              FROM deped_inventory_items 
                              WHERE category_id = ? 
+                             ORDER BY item_name ASC
                              LIMIT ? OFFSET ?");
+
 $itemQuery->bind_param("iii", $categoryId, $limit, $offset);
 $itemQuery->execute();
 $itemsResult = $itemQuery->get_result();

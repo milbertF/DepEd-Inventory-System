@@ -1,13 +1,13 @@
-let currentFilters = {}; // Global filter state
+let currentFilters = {};
 
 document.addEventListener('DOMContentLoaded', function() {
   initFilterControls();
   initTableActions();
   initSearchFunctionality();
-
-
+  calculateEditTotalCost();
+  initDateValidation();
   checkForDeletedItem();
-  initEditFormCalculations();
+ 
 });
 
 document.addEventListener('click', function(e) {
@@ -218,6 +218,7 @@ function initTableActions() {
   });
 }
 
+// Handle the delete action
 function handleDeleteItem(deleteBtn) {
   const itemId = deleteBtn.getAttribute('data-id');
   const itemName = deleteBtn.getAttribute('data-name');
@@ -234,13 +235,50 @@ function handleDeleteItem(deleteBtn) {
     cancelButtonText: 'Cancel'
   }).then(result => {
     if (result.isConfirmed) {
+
       sessionStorage.setItem('deletedItemName', itemName);
+      sessionStorage.setItem('deletedItemCategory', categoryId || 'none');
+      
+  
       let url = `/templates/inventory/function/deleteItem.php?id=${itemId}&source=category`;
       if (categoryId) url += `&category_id=${categoryId}`;
       window.location.href = url;
     }
   });
 }
+
+
+function checkForDeletedItem() {
+  const deletedName = sessionStorage.getItem('deletedItemName');
+  const deletedCategory = sessionStorage.getItem('deletedItemCategory');
+  
+  if (deletedName) {
+
+    const currentCategory = new URLSearchParams(window.location.search).get('category_id') || 'none';
+    
+    if (deletedCategory === currentCategory || deletedCategory === 'none') {
+      Swal.fire({
+        icon: 'success', 
+        title: 'Deleted!', 
+        html: `Item <b>${deletedName}</b> was deleted successfully.`,
+        confirmButtonColor: '#3085d6'
+      }).then(() => {
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('deleted');
+        url.searchParams.delete('id');
+        window.history.replaceState({}, document.title, url.toString());
+      });
+    }
+    
+
+    sessionStorage.removeItem('deletedItemName');
+    sessionStorage.removeItem('deletedItemCategory');
+  }
+}
+
+
+document.addEventListener('DOMContentLoaded', checkForDeletedItem);
 
 function handleEditItem(editBtn) {
   const getData = attr => editBtn.getAttribute(attr) || '';
@@ -342,7 +380,7 @@ function initSearchFunctionality() {
       return searchInput?.value.trim() || '';
     }
   
-    // Handle typing in search
+ 
     searchInput?.addEventListener("input", () => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
@@ -350,7 +388,7 @@ function initSearchFunctionality() {
       }, 400);
     });
   
-    // Clear search with Escape key
+   
     searchInput?.addEventListener("keydown", e => {
       if (e.key === "Escape") {
         searchInput.value = "";
@@ -358,7 +396,7 @@ function initSearchFunctionality() {
       }
     });
   
-    // Handle pagination clicks (always use current search + filters)
+   
     document.addEventListener("click", e => {
       const target = e.target.closest(".pagination a");
       if (target) {
@@ -371,31 +409,8 @@ function initSearchFunctionality() {
     });
   }
   
-// ---------------------
-// OTHER UTILITIES
-// ---------------------
-function checkForDeletedItem() {
-  const deletedName = sessionStorage.getItem('deletedItemName');
-  if (deletedName) {
-    Swal.fire({ icon: 'success', title: 'Deleted!', html: `Item <b>${deletedName}</b> was deleted successfully.`, confirmButtonColor: '#3085d6' })
-      .then(() => {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('deleted');
-        url.searchParams.delete('id');
-        window.history.replaceState({}, document.title, url.pathname + '?' + url.searchParams.toString());
-      });
-    sessionStorage.removeItem('deletedItemName');
-  }
-}
 
-function initEditFormCalculations() {
-  const qty = document.getElementById('edit-item-qty');
-  const unitCost = document.getElementById('edit-item-unit-cost');
-  if (qty && unitCost) {
-    qty.addEventListener('input', calculateTotalCost);
-    unitCost.addEventListener('input', calculateTotalCost);
-  }
-}
+
 
 function escEditItemModal() {
   document.getElementById('edit-item-form').reset();
@@ -421,3 +436,55 @@ function previewItemEditPhoto(event) {
     output.style.display = "none";
   }
 }
+
+
+function calculateEditTotalCost() {
+  const qtyInput = document.getElementById("edit-item-qty");
+  const unitCostInput = document.getElementById("edit-item-unit-cost");
+  const totalCostInput = document.getElementById("edit-item-total-cost");
+
+  function updateTotalCost() {
+    const qty = parseFloat(qtyInput.value) || 0;
+    const unitCost = parseFloat(unitCostInput.value) || 0;
+    const total = qty * unitCost;
+    totalCostInput.value = total.toFixed(2);
+  }
+
+  qtyInput.addEventListener("input", updateTotalCost);
+  unitCostInput.addEventListener("input", updateTotalCost);
+}
+
+
+
+
+
+function initDateValidation() {
+  const dateFromInput = document.getElementById("dateFrom");
+  const dateToInput = document.getElementById("dateTo");
+
+  if (!dateFromInput || !dateToInput) return;
+
+
+  dateFromInput.addEventListener("change", () => {
+    if (dateFromInput.value) {
+      dateToInput.min = dateFromInput.value;
+
+    
+      if (dateToInput.value && dateToInput.value < dateFromInput.value) {
+        dateToInput.value = "";
+      }
+    } else {
+ 
+      dateToInput.min = "";
+    }
+  });
+
+
+  dateToInput.addEventListener("input", () => {
+    if (dateFromInput.value && dateToInput.value < dateFromInput.value) {
+      dateToInput.value = dateFromInput.value;
+    }
+  });
+}
+
+

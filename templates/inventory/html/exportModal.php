@@ -18,6 +18,8 @@
     top: auto;
     position: relative;
   }
+  .err-text { color: #e11d48; font-size: 0.9rem; margin: 0.35rem 0 0.25rem; }
+  .btnSave button[disabled] { opacity: .6; cursor: not-allowed; }
 </style>
 
 <div class="addEmployee" id="exportModal" style="display: none;">
@@ -30,8 +32,9 @@
   <div class="con">
     <h4>Export Filter</h4>
 
-    <form action="/templates/inventory/function/exportCategoryToExcel.php" method="GET">
+    <form id="exportForm" action="/templates/inventory/function/exportCategoryToExcel.php" method="GET">
       <input type="hidden" name="category_id" value="<?= htmlspecialchars($categoryId) ?>">
+   
 
       <!-- Brand -->
       <div class="inpart">
@@ -61,26 +64,28 @@
 
       <!-- Quantity Range -->
       <div class="inpart">
+      <div id="quantityError" class="err-text"></div>
         <label>Quantity Range:</label>
         <div style="display: flex; gap: 0.5rem;">
           <div class="inputs" style="flex: 1;">
-            <input type="number" name="min_quantity" placeholder="Min (e.g. 5)" min="0">
+            <input type="number" id="minQuantity" name="min_quantity" placeholder="Min (e.g. 5)" min="0">
           </div>
           <div class="inputs" style="flex: 1;">
-            <input type="number" name="max_quantity" placeholder="Max (e.g. 100)" min="0">
+            <input type="number" id="maxQuantity" name="max_quantity" placeholder="Max (e.g. 100)" min="0">
           </div>
         </div>
       </div>
 
 
       <div class="inpart">
+      <div id="costError" class="err-text"></div>
         <label>Unit Cost Range:</label>
         <div style="display: flex; gap: 0.5rem;">
           <div class="inputs" style="flex: 1;">
-            <input type="number" step="0.01" name="min_cost" placeholder="Min Cost" min="0">
+            <input type="number" step="0.01" id="minCost"  name="min_cost" placeholder="Min Cost" min="0">
           </div>
           <div class="inputs" style="flex: 1;">
-            <input type="number" step="0.01" name="max_cost" placeholder="Max Cost" min="0">
+            <input type="number" step="0.01" id="maxCost"  name="max_cost" placeholder="Max Cost" min="0">
           </div>
         </div>
       </div>
@@ -94,7 +99,7 @@
     <div style="flex: 1;">
       <div style="font-size: 0.85rem; margin-bottom: 0.2rem;">From</div>
       <div class="inputs">
-        <input type="date" name="start_date">
+        <input type="date" id="start_date" name="start_date">
       </div>
     </div>
     
@@ -102,7 +107,7 @@
     <div style="flex: 1;">
       <div style="font-size: 0.85rem; margin-bottom: 0.2rem;">To</div>
       <div class="inputs">
-        <input type="date" name="end_date">
+        <input type="date" id="end_date" name="end_date">
       </div>
     </div>
 
@@ -112,10 +117,13 @@
 
       <!-- Button -->
       <div class="btnSave">
-        <button type="submit">
+        <button id="exportBtn"  type="submit">
           <i class="fas fa-file-excel"></i> Export to Excel
         </button>
       </div>
     </form>
   </div>
 </div>
+
+
+<script src="/javascript/exportModal.js"></script>

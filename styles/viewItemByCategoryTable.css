@@ -15,7 +15,6 @@
   
   .tableContainer {
     margin-top: 1.5rem;
-    overflow-x: auto;
     border-radius: 0.75rem;
     background-color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -133,7 +132,7 @@
   .filterControls {
     display: flex;
     gap: 10px;
-
+    position: relative; /* parent container */
     align-items: center;
     
   }
@@ -168,9 +167,10 @@
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+    z-index: 1001;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
     gap: 0.8rem;
     width: 220px;
   }
@@ -184,6 +184,7 @@
   .dateFilterContainer input[type="date"] {
     padding: 0.4rem;
     border: 1px solid #cbd5e1;
+    
     border-radius: 6px;
     font-size: 0.8rem;
     width: 95%;
@@ -214,13 +215,15 @@
   }
   
   #filterByBrandBtn,
-  #filterByDateBtn {
+  #filterByDateBtn,
+  #filterByDateBtnAll  {
     background-color: #3b82f6;
     color: white;
     border: 1px solid #2563eb;
   }
   
-  #filterByDateBtn:hover {
+  #filterByDateBtn:hover ,
+  #filterByDateBtnAll:hover{
     background-color: #2563eb;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);

@@ -15,13 +15,12 @@ function generateDeletedID($conn) {
 
 if (isset($_GET['id'])) {
     $item_id = $_GET['id'];
-    $category_id = $_GET['category_id'] ?? null;
 
-  
+   
     $conn->begin_transaction();
 
     try {
-      
+       
         $fetchStmt = $conn->prepare("SELECT * FROM deped_inventory_items WHERE item_id = ?");
         $fetchStmt->bind_param("s", $item_id);
         $fetchStmt->execute();
@@ -30,15 +29,15 @@ if (isset($_GET['id'])) {
         if ($result->num_rows > 0) {
             $item = $result->fetch_assoc();
 
-    
+        
             $deleted_by_user_id = $_SESSION['user']['user_id'] ?? null;
             $deleted_by_fname   = $_SESSION['user']['first_name'] ?? 'Unknown';
             $deleted_by_lname   = $_SESSION['user']['last_name'] ?? 'Unknown';
 
-         
+        
             $deleted_id = generateDeletedID($conn);
 
-        
+          
             $insertStmt = $conn->prepare("
                 INSERT INTO deped_inventory_items_deleted
                 (deleted_id, item_id, item_photo, item_name, category_id, description, brand, model, serial_number, quantity, date_acquired, unit, unit_cost, total_cost, status, created_at, deleted_by_user_id, deleted_by_fname, deleted_by_lname)
@@ -81,15 +80,15 @@ if (isset($_GET['id'])) {
             throw new Exception("Failed to delete from main items table");
         }
 
-
+    
         $conn->commit();
-        header("Location: /itemsByCategory?category_id=$category_id&deleted=1");
+        header("Location: /allItems?deleted=1");
         exit;
     } catch (Exception $e) {
     
         $conn->rollback();
         error_log("Delete item failed: " . $e->getMessage());
-        header("Location: /itemsByCategory?category_id=$category_id&deleted=0");
+        header("Location: /allItems?deleted=0");
         exit;
     }
 }

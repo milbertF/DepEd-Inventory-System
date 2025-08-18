@@ -5,12 +5,12 @@ $page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']
 $limit = 10;
 $offset = ($page - 1) * $limit;
 
-// Get total number of items
+
 $countQuery = $conn->query("SELECT COUNT(*) as total FROM deped_inventory_items");
 $totalItems = $countQuery->fetch_assoc()['total'];
 $totalPages = ceil($totalItems / $limit);
 
-// Fetch all items with category name
+
 $itemQuery = $conn->prepare("
     SELECT 
         i.item_id,

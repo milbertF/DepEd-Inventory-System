@@ -116,8 +116,8 @@
               </div>
 
               <!-- Date Filter Dropdown -->
-          <div class="dateFilterContainer hidden" id="dateFilterContainer">
-      <div class="date-filter-header">
+          <div class="dateFilterContainer hidden" id="dateFilterContainer" >
+      <div class="date-filter-header" >
         <i class="fas fa-filter"></i>
         <span>Filter by acquire date</span>
       </div>
