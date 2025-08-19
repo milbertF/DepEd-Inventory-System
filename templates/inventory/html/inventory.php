@@ -3,7 +3,11 @@ require __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/editCategoryFunction.php';
 
 require __DIR__ . '/../function/fetchCategory.php';
+
+
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -144,11 +148,17 @@ require __DIR__ . '/../function/fetchCategory.php';
         <?php endif; ?>
 
         <div class="viewAllContainer">
-          <a href="/allItems" class="viewAll">
-          <i class="fas fa-boxes"></i> View All Items
+    <a href="/allItems" class="viewAll">
+        <i class="fas fa-boxes"></i> View All Items
+    </a>
 
-          </a>
-        </div>
+    <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+    <a href="/recentlyDeleted" class="viewAll">
+        <i class="fas fa-trash-alt"></i> Recently Deleted Items
+    </a>
+<?php endif; ?>
+
+</div>
       </div>
     </div>
   </div>

@@ -1,7 +1,9 @@
 <?php
+require_once __DIR__ . '/../../../config/restrictRoles.php';
+
+restrictRoles(['Employee']);
 require __DIR__ . '/../../header/html/header.php';
-require __DIR__ . '/../function/fetchAllItems.php'; 
-require __DIR__ . '/../function/editItemFunction.php';
+require __DIR__ . '/../function/fetchDeletedItems.php'; 
 
 ?>
 
@@ -26,7 +28,7 @@ require __DIR__ . '/../function/editItemFunction.php';
   <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
 
   <div class="con">
-    <h3>All Items</h3>
+    <h3>Recently Deleted Items</h3>
     
 
     <?php require __DIR__ . '/../../quick-access/access.php'; ?>
@@ -94,89 +96,85 @@ require __DIR__ . '/../function/editItemFunction.php';
   <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
 
 
-      <!-- Items Table -->
-      <table class="itemTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Category</th>
-            <th>Serial Number</th>
-            <th>Image</th>
-            <th>Item Name</th>
-           
-            <th>Brand</th>
-            <th>Model</th>
-            <th>Quantity</th>
-            <th>Date Acquired</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($items as $index => $item): ?>
-          <tr>
-            <td><?= ($page - 1) * $limit + $index + 1 ?></td>
-            <td><?= htmlspecialchars($item['category_name']) ?></td>
-            <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
-            <td>
-              <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>" class="item-photo" alt="Item Photo" />
-            </td>
-            <td><?= htmlspecialchars($item['item_name']) ?></td>
-   
-            <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
-            <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
-            <td><?= htmlspecialchars($item['quantity']) ?></td>
-            <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
-            <td>
-              <button class="action-btn view" title="View Item"
-                data-id="<?= $item['item_id'] ?>"
-                data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
-                data-category="<?= htmlspecialchars($item['category_name']) ?>"
-                data-description="<?= htmlspecialchars($item['description']) ?>"
-                data-name="<?= htmlspecialchars($item['item_name']) ?>"
-                data-brand="<?= htmlspecialchars($item['brand']) ?>"
-                data-model="<?= htmlspecialchars($item['model']) ?>"
-                data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
-                data-qty="<?= $item['quantity'] ?>"
-                data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
-                data-unit="<?= $item['unit'] ?>"
-                data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
-                data-totalcost="<?= $item['total_cost'] ?? 0 ?>"
-                data-created="<?= $item['created_at'] ?>">
-                <i class="fas fa-eye"></i>
-                <span class="tooltip">View Item</span>
-              </button>
+    <!-- Items Table -->
+<table class="itemTable">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Category</th>
+      <th>Serial Number</th>
+      <th>Image</th>
+      <th>Item Name</th>
+      <th>Brand</th>
+      <th>Model</th>
+      <th>Quantity</th>
+      <th>Date Acquired</th>
+      <th>Deleted By</th>
+      <th>Deleted Date</th> <!-- NEW -->
+      <th>Deleted Time</th> <!-- NEW -->
+     
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach ($items as $index => $item): ?>
+    <tr>
+      <td><?= ($page - 1) * $limit + $index + 1 ?></td>
+      <td><?= htmlspecialchars($item['category_name']) ?></td>
+      <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
+      <td>
+        <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>" class="item-photo" alt="Item Photo" />
+      </td>
+      <td><?= htmlspecialchars($item['item_name']) ?></td>
+      <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
+      <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
+      <td><?= htmlspecialchars($item['quantity']) ?></td>
+      <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
+      <td><?= htmlspecialchars($item['deleted_by_fname'] . ' ' . $item['deleted_by_lname']) ?></td>
+      <td><?= !empty($item['deleted_at']) ? date("M-d-Y", strtotime($item['deleted_at'])) : 'N/A' ?></td> <!-- Date only -->
+      <td><?= !empty($item['deleted_at']) ? date("h:i A", strtotime($item['deleted_at'])) : 'N/A' ?></td> <!-- Time only -->
+      
+      <td>
+        <button class="action-btn view" title="View Item"
+          data-id="<?= $item['item_id'] ?>"
+          data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
+          data-category="<?= htmlspecialchars($item['category_name']) ?>"
+          data-description="<?= htmlspecialchars($item['description']) ?>"
+          data-name="<?= htmlspecialchars($item['item_name']) ?>"
+          data-brand="<?= htmlspecialchars($item['brand']) ?>"
+          data-model="<?= htmlspecialchars($item['model']) ?>"
+          data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
+          data-qty="<?= $item['quantity'] ?>"
+          data-deletedby="<?= htmlspecialchars($item['deleted_by_fname'] . ' ' . $item['deleted_by_lname']) ?>" 
+          data-deletedat="<?= (!empty($item['deleted_at']) ? date('Y-m-d H:i:s', strtotime($item['deleted_at'])) : '') ?>" 
+          data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
+          data-unit="<?= $item['unit'] ?>"
+          data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
+          data-totalcost="<?= $item['total_cost'] ?? 0 ?>"
+          data-created="<?= $item['created_at'] ?>">
+          <i class="fas fa-eye"></i>
+          <span class="tooltip">View Item</span>
+        </button>
+        <button class="action-btn restore" 
+    data-id="<?= $item['item_id'] ?>" 
+    data-name="<?= htmlspecialchars($item['item_name']) ?>" 
+    title="Restore Item">
+    <i class="fas fa-undo"></i>
+    <span class="tooltip">Restore Item</span>
+  </button>
 
-              <button class="action-btn edit" title="Edit Item"
-                data-id="<?= $item['item_id'] ?>"
-                data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
-                data-category-id="<?= $item['category_id'] ?>"
-                data-description="<?= $item['description'] ?>"
-                data-name="<?= $item['item_name'] ?>"
-                data-brand="<?= $item['brand'] ?>"
-                data-model="<?= $item['model'] ?>"
-                data-serial="<?= $item['serial_number'] ?>"
-                data-qty="<?= $item['quantity'] ?>"
-                data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
-                data-unit="<?= $item['unit'] ?>"
-                data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
-                data-totalcost="<?= $item['total_cost'] ?? 0 ?>">
-                <i class="fas fa-edit"></i>
-                <span class="tooltip">Edit Item</span>
-              </button>
-
-              <button class="action-btn delete"
-        data-id="<?= $item['item_id'] ?>"
-        data-name="<?= htmlspecialchars($item['item_name']) ?>"
-        data-source="all">
-  <i class="fas fa-trash-alt"></i>
-  <span class="tooltip">Delete Item</span>
-</button>
-
-            </td>
-          </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+        <button class="action-btn delete"
+          data-id="<?= $item['item_id'] ?>"
+          data-name="<?= htmlspecialchars($item['item_name']) ?>"
+          data-source="deleted">
+          <i class="fas fa-trash-alt"></i>
+          <span class="tooltip">Delete Item</span>
+        </button>
+      </td>
+    </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>
 
       <!-- Pagination -->
       <?php if ($totalPages > 1): ?>

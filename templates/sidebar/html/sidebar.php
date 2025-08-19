@@ -22,12 +22,15 @@
     <label>Item</label>
   </button>
 
-  <button class="part" onclick="redirect('employee')">
-    <div class="icon iconEmployee">
-      <i class="fas fa-user-tie"></i>
-    </div>
-    <label>Employee</label>
-  </button>
+  <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+    
+    <button class="part" onclick="redirect('employee')">
+      <div class="icon iconEmployee">
+        <i class="fas fa-user-tie"></i>
+      </div>
+      <label>Employee</label>
+    </button>
+    <?php endif; ?>
 
   <button class="part" onclick="redirect('position')">
     <div class="icon iconPosition">

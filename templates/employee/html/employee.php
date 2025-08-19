@@ -1,11 +1,19 @@
 <?php
 
 
+require_once __DIR__ . '/../../../config/restrictRoles.php';
+
+restrictRoles(['Employee']);
+
+
+
+
 require  __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/fetchEmp.php';
 require_once __DIR__ . '/../../../config/authProtect.php';
 require  __DIR__ . '/../function/editEmpFunction.php';
 require __DIR__ . '/../../settings/settings.php';
+
 ?>
 
 

@@ -132,7 +132,7 @@
   .filterControls {
     display: flex;
     gap: 10px;
-    position: relative; /* parent container */
+    position: relative; 
     align-items: center;
     
   }
@@ -180,6 +180,56 @@
     color: #475569;
     font-weight: 500;
   }
+
+  .columnFilterContainer {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px 16px;
+    width: 220px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+  }
+  
+  .columnFilterContainer label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  
+  .columnFilterContainer input[type="checkbox"] {
+    transform: scale(1.1);
+ 
+    cursor: pointer;
+  }
+  
+  .columnFilterContainer .reset-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 6px;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  
+  .columnFilterContainer .reset-btn:hover {
+    background: #e0e0e0;
+  }
+
+ 
+  
+ 
   
   .dateFilterContainer input[type="date"] {
     padding: 0.4rem;
@@ -490,7 +540,7 @@
   
   .table-empty-state {
     padding: 2.5rem;
-    text-align: left;
+    text-align: center;
     color: #94a3b8;
     border-radius: 0.5rem;
     background-color: #f8fafc;

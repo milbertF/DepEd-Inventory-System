@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
   calculateEditTotalCost();
   initDateValidation();
   checkForDeletedItem();
+  restoreColumnSettings();
+
  
 });
 
@@ -40,16 +42,19 @@ function initFilterControls() {
   const qtyFilter = document.getElementById("quantityFilterContainer");
   const dateToggle = document.getElementById("toggleDateFilter");
   const dateFilter = document.getElementById("dateFilterContainer");
+  const columnToggle = document.getElementById("toggleColumnFilter");
+  const columnFilter = document.getElementById("columnFilterContainer");
 
   function closeAllFilters() {
-    [brandFilter, qtyFilter, dateFilter].forEach(filter => filter.classList.add("hidden"));
+    [brandFilter, qtyFilter, dateFilter, columnFilter].forEach(filter => filter.classList.add("hidden"));
   }
 
-  [brandToggle, qtyToggle, dateToggle].forEach(toggle => {
+  [brandToggle, qtyToggle, dateToggle, columnToggle].forEach(toggle => {
     toggle?.addEventListener("click", function(e) {
       e.stopPropagation();
       const filter = this.id === "toggleBrandFilter" ? brandFilter :
-                   this.id === "toggleQtyFilter" ? qtyFilter : dateFilter;
+                   this.id === "toggleQtyFilter" ? qtyFilter :
+                   this.id === "toggleDateFilter" ? dateFilter : columnFilter;
 
       if (filter.classList.contains("hidden")) {
         closeAllFilters();
@@ -61,7 +66,7 @@ function initFilterControls() {
   });
 
   document.addEventListener('click', closeAllFilters);
-  [brandFilter, qtyFilter, dateFilter].forEach(filter => filter.addEventListener('click', e => e.stopPropagation()));
+  [brandFilter, qtyFilter, dateFilter, columnFilter].forEach(filter => filter.addEventListener('click', e => e.stopPropagation()));
 
   document.getElementById("sortLowToHigh")?.addEventListener("click", () => {
     qtyFilter.classList.add("hidden");
@@ -104,6 +109,7 @@ function initFilterControls() {
     fetchFilteredItems(); // reset
   });
 }
+
 
 // ---------------------
 // FETCH FILTERED ITEMS
@@ -486,5 +492,64 @@ function initDateValidation() {
     }
   });
 }
+
+
+const columnFilterKey = "columnFilterSettings";
+
+
+function restoreColumnSettings() {
+  const savedSettings = JSON.parse(localStorage.getItem(columnFilterKey)) || {};
+  document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
+    const colIndex = cb.getAttribute("data-column");
+    if (savedSettings[colIndex] === false) {
+      cb.checked = false;
+    } else {
+      cb.checked = true;
+    }
+    cb.dispatchEvent(new Event("change"));
+  });
+}
+
+
+function saveColumnSettings() {
+  const settings = {};
+  document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
+    const colIndex = cb.getAttribute("data-column");
+    settings[colIndex] = cb.checked;
+  });
+  localStorage.setItem(columnFilterKey, JSON.stringify(settings));
+}
+
+
+
+
+
+document.querySelectorAll("#columnFilterContainer input[type='checkbox']")
+  .forEach(checkbox => {
+    checkbox.addEventListener("change", function () {
+      const colIndex = this.getAttribute("data-column");
+      const table = document.querySelector(".itemTable");
+
+      table.querySelectorAll("thead th:nth-child(" + (parseInt(colIndex) + 1) + ")")
+        .forEach(th => th.style.display = this.checked ? "" : "none");
+
+      table.querySelectorAll("tbody tr td:nth-child(" + (parseInt(colIndex) + 1) + ")")
+        .forEach(td => td.style.display = this.checked ? "" : "none");
+
+      saveColumnSettings();
+    });
+  });
+
+
+document.getElementById("resetColumnFilterBtn").addEventListener("click", () => {
+  document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
+    if (!cb.checked) {
+      cb.checked = true;
+      cb.dispatchEvent(new Event("change"));
+    }
+  });
+  localStorage.removeItem(columnFilterKey); 
+});
+
 
 

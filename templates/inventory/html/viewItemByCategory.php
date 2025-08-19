@@ -19,7 +19,7 @@
                     
   </head>
 
-
+ 
 
 
 
@@ -54,6 +54,39 @@
           
 
               <div class="filterControls">
+
+  <!-- Column Filter Button -->
+              <button id="toggleColumnFilter" class="filter-btn" title="Show/Hide Columns">
+  <i class="fas fa-columns"></i>
+  <span class="sr-only">Show/Hide Columns</span>
+</button>
+
+
+<!-- Column Filter Dropdown -->
+<div class="columnFilterContainer hidden" id="columnFilterContainer">
+  <div class="filter-header">
+    <i class="fas fa-table-columns"></i>
+    <span>Show/Hide Columns</span>
+  </div>
+
+  <div class="column-checkboxes">
+    <label><input type="checkbox" data-column="1" checked> Serial Number</label>
+    <label><input type="checkbox" data-column="2" checked> Image</label>
+    <label><input type="checkbox" data-column="3" checked> Item Name</label>
+    <label><input type="checkbox" data-column="4" checked> Brand</label>
+    <label><input type="checkbox" data-column="5" checked> Model</label>
+    <label><input type="checkbox" data-column="6" checked> Unit Cost</label>
+    <label><input type="checkbox" data-column="7" checked> Quantity</label>
+    <label><input type="checkbox" data-column="8" checked> Total Cost</label>
+    <label><input type="checkbox" data-column="9" checked> Date Acquired</label>
+    <label><input type="checkbox" data-column="10" checked> Actions</label>
+  </div>
+
+  <button class="reset-btn" id="resetColumnFilterBtn">Reset</button>
+</div>
+
+
+                
                 <!-- Brand Filter Button -->
                 <button id="toggleBrandFilter" class="filter-btn" title="Filter by Brand">
                   <i class="fas fa-tags"></i>
@@ -81,13 +114,19 @@
                 </div>
                 
                 <select id="brandSelect" multiple>
-                  <?php 
-                  $uniqueBrands = array_unique(array_column($items, 'brand'));
-                  foreach ($uniqueBrands as $brand): 
-                  ?>
-                    <option value="<?= htmlspecialchars($brand) ?>"><?= htmlspecialchars($brand) ?></option>
-                  <?php endforeach; ?>
-                </select>
+    <?php 
+
+    $allBrands = array_column($items, 'brand');
+    $filteredBrands = array_filter($allBrands, function($brand) {
+        return $brand !== null && $brand !== '';
+    });
+    $uniqueBrands = array_unique($filteredBrands);
+    
+    foreach ($uniqueBrands as $brand): 
+    ?>
+        <option value="<?= htmlspecialchars($brand) ?>"><?= htmlspecialchars($brand) ?></option>
+    <?php endforeach; ?>
+</select>
 
                 <div class="filter-actions">
                   <button id="filterByBrandBtn">Apply</button>
@@ -135,7 +174,7 @@
               </div>
             </div>
 
-            <!-- Trigger Button (not inside form anymore) -->
+           
   <button class="excel-export-btn" style ="margin-bottom:1rem" onclick="document.getElementById('exportModal').style.display='flex'">
     <i class="fas fa-file-excel"></i>
     Export to Excel
@@ -155,7 +194,9 @@
                   <th>Item Name</th>
                   <th>Brand</th>
                   <th>Model</th>
+                  <th>Unit Cost</th>
                   <th>Quantity</th>
+                  <th>Total Cost</th>
                   <th>Date Acquired</th>
                   <th>Actions</th>
                 </tr>
@@ -176,8 +217,10 @@
                     <td><?= htmlspecialchars($item['item_name']) ?></td>
                     <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
   <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
+  <td>₱<?= htmlspecialchars($item['unit_cost']) ?></td>
 
                     <td><?= htmlspecialchars($item['quantity']) ?></td>
+                    <td>₱<?= htmlspecialchars($item['total_cost']) ?></td>
                     <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
                     <td>
                     <button class="action-btn view" title="View Item"
@@ -294,11 +337,7 @@
 
 
 
-    <script>
-      
-    </script>
-
-
+   
 
   </body>
   </html>

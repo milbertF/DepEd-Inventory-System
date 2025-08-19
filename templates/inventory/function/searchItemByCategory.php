@@ -94,7 +94,9 @@ if ($result->num_rows > 0) {
             <td>{$itemName}</td>
             <td>{$brand}</td>
             <td>{$model}</td>
+            <td>{$unitCost}</td>
             <td>{$qty} {$unit}</td>
+            <td>{$totalCost}</td>
             <td>{$dateAcquired}</td>
             <td>
                 <button class='action-btn view' title='View Item'

@@ -115,7 +115,9 @@ while ($row = $result->fetch_assoc()) {
     echo "<td>{$itemName}</td>";
     echo "<td>{$brand}</td>";
     echo "<td>{$model}</td>";
+    echo "<td>{$unitCost}</td>";
     echo "<td>{$qty} {$unit}</td>";
+    echo "<td>{$totalCost}</td>";
     echo "<td>{$dateAcquired}</td>";
     echo "<td>
         <button class='action-btn view' title='View Item'
