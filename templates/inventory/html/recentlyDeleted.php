@@ -38,13 +38,13 @@ require __DIR__ . '/../function/fetchDeletedItems.php';
         <p style="text-align: center;">No items found.</p>
       <?php else: ?>
 
-      <!-- Search + Filters -->
+       <!-- Search + Filters -->
       <div class="searchFilterWrapper">
         <div class="searchContainer">
           <input type="text" id="searchItem" placeholder="Search Item.." />
         </div>
 
-        <div class="filterControls">
+        <!-- <div class="filterControls">
          
           <button id="toggleQtyFilterAll" class="filter-btn" title="Filter by Quantity">
             <i class="fas fa-sort-amount-up-alt"></i>
@@ -52,14 +52,14 @@ require __DIR__ . '/../function/fetchDeletedItems.php';
           <button id="toggleDateFilterAll" class="filter-btn" title="Filter by Date">
             <i class="fas fa-calendar-alt"></i>
           </button>
-        </div>
+        </div> -->
 
-        <!-- Brand Filter -->
+        <!-- Brand Filter
         <div class="filterContainer hidden" >
         
         </div>
 
-        <!-- Quantity Filter -->
+        Quantity Filter
         <div class="filterContainer hidden" id="quantityFilterContainerAll">
           <div class="filter-header">
             <i class="fas fa-sort-amount-up-alt"></i>
@@ -72,7 +72,7 @@ require __DIR__ . '/../function/fetchDeletedItems.php';
           </div>
         </div>
 
-        <!-- Date Filter -->
+        Date Filter
         <div class="dateFilterContainer hidden" id="dateFilterContainerAll">
           <div class="date-filter-header">
             <i class="fas fa-filter"></i>
@@ -89,14 +89,20 @@ require __DIR__ . '/../function/fetchDeletedItems.php';
         </div>
       </div>
 
+      
+
       <button class="excel-export-btn" style ="margin-bottom:1rem" onclick="document.getElementById('exportModal').style.display='flex'">
     <i class="fas fa-file-excel"></i>
     Export to Excel
-  </button>
+  </button> -->
+
+      </div>
+
+       
+    
   <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
 
 
-    <!-- Items Table -->
 <table class="itemTable">
   <thead>
     <tr>
@@ -110,8 +116,8 @@ require __DIR__ . '/../function/fetchDeletedItems.php';
       <th>Quantity</th>
       <th>Date Acquired</th>
       <th>Deleted By</th>
-      <th>Deleted Date</th> <!-- NEW -->
-      <th>Deleted Time</th> <!-- NEW -->
+      <th>Deleted Date</th> 
+      <th>Deleted Time</th> 
      
       <th>Actions</th>
     </tr>
@@ -131,8 +137,8 @@ require __DIR__ . '/../function/fetchDeletedItems.php';
       <td><?= htmlspecialchars($item['quantity']) ?></td>
       <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
       <td><?= htmlspecialchars($item['deleted_by_fname'] . ' ' . $item['deleted_by_lname']) ?></td>
-      <td><?= !empty($item['deleted_at']) ? date("M-d-Y", strtotime($item['deleted_at'])) : 'N/A' ?></td> <!-- Date only -->
-      <td><?= !empty($item['deleted_at']) ? date("h:i A", strtotime($item['deleted_at'])) : 'N/A' ?></td> <!-- Time only -->
+      <td><?= !empty($item['deleted_at']) ? date("M-d-Y", strtotime($item['deleted_at'])) : 'N/A' ?></td> 
+      <td><?= !empty($item['deleted_at']) ? date("h:i A", strtotime($item['deleted_at'])) : 'N/A' ?></td> 
       
       <td>
         <button class="action-btn view" title="View Item"
@@ -219,7 +225,7 @@ require __DIR__ . '/../function/fetchDeletedItems.php';
 <script src="/javascript/sidebar.js"></script>
 <script src="/javascript/script.js"></script>
 
-<script src="/javascript/viewAllitems.js"></script>\
+<script src="/javascript/recentlyDeletedItems.js"></script>\
 
 
 </body>

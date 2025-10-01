@@ -104,7 +104,7 @@ require __DIR__ . '/../function/addItemFunction.php';
       <div class="inpart">
         <label for="item-description">Description</label>
         <div class="inputs">
-          <input id="item-description" name="description" rows="3" placeholder="e.g., Canon PIXMA G3010"></input>
+          <input id="item-description" name="description" rows="3" placeholder="e.g., Canon PIXMA G3010 or Color etc"></input>
         </div>
       </div>
 

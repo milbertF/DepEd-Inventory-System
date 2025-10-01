@@ -23,5 +23,10 @@
     <i class="fa-solid fa-building"></i>
     <p>Add Office</p>
   </div>
+  <div class="access" title=" Add Request" onclick="addRequest()">
+  <i class="fa-solid fa-file-signature"></i>
+  <p> Add Request</p>
+</div>
+
   
 </div>

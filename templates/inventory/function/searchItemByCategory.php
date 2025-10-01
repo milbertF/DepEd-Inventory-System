@@ -30,10 +30,10 @@ $params = [$categoryId];
 $types = 'i';
 
 if (!empty($search)) {
-    $countQuery .= " AND (item_name LIKE ? OR serial_number LIKE ? OR brand LIKE ?)";
+    $countQuery .= " AND (item_name LIKE ? OR serial_number LIKE ? OR brand LIKE ? OR description LIKE ?)";
     $searchTerm = "%$search%";
-    $params = [$categoryId, $searchTerm, $searchTerm, $searchTerm];
-    $types = 'isss';
+    $params = [$categoryId, $searchTerm, $searchTerm,$searchTerm, $searchTerm];
+    $types = 'issss';
 }
 
 $countStmt = $conn->prepare($countQuery);
@@ -43,15 +43,15 @@ $total = $countStmt->get_result()->fetch_assoc()['total'];
 $response['showPagination'] = $total > $limit;
 $response['totalPages'] = ceil($total / $limit);
 
-// Query for paginated data
+
 $query = "SELECT * FROM deped_inventory_items WHERE category_id = ?";
 $params = [$categoryId];
 $types = 'i';
 
 if (!empty($search)) {
-    $query .= " AND (item_name LIKE ? OR serial_number LIKE ? OR brand LIKE ?)";
-    $params = [$categoryId, $searchTerm, $searchTerm, $searchTerm];
-    $types = 'isss';
+    $query .= " AND (item_name LIKE ? OR serial_number LIKE ? OR brand LIKE ? OR description LIKE ? )";
+    $params = [$categoryId, $searchTerm, $searchTerm,  $searchTerm, $searchTerm];
+    $types = 'issss';
 }
 
 $query .= " ORDER BY item_name ASC LIMIT ? OFFSET ?";
@@ -71,13 +71,14 @@ if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $itemId = htmlspecialchars($row['item_id']);
         $itemName = ucfirst(htmlspecialchars($row['item_name']));
+        $desc = htmlspecialchars($row['description'] ?? '');
         $serial = !empty($row['serial_number']) ? htmlspecialchars($row['serial_number']) : 'None';
         $brand = !empty($row['brand']) ? ucfirst(htmlspecialchars($row['brand'])) : 'None';
         $model = !empty($row['model']) ? ucfirst(htmlspecialchars($row['model'])) : 'None';
         $qty = htmlspecialchars($row['quantity']);
         $unit = !empty($row['unit']) ? htmlspecialchars($row['unit']) : '';
         $photo = !empty($row['item_photo']) ? htmlspecialchars($row['item_photo']) : '/images/user-profile/default-image.jpg';
-        $desc = htmlspecialchars($row['description'] ?? '');
+    
         $unitCost = $row['unit_cost'] ?? 0;
         $totalCost = $row['total_cost'] ?? 0;
         $dateAcquired = !empty($row['date_acquired']) && $row['date_acquired'] !== '0000-00-00'
@@ -92,6 +93,7 @@ if ($result->num_rows > 0) {
             <td>{$serial}</td>
             <td><img src='{$photo}' alt='Item Photo' class='item-photo' /></td>
             <td>{$itemName}</td>
+            <td>{$desc}</td>
             <td>{$brand}</td>
             <td>{$model}</td>
             <td>{$unitCost}</td>

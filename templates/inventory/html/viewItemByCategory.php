@@ -73,13 +73,14 @@
     <label><input type="checkbox" data-column="1" checked> Serial Number</label>
     <label><input type="checkbox" data-column="2" checked> Image</label>
     <label><input type="checkbox" data-column="3" checked> Item Name</label>
-    <label><input type="checkbox" data-column="4" checked> Brand</label>
-    <label><input type="checkbox" data-column="5" checked> Model</label>
-    <label><input type="checkbox" data-column="6" checked> Unit Cost</label>
-    <label><input type="checkbox" data-column="7" checked> Quantity</label>
-    <label><input type="checkbox" data-column="8" checked> Total Cost</label>
-    <label><input type="checkbox" data-column="9" checked> Date Acquired</label>
-    <label><input type="checkbox" data-column="10" checked> Actions</label>
+    <label><input type="checkbox" data-column="4" checked> Description</label>
+    <label><input type="checkbox" data-column="5" checked> Brand</label>
+    <label><input type="checkbox" data-column="6" checked> Model</label>
+    <label><input type="checkbox" data-column="7" checked> Unit Cost</label>
+    <label><input type="checkbox" data-column="8" checked> Quantity</label>
+    <label><input type="checkbox" data-column="9" checked> Total Cost</label>
+    <label><input type="checkbox" data-column="10" checked> Date Acquired</label>
+    <label><input type="checkbox" data-column="11" checked> Actions</label>
   </div>
 
   <button class="reset-btn" id="resetColumnFilterBtn">Reset</button>
@@ -192,6 +193,7 @@
                   <th>Serial Number</th>
                   <th>Image</th>
                   <th>Item Name</th>
+                  <th>Description</th>
                   <th>Brand</th>
                   <th>Model</th>
                   <th>Unit Cost</th>
@@ -215,6 +217,7 @@
                       />
                     </td>
                     <td><?= htmlspecialchars($item['item_name']) ?></td>
+                    <td><?= htmlspecialchars($item['description']) ?></td>
                     <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
   <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
   <td>₱<?= htmlspecialchars($item['unit_cost']) ?></td>

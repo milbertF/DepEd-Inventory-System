@@ -25,9 +25,9 @@ if (!empty($search)) {
     $whereClause = "WHERE 
         i.item_name LIKE ? OR 
         i.serial_number LIKE ? OR 
-        i.brand LIKE ?";
-    $bindTypes = 'sss';
-    $bindParams = [$searchTerm, $searchTerm, $searchTerm];
+        i.brand LIKE ? OR i.description  LIKE ?";
+    $bindTypes = 'ssss';
+    $bindParams = [$searchTerm, $searchTerm, $searchTerm,$searchTerm];
 }
 
 // Count query
@@ -43,7 +43,7 @@ $totalItems = $countStmt->get_result()->fetch_assoc()['total'] ?? 0;
 $response['totalPages'] = ceil($totalItems / $limit);
 $response['showPagination'] = $response['totalPages'] > 1;
 
-// Fetch items
+
 $sql = "SELECT 
         i.item_id, i.item_name, i.category_id, c.category_name, i.brand, i.model,
         i.serial_number, i.quantity, i.unit, i.description, i.unit_cost, i.total_cost,
@@ -58,7 +58,7 @@ $stmt = $conn->prepare($sql);
 
 if (!empty($bindTypes)) {
     $fullBindTypes = $bindTypes . 'ii';
-    // $stmt->bind_param($fullBindTypes, ...$bindParams, $limit, $offset);
+  
 } else {
     $stmt->bind_param('ii', $limit, $offset);
 }

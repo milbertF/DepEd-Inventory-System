@@ -30,10 +30,10 @@ $params = [];
 
 
 if (!empty($search)) {
-    $conditions[] = "(i.item_name LIKE ? OR i.brand LIKE ? OR i.model LIKE ? OR i.serial_number LIKE ?)";
-    $types .= "ssss";
+    $conditions[] = "(i.item_name LIKE ? OR i.brand LIKE ? OR i.model LIKE ? OR i.serial_number LIKE ? OR i.description LIKE ?)";
+    $types .= "sssss";
     $like = "%$search%";
-    $params = array_merge($params, [$like, $like, $like, $like]);
+    $params = array_merge($params, [$like, $like, $like, $like, $like]);
 }
 
 
@@ -103,6 +103,7 @@ if ($totalItems > 0) {
     while ($row = $result->fetch_assoc()) {
         $itemId = htmlspecialchars($row['item_id']);
         $itemName = htmlspecialchars($row['item_name']);
+        $desc = htmlspecialchars($row['description'] ?? '');
         $category = !empty($row['category_name']) ? htmlspecialchars($row['category_name']) : 'None';
         $serial = !empty($row['serial_number']) ? htmlspecialchars($row['serial_number']) : 'None';
         $brand = !empty($row['brand']) ? htmlspecialchars($row['brand']) : 'None';
@@ -110,7 +111,7 @@ if ($totalItems > 0) {
         $qty = htmlspecialchars($row['quantity']);
         $unit = !empty($row['unit']) ? htmlspecialchars($row['unit']) : '';
         $photo = !empty($row['item_photo']) ? htmlspecialchars($row['item_photo']) : '/images/user-profile/default-image.jpg';
-        $desc = htmlspecialchars($row['description'] ?? '');
+       
         $unitCost = htmlspecialchars($row['unit_cost'] ?? 0);
         $totalCost = htmlspecialchars($row['total_cost'] ?? 0);
         $dateAcquired = !empty($row['date_acquired']) && $row['date_acquired'] !== '0000-00-00' ? date('M-d-Y', strtotime($row['date_acquired'])) : 'N/A';
@@ -122,6 +123,7 @@ if ($totalItems > 0) {
         echo "<td>{$serial}</td>";
         echo "<td><img src='{$photo}' class ='item-photo' alt='Item Photo'></td>";
         echo "<td>{$itemName}</td>";
+        echo "<td>{$desc}</td>";
         echo "<td>{$brand}</td>";
         echo "<td>{$model}</td>";
         echo "<td>{$qty} {$unit}</td>";

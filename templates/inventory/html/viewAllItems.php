@@ -103,6 +103,7 @@ require __DIR__ . '/../function/editItemFunction.php';
             <th>Serial Number</th>
             <th>Image</th>
             <th>Item Name</th>
+            <th>Description</th>
            
             <th>Brand</th>
             <th>Model</th>
@@ -121,6 +122,7 @@ require __DIR__ . '/../function/editItemFunction.php';
               <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>" class="item-photo" alt="Item Photo" />
             </td>
             <td><?= htmlspecialchars($item['item_name']) ?></td>
+            <td><?= htmlspecialchars($item['description']) ?></td>
    
             <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
             <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>

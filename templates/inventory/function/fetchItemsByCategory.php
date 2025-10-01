@@ -49,13 +49,14 @@ while ($row = $itemsResult->fetch_assoc()) {
     $items[] = [
         'item_id' => $row['item_id'] ?? '',
         'item_name' => ucfirst($row['item_name'] ?? ''),
+        'description' => $row['description'] ?? '',
         'category_id' => ucfirst($row['category_id'] ?? ''),
         'brand' => ucfirst($row['brand'] ?? ''),
         'model' => ucfirst($row['model'] ?? ''),
         'serial_number' => $row['serial_number'] ?? '',
         'quantity' => $row['quantity'] ?? 0,
         'unit' => ucfirst($row['unit'] ?? ''),
-        'description' => $row['description'] ?? '',
+      
         'unit_cost' => $row['unit_cost'] ?? 0,
         'total_cost' => $row['total_cost'] ?? 0,
         'created_at' => $row['created_at'] ?? '',

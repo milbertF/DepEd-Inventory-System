@@ -1,0 +1,124 @@
+#itemModal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(4px);
+    overflow-y: auto; /* allow scrolling when table is too long */
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .borrow-item-modal-content {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 1000px;
+    margin: 40px auto; /* stick to top with spacing */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    animation: slideDown 0.3s ease;
+    font-family: "Inter", "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* ✅ add spacing between contents */
+    position: relative; /* needed for absolute close button */
+  }
+  
+  .borrow-item-modal-content h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  /* Labels and inputs */
+  .borrow-item-modal-content label {
+    font-weight: 500;
+    margin-right: 8px;
+  }
+  
+  .borrow-item-modal-content select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  
+    outline: none;
+    font-size: 14px;
+  }
+  
+  .borrow-item-modal-content select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.15);
+  }
+  
+  /* Close Button */
+  .borrow-item-modal-content .close {
+    position: absolute; /* ✅ keeps it at the top-right */
+    top: 16px;
+    right: 16px;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+  }
+  .borrow-item-modal-content .close:hover {
+    color: #000;
+  }
+  
+  /* Table Container */
+  .borrow-item-table-container {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    max-height: 60vh; /* fixed height for table scroll */
+    overflow-y: auto;
+  }
+  
+  /* Table Styling */
+  .borrow-item-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  
+  .borrow-item-table th, 
+  .borrow-item-table td {
+    border: 1px solid #e0e0e0;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  
+  .borrow-item-table th {
+    background: #f8f9fa;
+    color: #333;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  
+  .borrow-item-table tr:nth-child(even) {
+    background: #fdfdfd;
+  }
+  
+  .borrow-item-table tr:hover {
+    background: #f1f5ff;
+  }
+  
+  
+  .borrow-item-table button {
+    padding: 4px 10px;
+    background: var(--accentColor);
+    border: none;
+    border-radius: 6px;
+    color: var(--textColor);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .borrow-item-table button:hover {
+    background: #0056b3;
+  }
+  
+  

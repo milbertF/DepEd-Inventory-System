@@ -318,6 +318,8 @@ function handleEditItem(editBtn) {
   document.getElementById('editItemModal').style.display = 'flex';
 }
 
+let scrollPosition = 0;
+
 function handleViewItem(viewBtn) {
   document.getElementById("view-item-name").textContent = viewBtn.dataset.name;
   document.getElementById("view-item-category").textContent = viewBtn.dataset.category || 'None';
@@ -330,14 +332,41 @@ function handleViewItem(viewBtn) {
   document.getElementById("view-item-unit-cost").textContent = viewBtn.dataset.unitcost;
   document.getElementById("view-item-total-cost").textContent = viewBtn.dataset.totalcost;
 
-  document.getElementById("view-item-date-acquired").textContent = viewBtn.dataset.dateAcquired ? new Date(viewBtn.dataset.dateAcquired).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: '2-digit' }).replace(',', '').replace(' ', '-') : 'N/A';
+  document.getElementById("view-item-date-acquired").textContent =
+    viewBtn.dataset.dateAcquired
+      ? new Date(viewBtn.dataset.dateAcquired).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: '2-digit'
+        }).replace(',', '').replace(' ', '-')
+      : 'N/A';
   document.getElementById("view-item-created-at").textContent = viewBtn.dataset.created || 'N/A';
 
   const photo = viewBtn.dataset.photo;
-  document.getElementById("view-item-photo").src = photo && photo !== '' ? '/' + photo : '/images/user-profile/default-image.jpg';
+  document.getElementById("view-item-photo").src =
+    photo && photo !== '' ? '/' + photo : '/images/user-profile/default-image.jpg';
+
+
+  scrollPosition = window.scrollY;
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${scrollPosition}px`;
+  document.body.style.overflow = "hidden";
+  document.body.style.width = "100%";
 
   document.getElementById("itemViewModal").style.display = "flex";
 }
+
+function closeItemView() {
+  document.getElementById("itemViewModal").style.display = "none";
+
+
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.overflow = "";
+  document.body.style.width = "";
+  window.scrollTo(0, scrollPosition);
+}
+
 
 
 function escEditItemModal() {
@@ -348,10 +377,7 @@ function escEditItemModal() {
     document.getElementById('editItemModal').style.display = 'none';
   }
   
-  function closeItemView() {
-    document.getElementById("itemViewModal").style.display = "none";
-  }
-  
+
   function previewItemEditPhoto(event) {
     const output = document.getElementById('edit-itemPhotoOutput');
     const file = event.target.files[0];
