@@ -45,7 +45,7 @@
 .positionTable td {
   padding: 0.875rem 1rem;
   border-bottom: 1px solid #f1f5f9;
-  color: #475569;
+  color: var(  --textColor);
   vertical-align: middle;
   text-align: left;
 }
