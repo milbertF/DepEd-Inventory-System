@@ -1,4 +1,5 @@
 <?php
+
 require __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/fetchAllItems.php'; 
 require __DIR__ . '/../function/editItemFunction.php';
@@ -109,6 +110,7 @@ require __DIR__ . '/../function/editItemFunction.php';
             <th>Model</th>
             <th>Quantity</th>
             <th>Date Acquired</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -122,12 +124,14 @@ require __DIR__ . '/../function/editItemFunction.php';
               <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>" class="item-photo" alt="Item Photo" />
             </td>
             <td><?= htmlspecialchars($item['item_name']) ?></td>
-            <td><?= htmlspecialchars($item['description']) ?></td>
+            <td><?= !empty($item['description']) ? htmlspecialchars($item['description']) : 'None' ?></td>
+
    
             <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
             <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
             <td><?= htmlspecialchars($item['quantity']) ?></td>
             <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
+            <td><?= htmlspecialchars($item['item_status']) ?></td>
             <td>
               <button class="action-btn view" title="View Item"
                 data-id="<?= $item['item_id'] ?>"
@@ -143,10 +147,14 @@ require __DIR__ . '/../function/editItemFunction.php';
                 data-unit="<?= $item['unit'] ?>"
                 data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
                 data-totalcost="<?= $item['total_cost'] ?? 0 ?>"
+                data-itemstatus="<?= $item['item_status'] ?? 0 ?>"
                 data-created="<?= $item['created_at'] ?>">
                 <i class="fas fa-eye"></i>
                 <span class="tooltip">View Item</span>
               </button>
+
+              <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+ 
 
               <button class="action-btn edit" title="Edit Item"
                 data-id="<?= $item['item_id'] ?>"
@@ -159,6 +167,7 @@ require __DIR__ . '/../function/editItemFunction.php';
                 data-serial="<?= $item['serial_number'] ?>"
                 data-qty="<?= $item['quantity'] ?>"
                 data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
+                data-item-status="<?= $item['item_status'] ?>"
                 data-unit="<?= $item['unit'] ?>"
                 data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
                 data-totalcost="<?= $item['total_cost'] ?? 0 ?>">
@@ -173,6 +182,7 @@ require __DIR__ . '/../function/editItemFunction.php';
   <i class="fas fa-trash-alt"></i>
   <span class="tooltip">Delete Item</span>
 </button>
+<?php endif; ?>
 
             </td>
           </tr>

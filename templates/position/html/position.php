@@ -3,7 +3,66 @@ require __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/editPosFunction.php';
 require __DIR__ . '/../function/deletePos.php';
 require __DIR__ . '/../function/fetchPos.php';
+$isAdmin = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin';
 ?>
+
+<style>
+  <?php if (!$isAdmin): ?>
+  
+    .positionTable th:nth-child(4),
+    .positionTable td:nth-child(4),
+    .positionTable th:nth-child(5),
+    .positionTable td:nth-child(5),
+    .officeTable th:nth-child(4),
+    .officeTable td:nth-child(4),
+    .officeTable th:nth-child(5),
+    .officeTable td:nth-child(5) {
+      display: none;
+    }
+
+    
+    .positionTable th:nth-child(2),
+    .positionTable td:nth-child(2),
+    .positionTable th:nth-child(3),
+    .positionTable td:nth-child(3),
+    .officeTable th:nth-child(2),
+    .officeTable td:nth-child(2),
+    .officeTable th:nth-child(3),
+    .officeTable td:nth-child(3) {
+      width: 50%;
+    }
+  <?php else: ?>
+   
+    .positionTable th:nth-child(2),
+    .positionTable td:nth-child(2),
+    .officeTable th:nth-child(2),
+    .officeTable td:nth-child(2) {
+      width: 25%;
+    }
+
+    .positionTable th:nth-child(3),
+    .positionTable td:nth-child(3),
+    .officeTable th:nth-child(3),
+    .officeTable td:nth-child(3) {
+      width: 0%;
+    }
+
+    .positionTable th:nth-child(4),
+    .positionTable td:nth-child(4),
+    .officeTable th:nth-child(4),
+    .officeTable td:nth-child(4) {
+      width: 0%;
+    }
+
+    .positionTable th:nth-child(5),
+    .positionTable td:nth-child(5),
+    .officeTable th:nth-child(5),
+    .officeTable td:nth-child(5) {
+      width: 0%;
+      min-width: 100x;
+    }
+  <?php endif; ?>
+</style>
 
 <!DOCTYPE html>
 <html lang="en">

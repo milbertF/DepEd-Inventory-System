@@ -20,7 +20,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
     $brand = isset($_POST['brand']) && trim($_POST['brand']) !== '' ? trim($_POST['brand']) : null;
     $model = isset($_POST['model']) && trim($_POST['model']) !== '' ? trim($_POST['model']) : null;
     $unit  = isset($_POST['unit'])  && trim($_POST['unit'])  !== '' ? trim($_POST['unit'])  : null;
-    
+    $item_status = isset($_POST['item_status']) && trim($_POST['item_status']) !== '' ? trim($_POST['item_status']) : 'Good'; // ✅ Added this line
+
     $unit_cost = floatval($_POST['unit_cost']);
     $date_acquired = !empty($_POST['date_acquired']) ? $_POST['date_acquired'] : null;
     $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
@@ -70,11 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         }
     }
 
-  
     if (empty($serials)) {
         $serials[] = null;
     }
-    
 
     $success_count = 0;
 
@@ -84,14 +83,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         $stmt = $conn->prepare("
             INSERT INTO deped_inventory_items (
                 item_id, item_photo, item_name, category_id, description,
-                brand, model, serial_number, quantity, unit, unit_cost, date_acquired
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                brand, model, serial_number, quantity, unit, unit_cost, date_acquired, item_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
     
         if ($stmt) {
-           
             $stmt->bind_param(
-                "sssissssisds",  
+                "sssissssisdss",  
                 $item_id,
                 $photo_path,
                 $item_name,
@@ -103,9 +101,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
                 $quantity,
                 $unit,
                 $unit_cost,
-                $date_acquired
+                $date_acquired,
+                $item_status 
             );
-    
+
             if ($stmt->execute()) {
                 $success_count++;
             }
@@ -127,3 +126,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
 
     $conn->close();
 }
+?>

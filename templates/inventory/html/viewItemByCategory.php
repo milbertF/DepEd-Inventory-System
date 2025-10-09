@@ -80,7 +80,8 @@
     <label><input type="checkbox" data-column="8" checked> Quantity</label>
     <label><input type="checkbox" data-column="9" checked> Total Cost</label>
     <label><input type="checkbox" data-column="10" checked> Date Acquired</label>
-    <label><input type="checkbox" data-column="11" checked> Actions</label>
+    <label><input type="checkbox" data-column="11" checked> Status</label>
+    <label><input type="checkbox" data-column="12" checked> Actions</label>
   </div>
 
   <button class="reset-btn" id="resetColumnFilterBtn">Reset</button>
@@ -199,7 +200,9 @@
                   <th>Unit Cost</th>
                   <th>Quantity</th>
                   <th>Total Cost</th>
+                  
                   <th>Date Acquired</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -225,7 +228,9 @@
                     <td><?= htmlspecialchars($item['quantity']) ?></td>
                     <td>₱<?= htmlspecialchars($item['total_cost']) ?></td>
                     <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
+                    <td><?= htmlspecialchars($item['item_status']) ?></td>
                     <td>
+
                     <button class="action-btn view" title="View Item"
     data-id="<?= $item['item_id'] ?>"
     data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
@@ -237,6 +242,7 @@
     data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
     data-qty="<?= $item['quantity'] ?>"
     data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
+    data-itemstatus="<?= $item['item_status'] ?>"
     data-unit="<?= $item['unit'] ?>"
     data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
     data-totalcost="<?= $item['total_cost'] ?? 0 ?>"
@@ -244,6 +250,8 @@
   >
     <i class="fas fa-eye"></i>
     <span class="tooltip">View Item</span>
+    <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+
   </button>
 
                       <button class="action-btn edit" title="Edit Item"
@@ -257,7 +265,7 @@
           data-serial="<?= $item['serial_number'] ?>"
           data-qty="<?= $item['quantity'] ?>"
           data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
-
+          data-item-status="<?= $item['item_status'] ?>"
           data-unit="<?= $item['unit'] ?>"
           data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
           data-totalcost="<?= $item['total_cost'] ?? 0 ?>">
@@ -272,6 +280,7 @@
     <i class="fas fa-trash-alt"></i>
     <span class="tooltip">Delete Item</span>
   </button>
+  <?php endif; ?>
 
 
                     </td>

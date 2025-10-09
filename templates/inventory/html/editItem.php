@@ -82,6 +82,19 @@
        value="<?= !empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00' ? htmlspecialchars($item['date_acquired']) : '' ?>" />
         </div>
       </div>
+      <div class="inpart">
+  <label for="item-status"> Item Status <span>*</span></label>
+  <div class="inputs">
+    <select id="edit-item-status" name="item_status" required>
+      <option value="" disabled selected>Select Status</option>
+      <option value="Good">Good</option>
+      <option value="Damaged">Damaged</option>
+      <option value="For Repair">For Repair</option>
+      <option value="Lost">Lost</option>
+      <option value="Replaced">Replaced</option>
+    </select>
+  </div>
+</div>
 
       <div class="inpart">
         <label for="edit-item-qty">Quantity <span>*</span></label>

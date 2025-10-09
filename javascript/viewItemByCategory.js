@@ -92,7 +92,7 @@ function initFilterControls() {
   document.getElementById("resetBrandFilterBtn")?.addEventListener("click", () => {
     document.getElementById("brandSelect").selectedIndex = -1;
     brandFilter.classList.add("hidden");
-    fetchFilteredItems(); // reset
+    fetchFilteredItems();
   });
 
   document.getElementById("filterByDateBtn")?.addEventListener("click", () => {
@@ -106,7 +106,7 @@ function initFilterControls() {
     document.getElementById("dateFrom").value = "";
     document.getElementById("dateTo").value = "";
     dateFilter.classList.add("hidden");
-    fetchFilteredItems(); // reset
+    fetchFilteredItems();
   });
 }
 
@@ -138,7 +138,7 @@ function fetchFilteredItems(filters = {}, page = 1) {
           pagination.style.display = data.showPagination ? 'flex' : 'none';
           pagination.innerHTML = generatePagination(data.currentPage, data.totalPages);
           
-          // Add event listeners to the new pagination buttons
+      
           document.querySelectorAll('.pagination a').forEach(link => {
             link.addEventListener('click', function(e) {
               e.preventDefault();
@@ -175,7 +175,7 @@ function fetchFilteredItems(filters = {}, page = 1) {
   
     if (totalPages <= 1) return html;
   
-    // Chevron Left (Previous)
+ 
     if (currentPage > 1) {
       html += createPageLink(currentPage - 1, '<i class="fas fa-chevron-left"></i>');
     } else {
@@ -297,6 +297,7 @@ function handleEditItem(editBtn) {
   document.getElementById('edit-item-unit').value = getData('data-unit');
   document.getElementById('edit-item-unit-cost').value = getData('data-unitcost');
   document.getElementById('edit-item-total-cost').value = getData('data-totalcost');
+  document.getElementById('edit-item-status').value = getData('data-item-status');
   document.getElementById('edit-item-qty').value = getData('data-qty');
   document.getElementById('edit-item-photo').value = '';
 
@@ -345,11 +346,13 @@ function handleViewItem(viewBtn) {
       : 'N/A';
   document.getElementById("view-item-created-at").textContent = viewBtn.dataset.created || 'N/A';
 
+  document.getElementById("view-item-status").textContent = viewBtn.dataset.itemstatus;
+
   const photo = viewBtn.dataset.photo;
   document.getElementById("view-item-photo").src =
     photo && photo !== '' ? '/' + photo : '/images/user-profile/default-image.jpg';
 
-  // 🔒 Lock scroll
+
   scrollPosition = window.scrollY;
   document.body.style.position = "fixed";
   document.body.style.top = `-${scrollPosition}px`;
@@ -362,7 +365,7 @@ function handleViewItem(viewBtn) {
 function closeItemView() {
   document.getElementById("itemViewModal").style.display = "none";
 
-  // 🔓 Restore scroll
+
   document.body.style.position = "";
   document.body.style.top = "";
   document.body.style.overflow = "";

@@ -72,10 +72,9 @@
     background-color: #ffffff;
   }
   
-  /* Buttons inside the request table */
-
   
-  /* Special delete/remove button */
+  
+  
   .request-table .delete-btn {
     background-color: #f8d7da;
     color: #000;
@@ -86,7 +85,7 @@
     background-color: #f1b0b7;
   }
   
-  /* For consistent spacing if button text changes */
+
   .request-table td:last-child {
     white-space: nowrap;
   }
@@ -146,9 +145,23 @@
 
 
 
+.qty-highlight {
 
 
+  font-weight: 600;
+  letter-spacing: 0.5px;
 
+
+}
+
+
+#submitRequestBtn:disabled {
+  background-color: #b5b5b5; 
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 0.8;
+  transition: background-color 0.2s ease;
+}
 
 
 

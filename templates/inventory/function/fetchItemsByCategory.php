@@ -34,7 +34,7 @@ $totalItems = $countResult->fetch_assoc()['total'];
 $totalPages = ceil($totalItems / $limit);
 
 
-$itemQuery = $conn->prepare("SELECT item_id, item_name, category_id, brand, model, serial_number, quantity, unit, description, unit_cost, total_cost, created_at, date_acquired, item_photo 
+$itemQuery = $conn->prepare("SELECT item_id, item_name, category_id, brand, model, serial_number, quantity, unit, description, unit_cost, total_cost, created_at, date_acquired, item_status, item_photo 
                              FROM deped_inventory_items 
                              WHERE category_id = ? 
                              ORDER BY item_name ASC
@@ -56,11 +56,11 @@ while ($row = $itemsResult->fetch_assoc()) {
         'serial_number' => $row['serial_number'] ?? '',
         'quantity' => $row['quantity'] ?? 0,
         'unit' => ucfirst($row['unit'] ?? ''),
-      
         'unit_cost' => $row['unit_cost'] ?? 0,
         'total_cost' => $row['total_cost'] ?? 0,
         'created_at' => $row['created_at'] ?? '',
         'date_acquired' => $row['date_acquired'] ?? '',
+        'item_status' => ucfirst($row['item_status'] ?? ''),
         'item_photo' => $row['item_photo'] ?? ''
     ];
 }

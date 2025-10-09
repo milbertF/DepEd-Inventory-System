@@ -8,16 +8,26 @@ while ($row = $catResult->fetch_assoc()) {
     $categories[] = $row;
 }
 
+
 $items = [];
 $itemQuery = "
   SELECT 
-    i.item_id, i.item_name, i.category_id, 
-    i.brand, i.model, i.serial_number, 
-    i.quantity, i.description
+    i.item_id, 
+    i.item_name, 
+    i.category_id, 
+    i.brand, 
+    i.model, 
+    i.serial_number, 
+    i.quantity, 
+    i.description
   FROM deped_inventory_items i
+  WHERE i.item_status = 'Good'
   ORDER BY i.item_name ASC
 ";
 $itemResult = $conn->query($itemQuery);
 while ($row = $itemResult->fetch_assoc()) {
     $items[] = $row;
 }
+
+$conn->close();
+?>

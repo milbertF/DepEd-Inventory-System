@@ -27,6 +27,7 @@ $itemQuery = $conn->prepare("
         i.total_cost,
         i.created_at,
         i.date_acquired,
+        i.item_status,
         i.item_photo
     FROM deped_inventory_items i
     LEFT JOIN deped_inventory_item_category c ON i.category_id = c.category_id
@@ -55,6 +56,7 @@ while ($row = $itemsResult->fetch_assoc()) {
         'total_cost' => $row['total_cost'] ?? 0,
         'created_at' => $row['created_at'] ?? '',
         'date_acquired' => $row['date_acquired'] ?? '',
+        'item_status' => $row['item_status'] ?? '',
         'item_photo' => $row['item_photo'] ?? ''
     ];
 }

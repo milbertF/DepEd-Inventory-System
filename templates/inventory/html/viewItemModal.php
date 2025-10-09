@@ -64,6 +64,10 @@
           <span class="info-value" id="view-item-date-acquired"></span>
         </div>
         <div class="info-item">
+          <span class="info-label">Item Status:</span>
+          <span class="info-value" id="view-item-status"></span>
+        </div>
+        <div class="info-item">
           <span class="info-label">Created At:</span>
           <span class="info-value" id="view-item-created-at"></span>
         </div>

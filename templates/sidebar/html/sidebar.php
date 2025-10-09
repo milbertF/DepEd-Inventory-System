@@ -22,6 +22,7 @@
     <label>Item</label>
   </button>
 
+
   <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
     
     <button class="part" onclick="redirect('employee')">
@@ -45,6 +46,8 @@
     </div>
     <label>Office</label>
   </button>
+  <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+    
 
   <button class="part" onclick="redirect('request')">
     <div class="icon iconRequest">
@@ -52,6 +55,7 @@
     </div>
     <label>Request</label>
   </button>
+  <?php endif; ?>
 
   <button class="part" onclick="redirect('report')">
     <div class="icon iconReport">

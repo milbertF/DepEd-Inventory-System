@@ -1,5 +1,7 @@
 <?php
+require_once __DIR__ . '/../../../config/restrictRoles.php';
 
+restrictRoles(['Employee']);
 
 require  __DIR__ . '/../../header/html/header.php';
 

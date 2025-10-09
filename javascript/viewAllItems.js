@@ -295,11 +295,14 @@ function handleEditItem(editBtn) {
   document.getElementById('edit-item-unit-cost').value = getData('data-unitcost');
   document.getElementById('edit-item-total-cost').value = getData('data-totalcost');
   document.getElementById('edit-item-qty').value = getData('data-qty');
+  document.getElementById('edit-item-status').value = getData('data-item-status');
   document.getElementById('edit-item-photo').value = '';
 
   const dateAcquired = getData('data-date-acquired');
   document.getElementById('edit-item-date-acquired').value = dateAcquired && !isNaN(Date.parse(dateAcquired)) ? new Date(dateAcquired).toISOString().split('T')[0] : '';
 
+
+  
   const categoryId = getData('data-category-id');
   const categorySelect = document.getElementById('edit-item-category-id');
   Array.from(categorySelect.options).forEach(opt => opt.selected = opt.value === categoryId);
@@ -341,6 +344,7 @@ function handleViewItem(viewBtn) {
         }).replace(',', '').replace(' ', '-')
       : 'N/A';
   document.getElementById("view-item-created-at").textContent = viewBtn.dataset.created || 'N/A';
+  document.getElementById("view-item-status").textContent = viewBtn.dataset.itemstatus;
 
   const photo = viewBtn.dataset.photo;
   document.getElementById("view-item-photo").src =

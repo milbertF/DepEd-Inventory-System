@@ -10,48 +10,7 @@ require __DIR__ . '/../function/addItemFunction.php';
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="/styles/addOffPos.css" />
-  <style>
-    .serial-tag {
-      display: none; /* hide long serial list on form */
-      background: #f0f0f0;
-      padding: 5px 10px;
-      border-radius: 4px;
-      margin: 5px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .serial-tag button {
-      background: none;
-      border: none;
-      color: #ff4444;
-      cursor: pointer;
-    }
-    .remove-serial {
-      background: none;
-      border: none;
-      color: #ff4444;
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      cursor: pointer;
-    }
-    .serial-entry {
-      position: relative;
-      margin-bottom: 15px;
-      padding-right: 30px;
-    }
-    #serial-numbers-list {
-      display: none; /* hide long serial list on form */
-    }
-    #multiple-serial-indicator {
-      display: none; /* hide long serial list on form */
-      font-size: 0.875rem;
-      color: #555;
-      margin-top: 5px;
-      display: none;
-    }
-  </style>
+  
 </head>
 
 <body>
@@ -121,6 +80,21 @@ require __DIR__ . '/../function/addItemFunction.php';
           <input type="text" id="item-model" name="model" placeholder="e.g., G3010, V2.1" />
         </div>
       </div>
+
+      <div class="inpart">
+  <label for="item-status"> Item Status <span>*</span></label>
+  <div class="inputs">
+    <select id="item-status" name="item_status" required>
+      <option value="" disabled selected>Select Status</option>
+      <option value="Good">Good</option>
+      <option value="Damaged">Damaged</option>
+      <option value="For Repair">For Repair</option>
+      <option value="Lost">Lost</option>
+      <option value="Replaced">Replaced</option>
+    </select>
+  </div>
+</div>
+
 
       <div class="info">
         <p>For items with identical details (same item details), you can add multiple serial numbers to track individual units.</p>
@@ -235,7 +209,48 @@ require __DIR__ . '/../function/addItemFunction.php';
 
 
 
-
+<style>
+    .serial-tag {
+      display: none; 
+      background: #f0f0f0;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .serial-tag button {
+      background: none;
+      border: none;
+      color: #ff4444;
+      cursor: pointer;
+    }
+    .remove-serial {
+      background: none;
+      border: none;
+      color: #ff4444;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      cursor: pointer;
+    }
+    .serial-entry {
+      position: relative;
+      margin-bottom: 15px;
+      padding-right: 30px;
+    }
+    #serial-numbers-list {
+      display: none; 
+    }
+    #multiple-serial-indicator {
+      display: none; 
+      font-size: 0.875rem;
+      color: #555;
+      margin-top: 5px;
+      display: none;
+    }
+  </style>
 
 
 </body>

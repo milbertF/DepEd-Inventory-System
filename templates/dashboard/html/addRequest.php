@@ -16,17 +16,17 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
 </head>
 <body>
 <div class="addEmployee" style="display: none;" id="addRequest">
-  <div class="esc" style="justify-content: flex-end; margin-left:250px">
+  <div class="esc" style="justify-content: flex-end; margin-left:550px">
     <button id="btnEsc" onclick="escRequest()"><i class="fa-solid fa-xmark"></i></button>
   </div>
 
-  <div class="con" style="width:40rem;">
+  <div class="con" style="width:60rem;">
     <h4>Request Item</h4>
 
     <form method="POST" enctype="multipart/form-data" id="request-form" autocomplete="off">
-      <!-- ================= DIRECTLY START AT STAGE 2 ================= -->
+  
       <div class="stage active" id="stage-2">
-        <div class="btnSave">
+        <div class="btnSave"   >
           <button type="button" style="font-weight:400;" onclick="openItemModal()">
             <i class="fa-solid fa-box"></i> Choose Item
           </button>
@@ -36,7 +36,10 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
         <table class="request-table" id="request-items-table">
           <thead>
             <tr>
-              <th>Item</th>
+            <th> Available Quantity</th>
+            <th> Serial #</th>
+              <th>Item Name</th>
+              <th>Desccription</th>
               <th>Brand</th>
               <th>Model</th>
               <th>Quantity</th>
@@ -49,8 +52,11 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
 
         <div id="hidden-items"></div>
         <div class="btnSave">
-          <button type="submit" name="submit_request">Submit Request</button>
-        </div>
+  <button type="submit" name="submit_request" id="submitRequestBtn" disabled>
+    Submit Request
+  </button>
+</div>
+
       </div>
     </form>
   </div>

@@ -2,6 +2,8 @@
                     
 
 <div class="quickAccess">
+<?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+  
 
 <div class="access" title="Add Item Category" onclick="addCategory()">
     <i class="fas fa-tags"></i>
@@ -11,10 +13,12 @@
     <i class="fas fa-list"></i>
     <p>Add Items</p>
   </div>
+
   <div class="access" title="Add Employee" onclick="addEmployee()">
     <i class="fas fa-user-tie"></i>
     <p>Add Employee</p>
   </div>
+
   <div class="access" title="Add Position" onclick="addPosition()">
     <i class="fa-solid fa-street-view"></i>
     <p>Add Position</p>
@@ -23,10 +27,11 @@
     <i class="fa-solid fa-building"></i>
     <p>Add Office</p>
   </div>
+  <?php endif; ?>
   <div class="access" title=" Add Request" onclick="addRequest()">
   <i class="fa-solid fa-file-signature"></i>
   <p> Add Request</p>
 </div>
 
-  
+
 </div>

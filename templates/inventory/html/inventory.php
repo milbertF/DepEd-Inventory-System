@@ -64,7 +64,8 @@ require __DIR__ . '/../function/fetchCategory.php';
   <span class="tooltip">View Items</span>
 </button>
 
-
+<?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+    
 <button class="action-btn edit" 
         data-id="<?= $category['category_id'] ?>"
         data-name="<?= htmlspecialchars($category['category_name']) ?>">
@@ -80,6 +81,7 @@ require __DIR__ . '/../function/fetchCategory.php';
   <i class="fas fa-trash-alt"></i>
   <span class="tooltip">Delete Category</span>
 </button>
+<?php endif; ?>
 
 
 

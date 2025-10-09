@@ -7,21 +7,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
     $item_name = trim($_POST['item_name']);
     $category_id = intval($_POST['category_id']);
     
-    // Convert empty strings to NULL for optional fields
-    $description = (!empty(trim($_POST['description'] ?? ''))) ? trim($_POST['description']) : null;
-    $brand = (!empty(trim($_POST['brand'] ?? ''))) ? trim($_POST['brand']) : null;
-    $model = (!empty(trim($_POST['model'] ?? ''))) ? trim($_POST['model']) : null;
-    $serial_number = (!empty(trim($_POST['serial_number'] ?? ''))) ? trim($_POST['serial_number']) : null;
+    // ✅ Save "None" instead of NULL for empty values
+    $description = (!empty(trim($_POST['description'] ?? ''))) ? trim($_POST['description']) : 'None';
+    $brand = (!empty(trim($_POST['brand'] ?? ''))) ? trim($_POST['brand']) : 'None';
+    $model = (!empty(trim($_POST['model'] ?? ''))) ? trim($_POST['model']) : 'None';
+    $serial_number = (!empty(trim($_POST['serial_number'] ?? ''))) ? trim($_POST['serial_number']) : 'None';
     
     $quantity = intval($_POST['quantity']);
-    
-    // Convert empty unit to NULL
-    $unit = (!empty(trim($_POST['unit']))) ? trim($_POST['unit']) : null;
+    $unit = (!empty(trim($_POST['unit']))) ? trim($_POST['unit']) : 'None';
     
     $unit_cost = floatval($_POST['unit_cost']);
     $date_acquired = (!empty($_POST['date_acquired']) && $_POST['date_acquired'] !== '0000-00-00') 
         ? $_POST['date_acquired'] 
         : null;
+    $item_status = trim($_POST['item_status']);
 
     $stmt_old = $conn->prepare("SELECT item_photo FROM deped_inventory_items WHERE item_id = ?");
     $stmt_old->bind_param("s", $item_id);
@@ -69,14 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             quantity = ?,
             unit = ?,
             unit_cost = ?,
-            date_acquired = ?
+            date_acquired = ?,
+            item_status = ?
         WHERE item_id = ?
     ");
 
     if ($stmt) {
-        // Use "s" for string parameters that might be NULL
         $stmt->bind_param(
-            "ssissssisdsi", // Changed the last parameter to "i" since item_id is likely an integer
+            "ssissssisdssi", 
             $photo_path,
             $item_name,
             $category_id,
@@ -88,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             $unit,
             $unit_cost,
             $date_acquired,
+            $item_status,
             $item_id
         );
 
@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             showSweetAlert(
                 'success',
                 'Item Updated',
-                "Item <b>$item_name</b>  has been updated.",
+                "Item <b>$item_name</b> has been updated.",
                 $_SERVER['HTTP_REFERER']
             );
         } else {

@@ -12,31 +12,40 @@ function addRequest() {
 function escRequest() {
   const addRequest = document.getElementById('addRequest');
   addRequest.style.display = 'none';
-
-
   document.body.style.overflow = '';
-
 
   const form = document.getElementById('request-form');
   if (form) {
     form.reset();
   }
 
-
   const tbody = document.querySelector('#request-items-table tbody');
   if (tbody) {
     tbody.innerHTML = '';
   }
+
+
+  addedItems.clear();
+  updateSubmitButtonState();
 }
 
 
 
 function openItemModal() {
-  document.getElementById('itemModal').style.display = 'flex';
+  const itemModal = document.getElementById('itemModal');
+  itemModal.style.display = 'flex';
+
+
+  document.getElementById('categoryFilter').value = '';
+  document.getElementById('itemSearch').value = '';
+  
+  filteredItems = [...allItems];
   currentPage = 1;
-    filteredItems = [...allItems];
+
+
   renderTable();
 }
+
 
 function closeItemModal() {
   document.getElementById('itemModal').style.display = 'none';
@@ -45,6 +54,15 @@ function closeItemModal() {
   filteredItems = [...allItems];
   currentPage = 1;
 }
+
+function updateSubmitButtonState() {
+  const submitBtn = document.getElementById('submitRequestBtn');
+  const tbody = document.querySelector('#request-items-table tbody');
+  const hasItems = tbody && tbody.children.length > 0;
+  submitBtn.disabled = !hasItems;
+}
+
+
 
 
 
@@ -128,7 +146,7 @@ function renderTable() {
         btn.className = 'item-select-btn active-btn';
         btn.style.fontSize = '13px';
       } else if (!isOutOfStock) {
-        selectItem(item.item_id, item.item_name, item.brand, item.model, qty, btn);
+        selectItem(item.item_id,item.quantity, item.serial_number, item.item_name, item.description, item.brand, item.model, qty, btn);
       }
     };
   });
@@ -207,7 +225,7 @@ function applyFilters(event) {
 
 const addedItems = new Set(); 
 
-function selectItem(id, name, brand, model, qty, button) {
+function selectItem(id, quantity, serial_number, name, description, brand, model, qty, button) {
   const tbody = document.querySelector('#request-items-table tbody');
 
   if (addedItems.has(id)) {
@@ -220,7 +238,12 @@ function selectItem(id, name, brand, model, qty, button) {
 
   const row = document.createElement('tr');
   row.innerHTML = `
+  <td data-label="Available Quantity" class="qty-highlight">${quantity || '-'}</td>
+
+  <td data-label="Serial #">${serial_number || '-'}</td>
     <td data-label="Item">${name}<input type="hidden" name="item_id[]" value="${id}"></td>
+ 
+    <td data-label="Description">${description || '-'}</td>
     <td data-label="Brand">${brand || '-'}</td>
     <td data-label="Model">${model || '-'}</td>
     <td data-label="Quantity"><input type="number" name="quantity_requested[]" min="1" max="${qty}" required></td>
@@ -232,6 +255,7 @@ function selectItem(id, name, brand, model, qty, button) {
     </td>
   `;
   tbody.appendChild(row);
+  updateSubmitButtonState();
 
 
 
@@ -243,13 +267,14 @@ function selectItem(id, name, brand, model, qty, button) {
   const removeFunc = () => {
    
     row.remove();
+    updateSubmitButtonState();
 
 
     button.classList.remove('delete-item');
  
     button.textContent = 'Select';
     button.style.fontSize = '13px'; 
-    button.onclick = () => selectItem(id, name, brand, model, qty, button);
+    button.onclick = () => selectItem(id,quantity, serial_number, name, description, brand, model, qty, button);
 
 
     addedItems.delete(id);
@@ -276,3 +301,18 @@ function removeRow(btn, id) {
     selectBtn.classList.remove("selected-btn");
   }
 }
+
+document.getElementById('request-form').addEventListener('submit', function (e) {
+  const submitBtn = document.getElementById('submitRequestBtn');
+  
+
+  if (submitBtn.disabled) {
+    e.preventDefault();
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+
+});
