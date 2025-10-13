@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/../function/fetchEmployees.php';
-require __DIR__ . '/../function/fetchItemsByCategory.php';
+require __DIR__ . '/../function/fetchItemsByCategoryDashboard.php';
 ?>
 
 
@@ -68,7 +68,7 @@ require __DIR__ . '/../function/fetchItemsByCategory.php';
 <script src="/javascript/addRequest.js"></script>
 <script>
 
-const allItems = <?= json_encode($items) ?>;
+
 
 
 

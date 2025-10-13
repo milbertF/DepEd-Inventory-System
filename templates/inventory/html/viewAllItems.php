@@ -1,9 +1,8 @@
 <?php
-
 require __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/fetchAllItems.php'; 
-require __DIR__ . '/../function/editItemFunction.php';
 
+require __DIR__ . '/../function/editItemFunction.php';
 ?>
 
 <!DOCTYPE html>
@@ -17,7 +16,23 @@ require __DIR__ . '/../function/editItemFunction.php';
   <link rel="stylesheet" href="/styles/viewItemByCategoryTable.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
 </head>
+
+<!-- Add this in your allItems PHP file -->
+<div id="allItemsDeleteAlertData" 
+     data-all-deleted-name="<?php echo htmlspecialchars($_SESSION['deleted_all_item_name'] ?? ''); ?>"
+     data-all-is-last-item="<?php echo isset($_SESSION['deleted_all_is_last_item']) && $_SESSION['deleted_all_is_last_item'] ? 'true' : 'false'; ?>"
+     style="display: none;">
+</div>
+
+<?php
+// Clear the session after setting the data attributes
+if (isset($_SESSION['deleted_all_item_name'])) {
+    unset($_SESSION['deleted_all_item_name']);
+    unset($_SESSION['deleted_all_is_last_item']);
+}
+?>
 
 <body>
 <?php require __DIR__ . '/viewItemModal.php'; ?>
@@ -27,9 +42,7 @@ require __DIR__ . '/../function/editItemFunction.php';
   <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
 
   <div class="con">
-    <h3>All Items</h3>
-    
-
+  <?php require __DIR__ . '/../../header/html/pageHeader.php'; ?>
     <?php require __DIR__ . '/../../quick-access/access.php'; ?>
 
     <div class="tableContainer">
@@ -37,63 +50,146 @@ require __DIR__ . '/../function/editItemFunction.php';
         <p style="text-align: center;">No items found.</p>
       <?php else: ?>
 
-      <!-- Search + Filters -->
-      <div class="searchFilterWrapper">
-        <div class="searchContainer">
-          <input type="text" id="searchItem" placeholder="Search Item.." />
-        </div>
+        <div class="searchFilterWrapper" style="position: relative; display: flex; gap: 15px; align-items: center; margin-bottom: 20px;">
+            <div class="searchContainer" style="flex: 1;">
+              <input type="hidden" id="categoryId" value="<?= $categoryId ?>" />
+              <input type="text" id="searchItem" placeholder="Search items by name, brand, model, serial number..."
+                value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" 
+                style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;" />
+            </div>
 
-        <div class="filterControls">
-         
-          <button id="toggleQtyFilterAll" class="filter-btn" title="Filter by Quantity">
-            <i class="fas fa-sort-amount-up-alt"></i>
+      <!-- Search + Filters -->
+    
+        <div class="filterControls" style="position: relative;">
+          <!-- Reset All Filters Button -->
+          <button id="resetAllFiltersBtn" class="filter-btn" title="Reset All Filters">
+            <i class="fas fa-refresh"></i>
+            <span class="sr-only">Reset All Filters</span>
+            <div class="tooltip">Reset All Filters</div>
           </button>
+
+          <!-- Column Filter Button -->
+          <button id="toggleColumnFilter" class="filter-btn" title="Show/Hide Columns">
+            <i class="fas fa-columns"></i>
+            <span class="sr-only">Show/Hide Columns</span>
+            <div class="tooltip">Show/Hide Columns</div>
+          </button>
+
+           <!-- Quantity Filter Button -->
+           <button id="toggleQtyFilterAll" class="filter-btn" title="Filter by Quantity">
+            <i class="fas fa-sort-amount-up-alt"></i>
+            <span class="sr-only">Filter by Quantity</span>
+            <div class="tooltip">Filter by Quantity</div>
+          </button>
+
+       
+
+       
           <button id="toggleDateFilterAll" class="filter-btn" title="Filter by Date">
             <i class="fas fa-calendar-alt"></i>
+            <span class="sr-only">Filter by Acquired Date</span>
+            <div class="tooltip">Filter by Acquired Date</div>
           </button>
-        </div>
 
-        <!-- Brand Filter -->
-        <div class="filterContainer hidden" >
+             <!-- Status Filter Button -->
+             <button id="toggleStatusFilter" class="filter-btn" title="Filter by Status">
+            <i class="fas fa-info-circle"></i>
+            <span class="sr-only">Filter by Status</span>
+            <div class="tooltip">Filter by Status</div>
+          </button>
+
+
+         
         
-        </div>
 
-        <!-- Quantity Filter -->
-        <div class="filterContainer hidden" id="quantityFilterContainerAll">
-          <div class="filter-header">
-            <i class="fas fa-sort-amount-up-alt"></i>
-            <span>Filter by Quantity</span>
+          <!-- Column Filter Dropdown -->
+          <div class="columnFilterContainer hidden" id="columnFilterContainer" style="right: 0; min-width: 200px;">
+            <div class="filter-header">
+              <i class="fas fa-table-columns"></i>
+              <span>Show/Hide Columns</span>
+            </div>
+            <div class="column-checkboxes">
+        
+              <label><input type="checkbox" data-column="1" checked> Category</label>
+              <label><input type="checkbox" data-column="2" checked> Serial Number</label>
+              <label><input type="checkbox" data-column="3" checked> Image</label>
+              <label><input type="checkbox" data-column="4" checked> Item Name</label>
+              <label><input type="checkbox" data-column="5" checked> Description</label>
+              <label><input type="checkbox" data-column="6" checked> Brand</label>
+              <label><input type="checkbox" data-column="7" checked> Model</label>
+              <label><input type="checkbox" data-column="8" checked> Quantity</label>
+              <label><input type="checkbox" data-column="9" checked> Date Acquired</label>
+              <label><input type="checkbox" data-column="10" checked> Status</label>
+              <label><input type="checkbox" data-column="11" checked> Actions</label>
+            </div>
+            <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
           </div>
-          <div class="quantity-options">
-            <button id="sortLowToHighAll" class="quantity-option"><i class="fas fa-sort-amount-up"></i> Low to High</button>
-            <button id="sortHighToLowAll" class="quantity-option"><i class="fas fa-sort-amount-down"></i> High to Low</button>
-            <button id="showOutOfStockAll" class="quantity-option"><i class="fas fa-box-open"></i> Out of Stock</button>
-          </div>
-        </div>
 
-        <!-- Date Filter -->
-        <div class="dateFilterContainer hidden" id="dateFilterContainerAll">
-          <div class="date-filter-header">
-            <i class="fas fa-filter"></i>
-            <span>Filter by acquire date</span>
+          <!-- Status Filter Dropdown -->
+          <div class="statusFilterContainer hidden" id="statusFilterContainer" style="right: 0; min-width: 200px;">
+            <div class="filter-header">
+              <i class="fas fa-info-circle"></i>
+              <span>Filter by Status</span>
+            </div>
+            <div class="status-checkboxes">
+              <?php
+              $allStatuses = array_column($items, 'item_status');
+              $uniqueStatuses = array_unique($allStatuses);
+              sort($uniqueStatuses);
+              
+              foreach ($uniqueStatuses as $status): 
+                if (!empty($status) && $status !== 'None'): ?>
+                  <label>
+                    <input type="checkbox" name="statusFilter" value="<?= htmlspecialchars($status) ?>" >
+                    <?= htmlspecialchars($status) ?>
+                  </label>
+              <?php endif; 
+              endforeach; ?>
+            </div>
+            <div class="filter-actions">
+              <button id="filterByStatusBtn">Apply</button>
+              <button id="resetStatusFilterBtn">Reset</button>
+            </div>
           </div>
-          <label for="dateFrom">From:</label>
-          <input type="date" id="dateFrom" name="dateFrom">
-          <label for="dateTo">To:</label>
-          <input type="date" id="dateTo" name="dateTo">
-          <div class="filter-actions">
-            <button id="filterByDateBtnAll" class="filter-btn">Apply</button>
-            <button id="resetDateFilterBtnAll" class="filter-btn">Reset</button>
+
+          <!-- Quantity Filter Dropdown -->
+          <div class="filterContainer hidden" id="quantityFilterContainerAll">
+            <div class="filter-header">
+              <i class="fas fa-sort-amount-up-alt"></i>
+              <span>Filter by Quantity</span>
+            </div>
+            <div class="quantity-options">
+              <button id="sortLowToHighAll" class="quantity-option"><i class="fas fa-sort-amount-up"></i> Low to High</button>
+              <button id="sortHighToLowAll" class="quantity-option"><i class="fas fa-sort-amount-down"></i> High to Low</button>
+              <button id="showAvailableAll" class="quantity-option"><i class="fas fa-box"></i> Available (Qty > 0)</button>
+              <button id="showOutOfStockAll" class="quantity-option"><i class="fas fa-box-open"></i> Out of Stock (Qty = 0)</button>
+              <button id="resetQuantityFilterAll" class="quantity-option"><i class="fas fa-times"></i> Show All Quantities</button>
+            </div>
+          </div>
+
+          <!-- Date Filter Dropdown -->
+          <div class="dateFilterContainer hidden" id="dateFilterContainerAll">
+            <div class="date-filter-header">
+              <i class="fas fa-filter"></i>
+              <span>Filter by acquire date</span>
+            </div>
+            <label for="dateFrom">From:</label>
+            <input type="date" id="dateFrom" name="dateFrom">
+            <label for="dateTo">To:</label>
+            <input type="date" id="dateTo" name="dateTo">
+            <div class="filter-actions">
+              <button id="filterByDateBtnAll" class="filter-btn">Apply</button>
+              <button id="resetDateFilterBtnAll" class="filter-btn">Reset</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <button class="excel-export-btn" style ="margin-bottom:1rem" onclick="document.getElementById('exportModal').style.display='flex'">
-    <i class="fas fa-file-excel"></i>
-    Export to Excel
-  </button>
-  <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
-
+      <button class="excel-export-btn" style="margin-bottom:1rem" onclick="document.getElementById('exportModal').style.display='flex'">
+        <i class="fas fa-file-excel"></i>
+        Export to Excel
+      </button>
+      <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
 
       <!-- Items Table -->
       <table class="itemTable">
@@ -105,7 +201,6 @@ require __DIR__ . '/../function/editItemFunction.php';
             <th>Image</th>
             <th>Item Name</th>
             <th>Description</th>
-           
             <th>Brand</th>
             <th>Model</th>
             <th>Quantity</th>
@@ -114,10 +209,10 @@ require __DIR__ . '/../function/editItemFunction.php';
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="inventoryTableBody">
           <?php foreach ($items as $index => $item): ?>
           <tr>
-            <td><?= ($page - 1) * $limit + $index + 1 ?></td>
+            <td><?= $index + 1 ?></td>
             <td><?= htmlspecialchars($item['category_name']) ?></td>
             <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
             <td>
@@ -125,8 +220,6 @@ require __DIR__ . '/../function/editItemFunction.php';
             </td>
             <td><?= htmlspecialchars($item['item_name']) ?></td>
             <td><?= !empty($item['description']) ? htmlspecialchars($item['description']) : 'None' ?></td>
-
-   
             <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
             <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
             <td><?= htmlspecialchars($item['quantity']) ?></td>
@@ -154,8 +247,6 @@ require __DIR__ . '/../function/editItemFunction.php';
               </button>
 
               <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
- 
-
               <button class="action-btn edit" title="Edit Item"
                 data-id="<?= $item['item_id'] ?>"
                 data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
@@ -176,14 +267,13 @@ require __DIR__ . '/../function/editItemFunction.php';
               </button>
 
               <button class="action-btn delete"
-        data-id="<?= $item['item_id'] ?>"
-        data-name="<?= htmlspecialchars($item['item_name']) ?>"
-        data-source="all">
-  <i class="fas fa-trash-alt"></i>
-  <span class="tooltip">Delete Item</span>
-</button>
-<?php endif; ?>
-
+                data-id="<?= $item['item_id'] ?>"
+                data-name="<?= htmlspecialchars($item['item_name']) ?>"
+                data-source="all">
+                <i class="fas fa-trash-alt"></i>
+                <span class="tooltip">Delete Item</span>
+              </button>
+              <?php endif; ?>
             </td>
           </tr>
           <?php endforeach; ?>
@@ -191,50 +281,114 @@ require __DIR__ . '/../function/editItemFunction.php';
       </table>
 
       <!-- Pagination -->
-      <?php if ($totalPages > 1): ?>
-        <div class="pagination">
-          <?php if ($page > 1): ?>
-            <a href="?page=<?= $page - 1 ?>" class="prev-next"><i class="fas fa-chevron-left"></i></a>
-          <?php else: ?>
-            <a class="prev-next disabled"><i class="fas fa-chevron-left"></i></a>
-          <?php endif; ?>
-
-          <?php if ($page > 3): ?>
-            <a href="?page=1">1</a>
-            <?php if ($page > 4): ?><span class="ellipsis">...</span><?php endif; ?>
-          <?php endif; ?>
-
-          <?php for ($i = max(1, $page - 2); $i <= min($page + 2, $totalPages); $i++): ?>
-            <a href="?page=<?= $i ?>" class="<?= ($i == $page) ? 'active' : '' ?>"><?= $i ?></a>
-          <?php endfor; ?>
-
-          <?php if ($page < $totalPages - 2): ?>
-            <?php if ($page < $totalPages - 3): ?><span class="ellipsis">...</span><?php endif; ?>
-            <a href="?page=<?= $totalPages ?>"><?= $totalPages ?></a>
-          <?php endif; ?>
-
-          <?php if ($page < $totalPages): ?>
-            <a href="?page=<?= $page + 1 ?>" class="prev-next"><i class="fas fa-chevron-right"></i></a>
-          <?php else: ?>
-            <a class="prev-next disabled"><i class="fas fa-chevron-right"></i></a>
-          <?php endif; ?>
-        </div>
-      <?php endif; ?>
-      <?php endif; ?>
+     
+      <div class="pagination" id="pagination"></div>
+<div class="table-footer">
+  <div class="footer-left">
+    <div class="items-per-page-selector">
+      <label for="rowsPerPageSelect">Show:</label>
+      <select id="rowsPerPageSelect" class="form-select">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+      </select>
+      <span>entries</span>
+    </div>
+   
+  </div>
+  
+  <div class="footer-right">
+    <div class="item-count-display" style="background: #f8f9fa; padding: 8px 16px; border-radius: 20px; font-weight: 500; color: #495057;">
+      <span id="totalItemsCount"><?= count($items) ?></span> total items
+      <span id="filteredItemsCount" style="display: none;">
+        | Showing <span id="visibleItemsCount">0</span> of <span id="totalItemsCount2"><?= count($items) ?></span>
+      </span>
+    </div>
+  </div>
+</div>
+    
+        <?php endif; ?>
 
       <div class="backBtnContainer">
         <a href="/inventory" class="backBtn"><i class="fas fa-arrow-left"></i> Back to Category</a>
       </div>
+      
+      
+      
     </div>
+    
   </div>
-</div>
+              </div>
+
+         
+
+              <script>
+                // checkAllItemsDeleteAlerts.js
+function checkForAllDeletedItem() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const itemDeleted = urlParams.get('item_all_deleted');
+    
+    if (itemDeleted === '1') {
+        // Get data from data attributes
+        const alertContainer = document.getElementById('allItemsDeleteAlertData');
+        if (alertContainer) {
+            const deletedName = alertContainer.getAttribute('data-all-deleted-name');
+            const isLastItem = alertContainer.getAttribute('data-all-is-last-item') === 'true';
+            
+            if (deletedName) {
+                setTimeout(() => {
+                    let message = `Item <b>${deletedName}</b> was deleted successfully.`;
+                    
+                    if (isLastItem) {
+                      
+                    }
+                    
+                    Swal.fire({
+                        icon: 'success', 
+                        title: 'Deleted!', 
+                        html: message,
+                        confirmButtonColor: '#3085d6'
+                    }).then(() => {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete('item_all_deleted');
+                        window.history.replaceState({}, document.title, url.pathname);
+                    });
+                }, 100);
+            }
+        }
+    } else if (itemDeleted === '0') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Delete Failed',
+            text: 'Failed to delete item. Please try again.',
+            confirmButtonColor: '#3085d6'
+        }).then(() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('item_all_deleted');
+            window.history.replaceState({}, document.title, url.pathname);
+        });
+    }
+}
+
+
+
+window.addEventListener('load', function() {
+    checkForAllDeletedItem();
+});
+
+window.addEventListener('pageshow', function() {
+    checkForAllDeletedItem();
+})
+              </script>
+
+
+
 
 <script src="/javascript/header.js"></script>
 <script src="/javascript/sidebar.js"></script>
 <script src="/javascript/script.js"></script>
-
-<script src="/javascript/viewAllitems.js"></script>\
-
+<script src="/javascript/viewAllItems.js"></script>
 
 </body>
 </html>

@@ -2,24 +2,30 @@
 require __DIR__ . '/../../../database/dbConnection.php';
 
 $offices = [];
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-$limit = 10; 
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$page = max($page, 1); 
-$offset = ($page - 1) * $limit;
-
-$totalQuery = "SELECT COUNT(*) AS total FROM deped_inventory_employee_office";
-$totalResult = $conn->query($totalQuery);
-$total = ($totalResult && $row = $totalResult->fetch_assoc()) ? (int)$row['total'] : 0;
-
-$totalPages = ceil($total / $limit);
 
 $query = "SELECT office_id, office_name, office_description, created_at 
-          FROM deped_inventory_employee_office 
-          ORDER BY office_name ASC 
-          LIMIT ? OFFSET ?";
+          FROM deped_inventory_employee_office";
+
+$params = [];
+$types = '';
+
+if (!empty($search)) {
+    $query .= " WHERE office_name LIKE ? OR office_description LIKE ?";
+    $searchTerm = "%$search%";
+    $params = [$searchTerm, $searchTerm];
+    $types = 'ss';
+}
+
+$query .= " ORDER BY office_name ASC";
+
 $stmt = $conn->prepare($query);
-$stmt->bind_param("ii", $limit, $offset);
+
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
 $stmt->execute();
 $result = $stmt->get_result();
 

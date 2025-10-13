@@ -1,13 +1,6 @@
-
-
-
-
-
 <style>
-
   #exportModal {
     display: flex;
-
     align-items: center;
   }
   
@@ -34,7 +27,20 @@
 
     <form id="exportForm" action="/templates/inventory/function/exportCategoryToExcel.php" method="GET">
       <input type="hidden" name="category_id" value="<?= htmlspecialchars($categoryId) ?>">
-   
+
+      <!-- Status -->
+      <div class="inpart">
+        <label for="status">Status:</label>
+        <div class="inputs">
+          <select name="status" id="status">
+            <option value="all">All Status</option>
+            <option value="good">Good</option>
+            <option value="damage">Damage</option>
+            <option value="lost">Lost</option>
+            <option value="for repair">For Repair</option>
+          </select>
+        </div>
+      </div>
 
       <!-- Brand -->
       <div class="inpart">
@@ -64,7 +70,7 @@
 
       <!-- Quantity Range -->
       <div class="inpart">
-      <div id="quantityError" class="err-text"></div>
+        <div id="quantityError" class="err-text"></div>
         <label>Quantity Range:</label>
         <div style="display: flex; gap: 0.5rem;">
           <div class="inputs" style="flex: 1;">
@@ -76,54 +82,49 @@
         </div>
       </div>
 
-
+      <!-- Unit Cost Range -->
       <div class="inpart">
-      <div id="costError" class="err-text"></div>
+        <div id="costError" class="err-text"></div>
         <label>Unit Cost Range:</label>
         <div style="display: flex; gap: 0.5rem;">
           <div class="inputs" style="flex: 1;">
-            <input type="number" step="0.01" id="minCost"  name="min_cost" placeholder="Min Cost" min="0">
+            <input type="number" step="0.01" id="minCost" name="min_cost" placeholder="Min Cost" min="0">
           </div>
           <div class="inputs" style="flex: 1;">
-            <input type="number" step="0.01" id="maxCost"  name="max_cost" placeholder="Max Cost" min="0">
+            <input type="number" step="0.01" id="maxCost" name="max_cost" placeholder="Max Cost" min="0">
           </div>
         </div>
       </div>
 
- <!-- Date Range -->
-<div class="inpart">
-  <label>Date Acquired Range:</label>
-  <div style="display: flex; gap: 0.5rem;">
-    
-    <!-- From -->
-    <div style="flex: 1;">
-      <div style="font-size: 0.85rem; margin-bottom: 0.2rem;">From</div>
-      <div class="inputs">
-        <input type="date" id="start_date" name="start_date">
+      <!-- Date Range -->
+      <div class="inpart">
+        <label>Date Acquired Range:</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <!-- From -->
+          <div style="flex: 1;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.2rem;">From</div>
+            <div class="inputs">
+              <input type="date" id="start_date" name="start_date">
+            </div>
+          </div>
+          <!-- To -->
+          <div style="flex: 1;">
+            <div style="font-size: 0.85rem; margin-bottom: 0.2rem;">To</div>
+            <div class="inputs">
+              <input type="date" id="end_date" name="end_date">
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    
-    <!-- To -->
-    <div style="flex: 1;">
-      <div style="font-size: 0.85rem; margin-bottom: 0.2rem;">To</div>
-      <div class="inputs">
-        <input type="date" id="end_date" name="end_date">
-      </div>
-    </div>
-
-  </div>
-</div>
 
 
-      <!-- Button -->
       <div class="btnSave">
-        <button id="exportBtn"  type="submit">
+        <button id="exportBtn" type="submit">
           <i class="fas fa-file-excel"></i> Export to Excel
         </button>
       </div>
     </form>
   </div>
 </div>
-
 
 <script src="/javascript/exportModal.js"></script>

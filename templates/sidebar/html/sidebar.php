@@ -19,7 +19,7 @@
     <div class="icon iconItems">
       <i class="fas fa-list"></i>
     </div>
-    <label>Item</label>
+    <label>Inventory</label>
   </button>
 
 
@@ -91,3 +91,4 @@
   </div>
 
 </div>
+

@@ -1,16 +1,6 @@
 <?php
 require __DIR__ . '/../../../database/dbConnection.php';
 
-$page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
-$limit = 10;
-$offset = ($page - 1) * $limit;
-
-
-$countQuery = $conn->query("SELECT COUNT(*) as total FROM deped_inventory_items");
-$totalItems = $countQuery->fetch_assoc()['total'];
-$totalPages = ceil($totalItems / $limit);
-
-
 $itemQuery = $conn->prepare("
     SELECT 
         i.item_id,
@@ -32,10 +22,8 @@ $itemQuery = $conn->prepare("
     FROM deped_inventory_items i
     LEFT JOIN deped_inventory_item_category c ON i.category_id = c.category_id
     ORDER BY i.created_at DESC
-    LIMIT ? OFFSET ?
 ");
 
-$itemQuery->bind_param("ii", $limit, $offset);
 $itemQuery->execute();
 $itemsResult = $itemQuery->get_result();
 

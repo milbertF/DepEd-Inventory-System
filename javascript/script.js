@@ -66,3 +66,7 @@ const existingicon = document.querySelector("link[rel~='icon']");
 //     inputs[nextIdx].focus();
 //   });
 // });
+
+window.addEventListener("beforeunload", () => {
+    document.body.classList.add("fade-out");
+  });

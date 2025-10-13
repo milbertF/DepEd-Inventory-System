@@ -90,7 +90,7 @@ require __DIR__ . '/../function/addItemFunction.php';
       <option value="Damaged">Damaged</option>
       <option value="For Repair">For Repair</option>
       <option value="Lost">Lost</option>
-      <option value="Replaced">Replaced</option>
+    
     </select>
   </div>
 </div>

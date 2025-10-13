@@ -41,6 +41,8 @@
 }
 
 
+
+
 .officeTable td,
 .positionTable td {
   padding: 0.875rem 1rem;
@@ -238,6 +240,38 @@
 .pagination .ellipsis {
   padding: 0.6rem 0.3rem;
   color: #94a3b8;
+}
+
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #dee2e6;
+  margin-top: 20px;
+}
+
+.pagination-controls {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-top: 1rem;
+padding: 0.5rem 0;
+}
+
+.items-per-page-selector {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+font-size: 0.875rem;
+color: #6c757d;
+}
+
+.items-per-page-selector select {
+width: auto;
+padding: 0.25rem 0.5rem;
+border: 1px solid #ced4da;
+border-radius: 0.25rem;
+background-color: white;
 }
 
 

@@ -23,7 +23,7 @@ require  __DIR__ . '/../../header/html/header.php';
     <div class="wrapMain">
         <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
         <div class="con">
-            <h3>Request</h3>
+        <?php require __DIR__ . '/../../header/html/pageHeader.php'; ?>
 
 
             <?php require __DIR__ . '/../../quick-access/access.php'; ?>

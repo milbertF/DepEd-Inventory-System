@@ -1,17 +1,7 @@
 <?php
 require __DIR__ . '/../../../database/dbConnection.php';
 
-
-$page = isset($_GET['page']) && is_numeric($_GET['page']) ? intval($_GET['page']) : 1;
-$limit = 10;
-$offset = ($page - 1) * $limit;
-
-
-$countQuery = $conn->query("SELECT COUNT(*) as total FROM deped_inventory_items_deleted");
-$totalItems = $countQuery->fetch_assoc()['total'];
-$totalPages = ceil($totalItems / $limit);
-
-
+// Removed pagination parameters
 $itemQuery = $conn->prepare("
     SELECT 
         d.deleted_id,
@@ -29,7 +19,7 @@ $itemQuery = $conn->prepare("
         d.unit,
         d.unit_cost,
         d.total_cost,
-        d.status,
+        d.item_status,
         d.created_at,
         d.deleted_by_user_id,
         d.deleted_by_fname,
@@ -38,10 +28,8 @@ $itemQuery = $conn->prepare("
     FROM deped_inventory_items_deleted d
     LEFT JOIN deped_inventory_item_category c ON d.category_id = c.category_id
     ORDER BY d.deleted_at DESC
-    LIMIT ? OFFSET ?
 ");
 
-$itemQuery->bind_param("ii", $limit, $offset);
 $itemQuery->execute();
 $itemsResult = $itemQuery->get_result();
 
@@ -61,7 +49,7 @@ while ($row = $itemsResult->fetch_assoc()) {
         'description' => $row['description'] ?? '',
         'unit_cost' => $row['unit_cost'] ?? 0,
         'total_cost' => $row['total_cost'] ?? 0,
-        'status' => $row['status'] ?? '',
+        'item_status' => $row['item_status'] ?? '',
         'created_at' => $row['created_at'] ?? '',
         'deleted_by_user_id' => $row['deleted_by_user_id'] ?? '',
         'deleted_by_fname' => ucfirst($row['deleted_by_fname'] ?? ''),

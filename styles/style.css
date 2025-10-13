@@ -48,10 +48,116 @@ body {
   box-sizing: border-box;
   box-shadow: var(--boxShadow);
 }
+.header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  border-bottom:1px solid black;
+  margin-bottom: 12px; 
+}
 
-.wrapMain .con h3 {
+
+.header-title-row  h3 {
   padding-bottom: 0.8rem;
-  border-bottom: black solid 1px;
+
+}
+
+
+
+/* Notification  Bell */
+.notif-bell {
+  position: relative;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.notif-bell i {
+  font-size: 1.5rem;
+  color: hsl(from var(--textColor) h s l / 0.5);
+  transition: transform 0.2s ease;
+}
+
+.notif-bell:hover i {
+  transform: scale(1.1);
+}
+
+.notif-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 130%;
+  background: var(--cardBg, #fff);
+  color: var(--textColor, #333);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  width: 300px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.notif-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: background 0.2s ease;
+}
+
+.notif-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.notif-item i {
+  margin-top: 2px;
+  font-size: 1rem;
+}
+
+.notif-item.low-stock i {
+  color: #f39c12;
+}
+
+.notif-item.restocked i {
+  color: #27ae60;
+}
+
+.notif-item.general i {
+  color: #3498db;
+}
+
+.notif-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+
+.notif-time {
+  display: block;
+  font-size: 0.75rem;
+  color: gray;
+  margin-top: 2px;
+}
+
+.notif-footer {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 8px;
+}
+
+.notif-footer a {
+  font-size: 0.9rem;
+  color: var(--accentColor, #007bff);
+  text-decoration: none;
+}
+
+.notif-footer a:hover {
+  text-decoration: underline;
 }
 
 @media screen and (max-width: 767px) {
@@ -84,4 +190,16 @@ body {
       max-width: calc(100% - 5.5rem);
     }
   }
+}
+
+
+body {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+  background-color: #f8f9fa; 
+}
+
+
+body.fade-out {
+  opacity: 0;
 }

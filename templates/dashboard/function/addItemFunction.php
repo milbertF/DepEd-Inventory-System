@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
     $brand = isset($_POST['brand']) && trim($_POST['brand']) !== '' ? trim($_POST['brand']) : null;
     $model = isset($_POST['model']) && trim($_POST['model']) !== '' ? trim($_POST['model']) : null;
     $unit  = isset($_POST['unit'])  && trim($_POST['unit'])  !== '' ? trim($_POST['unit'])  : null;
-    $item_status = isset($_POST['item_status']) && trim($_POST['item_status']) !== '' ? trim($_POST['item_status']) : 'Good'; // ✅ Added this line
+    $item_status = isset($_POST['item_status']) && trim($_POST['item_status']) !== '' ? trim($_POST['item_status']) : 'Good';
 
     $unit_cost = floatval($_POST['unit_cost']);
     $date_acquired = !empty($_POST['date_acquired']) ? $_POST['date_acquired'] : null;
@@ -57,12 +57,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         }
     }
 
+    // Handle serial numbers
     $serials = [];
-
     if (!empty($_POST['serial_number'])) {
         $serials[] = trim($_POST['serial_number']);
     }
-
     if (!empty($_POST['additional_serials']) && is_array($_POST['additional_serials'])) {
         foreach ($_POST['additional_serials'] as $s) {
             if (trim($s)) {
@@ -70,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
             }
         }
     }
-
     if (empty($serials)) {
         $serials[] = null;
     }
@@ -79,17 +77,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
 
     foreach ($serials as $serial) {
         $item_id = generateUniqueID($conn, 'deped_inventory_items', 'item_id');
-    
+        
         $stmt = $conn->prepare("
             INSERT INTO deped_inventory_items (
                 item_id, item_photo, item_name, category_id, description,
-                brand, model, serial_number, quantity, unit, unit_cost, date_acquired, item_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                brand, model, serial_number, quantity, initial_quantity, unit,
+                unit_cost, date_acquired, item_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-    
+
         if ($stmt) {
             $stmt->bind_param(
-                "sssissssisdss",  
+                "sssissssiisdss",
                 $item_id,
                 $photo_path,
                 $item_name,
@@ -99,16 +98,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
                 $model,
                 $serial,
                 $quantity,
+                $quantity, 
                 $unit,
                 $unit_cost,
                 $date_acquired,
-                $item_status 
+                $item_status
             );
 
             if ($stmt->execute()) {
                 $success_count++;
             }
-    
+
             $stmt->close();
         }
     }
