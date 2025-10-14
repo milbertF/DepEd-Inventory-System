@@ -116,7 +116,8 @@
       <option value="" disabled selected>Select a role</option>
       <option value="Admin">Admin</option>
       <option value="Employee">Employee</option>
-      <option value="Deactivate">Deactivate</option>
+      <option value="Inactive">Inactive</option>
+      <option value="logisticsOfficer">Logisctics Officer</option>
     </select>
   </div>
 </div>

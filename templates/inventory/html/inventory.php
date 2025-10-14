@@ -51,7 +51,9 @@ require __DIR__ . '/../function/fetchCategory.php';
               <span class="tooltip">View Items (<?= $category['item_count'] ?? 0 ?> items)</span>
             </button>
 
-            <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+            <?php if (isset($_SESSION['user']['role']) && 
+         ($_SESSION['user']['role'] === 'Admin' || $_SESSION['user']['role'] === 'logisticsOfficer')): ?>
+
               <button class="action-btn edit"
                 data-id="<?= $category['category_id'] ?>"
                 data-name="<?= htmlspecialchars($category['category_name']) ?>">

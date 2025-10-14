@@ -22,6 +22,7 @@ function handleLogin() {
             $isEmail = filter_var($identifier, FILTER_VALIDATE_EMAIL);
 
             if ($isEmail) {
+                
                 $stmt = $conn->prepare("SELECT * FROM `deped_inventory_users`");
                 $stmt->execute();
                 $result = $stmt->get_result();
@@ -39,6 +40,7 @@ function handleLogin() {
                     return false;
                 }
             } else {
+              
                 $stmt = $conn->prepare("SELECT * FROM `deped_inventory_users` WHERE username = ?");
                 $stmt->bind_param("s", $identifier);
                 $stmt->execute();
@@ -51,17 +53,24 @@ function handleLogin() {
                 }
             }
 
+            if (isset($user['role']) && strtolower($user['role']) === 'inactive') {
+                showSweetAlert('error', 'Account Inactive', 'Your account has not been activated yet. Please contact the administrator.');
+                return false;
+            }
+
             if (!password_verify($password, $user['password'])) {
                 showSweetAlert('error', 'Error', 'Invalid credentials');
                 return false;
             }
 
+         
             $infoStmt = $conn->prepare("SELECT * FROM `deped_inventory_user_info` WHERE user_id = ?");
             $infoStmt->bind_param("s", $user['user_id']);
             $infoStmt->execute();
             $infoResult = $infoStmt->get_result();
             $userInfo = $infoResult->fetch_assoc();
 
+        
             $_SESSION['user'] = [
                 'user_id' => $user['user_id'],
                 'username' => $user['username'],

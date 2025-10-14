@@ -20,36 +20,38 @@ document.addEventListener("DOMContentLoaded", function () {
   initFilterControlsAll();
   initSearchFunctionalityAll();
   initTableActions();
-  checkForDeletedItem();
+
   initDateValidation();
   calculateEditTotalCost();
   restoreColumnSettings();
   initRowsPerPageSelector(); 
 });
 
-// Function for rows per page selector
+
 function initRowsPerPageSelector() {
-  const rowsPerPageSelect = document.getElementById("rowsPerPageSelect");
-  
-  if (rowsPerPageSelect) {
-    // Load saved preference FIRST, before setting up event listener
-    const savedRowsPerPage = localStorage.getItem('allItemsTableRowsPerPage');
-    if (savedRowsPerPage) {
-      rowsPerPageSelect.value = savedRowsPerPage;
-      rowsPerPage = parseInt(savedRowsPerPage);
-    }
+    const rowsPerPageSelect = document.getElementById("rowsPerPageSelect");
     
-    // Then set up the event listener
-    rowsPerPageSelect.addEventListener('change', function() {
-      rowsPerPage = parseInt(this.value);
-      thisCurrentPage = 1; // Reset to first page when changing rows per page
-      displayPage(thisCurrentPage);
-      updateItemCounts();
+    if (rowsPerPageSelect) {
       
-      // Save preference to localStorage
-      localStorage.setItem('allItemsTableRowsPerPage', this.value);
-    });
-  }
+        const savedRowsPerPage = localStorage.getItem('allItemsTableRowsPerPage');
+        if (savedRowsPerPage) {
+            rowsPerPageSelect.value = savedRowsPerPage;
+            rowsPerPage = parseInt(savedRowsPerPage);
+        }
+        
+     
+        rowsPerPageSelect.addEventListener('change', function() {
+            rowsPerPage = parseInt(this.value);
+            thisCurrentPage = 1;
+            
+          
+            displayPage(thisCurrentPage);
+            updateItemCounts();
+            
+          
+            localStorage.setItem('allItemsTableRowsPerPage', this.value);
+        });
+    }
 }
 function initializeDOMCache() {
   domElements = {
@@ -171,90 +173,148 @@ function updateActiveFiltersDisplay() {
 
 
 function initializeTable() {
-  allRows = Array.from(domElements.tableBody.querySelectorAll("tr"));
-  
-  // Pre-calculate row data for faster filtering
-  allRows.forEach((row, index) => {
-      row._data = {
-          category: (row.cells[1]?.textContent || '').toLowerCase().trim(),
-          serialNumber: (row.cells[2]?.textContent || '').toLowerCase(),
-          itemName: (row.cells[4]?.textContent || '').toLowerCase(),
-          description: (row.cells[5]?.textContent || '').toLowerCase(),
-          brand: (row.cells[6]?.textContent || '').toLowerCase().trim(),
-          model: (row.cells[7]?.textContent || '').toLowerCase(),
-          quantity: parseInt(row.cells[8]?.textContent || 0),
-          dateAcquired: row.cells[9]?.textContent.trim(),
-          status: row.cells[10]?.textContent.trim()
-      };
-  });
-  
-  filteredRows = [...allRows];
-  displayPage(1);
-  updateItemCounts();
+    allRows = Array.from(domElements.tableBody.querySelectorAll("tr"));
+    
+    // Pre-calculate row data for faster filtering
+    allRows.forEach((row, index) => {
+        const dateCell = row.cells[10]?.textContent.trim();
+        console.log(`Row ${index} date:`, dateCell); // Debug logging
+        
+        row._data = {
+            category: (row.cells[2]?.textContent || '').toLowerCase().trim(),
+            serialNumber: (row.cells[4]?.textContent || '').toLowerCase(),
+            itemName: (row.cells[5]?.textContent || '').toLowerCase(),
+            description: (row.cells[6]?.textContent || '').toLowerCase(),
+            brand: (row.cells[7]?.textContent || '').toLowerCase().trim(),
+            model: (row.cells[8]?.textContent || '').toLowerCase(),
+            quantity: parseInt(row.cells[9]?.textContent || 0),
+            dateAcquired: dateCell, // Use the variable we logged
+            status: row.cells[11]?.textContent.trim(),
+            itemId: (row.cells[1]?.textContent || '').toLowerCase()
+        };
+    });
+    
+    filteredRows = [...allRows];
+    displayPage(1);
+    updateItemCounts();
 }
-
+// Client-side filtering
+// Client-side filtering
 // Client-side filtering
 function filterItemsAll() {
-  const filterKey = generateFilterKey();
-  
-  // Cache first
-  if (filterCache.has(filterKey)) {
-      filteredRows = filterCache.get(filterKey);
-      updateDisplay();
-      return;
-  }
-  
-  const searchValue = (domElements.searchInput?.value || '').toLowerCase();
- 
-  requestAnimationFrame(() => {
-      filteredRows = allRows.filter(row => {
-          const data = row._data;
-          
-          // Quantity filter
-          if (currentFiltersAll.quantity === "out" && data.quantity !== 0) return false;
-          if (currentFiltersAll.quantity === "available" && data.quantity <= 0) return false;
-          
-          // Date filter
-          if (currentFiltersAll.dateFrom || currentFiltersAll.dateTo) {
-              const itemDate = parseTableDate(data.dateAcquired);
-              if (!itemDate) return false;
-              
-              if (currentFiltersAll.dateFrom && itemDate < new Date(currentFiltersAll.dateFrom)) return false;
-              if (currentFiltersAll.dateTo) {
-                  const toDate = new Date(currentFiltersAll.dateTo);
-                  toDate.setHours(23, 59, 59, 999);
-                  if (itemDate > toDate) return false;
-              }
-          }
-          
-          // Status filter
-          if (currentFiltersAll.status.length > 0 && !currentFiltersAll.status.includes(data.status)) {
-              return false;
-          }
-          
-          // Search filter
-          if (searchValue && !(
-              data.itemName.includes(searchValue) || 
-              data.model.includes(searchValue) || 
-              data.brand.includes(searchValue) ||
-              data.serialNumber.includes(searchValue) ||
-              data.description.includes(searchValue) ||
-              data.category.includes(searchValue)
-          )) {
-              return false;
-          }
-          
-          return true;
-      });
+    const filterKey = generateFilterKey();
+    
+    // Cache first
+    if (filterCache.has(filterKey)) {
+        filteredRows = filterCache.get(filterKey);
+        updateDisplay();
+        return;
+    }
+    
+    const searchValue = (domElements.searchInput?.value || '').toLowerCase();
+   
+    requestAnimationFrame(() => {
+        console.log('=== FILTERING STARTED ===');
+        console.log('Date filters:', {
+            dateFrom: currentFiltersAll.dateFrom,
+            dateTo: currentFiltersAll.dateTo
+        });
+        
+        filteredRows = allRows.filter(row => {
+            const data = row._data;
+            
+            // Quantity filter
+            if (currentFiltersAll.quantity === "out" && data.quantity !== 0) return false;
+            if (currentFiltersAll.quantity === "available" && data.quantity <= 0) return false;
+            
+            // Date filter - ADD COMPREHENSIVE DEBUGGING
+            if (currentFiltersAll.dateFrom || currentFiltersAll.dateTo) {
+                const itemDate = parseTableDate(data.dateAcquired);
+                
+                console.log('Date comparison:', {
+                    rawDate: data.dateAcquired,
+                    parsedDate: itemDate,
+                    dateFrom: currentFiltersAll.dateFrom,
+                    dateTo: currentFiltersAll.dateTo,
+                    hasDateFrom: !!currentFiltersAll.dateFrom,
+                    hasDateTo: !!currentFiltersAll.dateTo
+                });
+                
+                if (!itemDate) {
+                    console.log('❌ No date parsed for:', data.dateAcquired);
+                    return false;
+                }
+                
+                if (currentFiltersAll.dateFrom) {
+                    const fromDate = new Date(currentFiltersAll.dateFrom);
+                    fromDate.setHours(0, 0, 0, 0);
+                    const itemDateNormalized = new Date(itemDate);
+                    itemDateNormalized.setHours(0, 0, 0, 0);
+                    
+                    console.log('From date check:', {
+                        itemDate: itemDateNormalized,
+                        fromDate: fromDate,
+                        isBefore: itemDateNormalized < fromDate
+                    });
+                    
+                    if (itemDateNormalized < fromDate) {
+                        console.log('❌ Filtered out - before date range');
+                        return false;
+                    }
+                }
+                
+                if (currentFiltersAll.dateTo) {
+                    const toDate = new Date(currentFiltersAll.dateTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    const itemDateNormalized = new Date(itemDate);
+                    itemDateNormalized.setHours(0, 0, 0, 0);
+                    
+                    console.log('To date check:', {
+                        itemDate: itemDateNormalized,
+                        toDate: toDate,
+                        isAfter: itemDateNormalized > toDate
+                    });
+                    
+                    if (itemDateNormalized > toDate) {
+                      
+                        return false;
+                    }
+                }
+                
+                console.log(' Date passed filter');
+            }
+            
+        
+            if (currentFiltersAll.status.length > 0 && !currentFiltersAll.status.includes(data.status)) {
+                return false;
+            }
+            
       
-      // Update cache
-      if (filterCache.size > 50) filterCache.clear(); 
-      filterCache.set(filterKey, filteredRows);
-      
-      updateDisplay();
-  });
+            if (searchValue && !(
+                data.itemId.includes(searchValue) ||
+                data.itemName.includes(searchValue) || 
+                data.model.includes(searchValue) || 
+                data.brand.includes(searchValue) ||
+                data.serialNumber.includes(searchValue) ||
+                data.description.includes(searchValue) ||
+                data.category.includes(searchValue)
+            )) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        console.log('=== FILTERING COMPLETE ===');
+        console.log('Results:', filteredRows.length, 'of', allRows.length);
+        
+        // Update cache
+        if (filterCache.size > 50) filterCache.clear(); 
+        filterCache.set(filterKey, filteredRows);
+        
+        updateDisplay();
+    });
 }
-
 function generateFilterKey() {
   const searchValue = domElements.searchInput?.value || '';
   return `${currentFiltersAll.quantity}|${currentFiltersAll.dateFrom}|${currentFiltersAll.dateTo}|${currentFiltersAll.status.sort().join(',')}|${searchValue}`;
@@ -270,37 +330,50 @@ function updateDisplay() {
 
 const dateCache = new Map();
 function parseTableDate(dateString) {
-  if (!dateString || dateString === 'N/A') return null;
-  
-  if (dateCache.has(dateString)) {
-      return dateCache.get(dateString);
-  }
-  
-  try {
-      const parts = dateString.split('-');
-      let result = null;
-      
-      if (parts.length === 3) {
-          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          const month = monthNames.indexOf(parts[0]);
-          const day = parseInt(parts[1]);
-          const year = parseInt(parts[2]);
-          
-          if (month !== -1 && !isNaN(day) && !isNaN(year)) {
-              result = new Date(year, month, day);
-          }
-      }
-      
-      if (!result) {
-          result = new Date(dateString);
-          if (isNaN(result.getTime())) result = null;
-      }
-      
-      dateCache.set(dateString, result);
-      return result;
-  } catch (e) {
-      return null;
-  }
+    if (!dateString || dateString === 'N/A' || dateString === '—') return null;
+    
+    if (dateCache.has(dateString)) {
+        return dateCache.get(dateString);
+    }
+    
+    try {
+        let result = null;
+        
+        // Try multiple date formats
+        
+        // Format 1: "Mar-15-2024" (M-d-Y)
+        if (dateString.match(/^[A-Za-z]{3}-\d{1,2}-\d{4}$/)) {
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const parts = dateString.split('-');
+            const month = monthNames.indexOf(parts[0]);
+            const day = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            
+            if (month !== -1 && !isNaN(day) && !isNaN(year)) {
+                result = new Date(year, month, day);
+            }
+        }
+        // Format 2: "2024-03-15" (ISO)
+        else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            result = new Date(dateString);
+        }
+        // Format 3: Try native Date parsing
+        else {
+            result = new Date(dateString);
+        }
+        
+        // Validate the result
+        if (!result || isNaN(result.getTime())) {
+            console.warn('Invalid date format:', dateString);
+            result = null;
+        }
+        
+        dateCache.set(dateString, result);
+        return result;
+    } catch (e) {
+        console.warn('Failed to parse date:', dateString, e);
+        return null;
+    }
 }
 
 function updateRowNumbers() {
@@ -326,22 +399,25 @@ function showNoResultsMessage(show) {
 }
 
 function displayPage(page = 1) {
-  const start = (page - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
 
-  requestAnimationFrame(() => {
-      // Hide all rows
-      allRows.forEach(row => {
-          row.style.display = "none";
-      });
-      
-      // Show only current page rows
-      for (let i = start; i < Math.min(end, filteredRows.length); i++) {
-          filteredRows[i].style.display = "";
-      }
-      
-      updatePagination(page);
-  });
+    requestAnimationFrame(() => {
+        // Hide all rows
+        allRows.forEach(row => {
+            row.style.display = "none";
+        });
+        
+        // Show only current page rows
+        for (let i = start; i < Math.min(end, filteredRows.length); i++) {
+            if (filteredRows[i]) {
+                filteredRows[i].style.display = ""; // Make sure this line exists
+            }
+        }
+        
+        updatePagination(page);
+        updatePageInfo(); // Add this if you want page info
+    });
 }
 
 function updatePagination(page) {
@@ -782,4 +858,244 @@ function initDateValidation() {
           dateToInput.value = dateFromInput.value;
       }
   });
+}
+
+function printAllCurrentTableView() {
+    // Create a print-friendly version of the table
+    const printWindow = window.open('', '_blank');
+    const currentDate = new Date().toLocaleDateString();
+    
+    // Get only visible rows (current page)
+    const visibleRows = Array.from(document.querySelectorAll('#inventoryTableBody tr'))
+        .filter(row => row.style.display !== 'none');
+    
+    // Get table headers (excluding image and action columns)
+    const headers = Array.from(document.querySelectorAll('.itemTable thead th'))
+        .map(th => th.textContent.trim())
+        .filter((header, index) => {
+            // Skip image column (index 3) and actions column (index 12)
+            if (index === 3 || index === 12) return false;
+            
+            // Check if column is visible (based on column filter)
+            const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
+            return !colCheckbox || colCheckbox.checked;
+        });
+
+    // Build table HTML with only visible columns and rows
+    let tableHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>All Items - Inventory Report</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 20px;
+                    color: #000;
+                }
+                .header-container {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 15px;
+                }
+                .logo-container {
+                    flex: 0 0 auto;
+                    margin-left: 150px;
+                }
+                .logo {
+                    width: 120px;
+                    height: 120px;
+                    object-fit: contain;
+                }
+                .header-content {
+                    flex: 1;
+                    text-align: center;
+                }
+                .header-content h1 {
+                    margin: 0 0 8px 0;
+                    font-size: 24pt;
+                    color: #2c3e50;
+                }
+                .header-content .subtitle {
+                    font-size: 14pt;
+                    color: #666;
+                    margin-bottom: 5px;
+                }
+                .header-content .department {
+                    font-size: 12pt;
+                    color: #888;
+                    font-weight: bold;
+                }
+                .print-info {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 20px;
+                    padding: 12px;
+                    background-color: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 4px;
+                    font-size: 10pt;
+                }
+                .info-item {
+                    text-align: center;
+                    flex: 1;
+                }
+                .info-item strong {
+                    display: block;
+                    color: #2c3e50;
+                    margin-bottom: 3px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 9pt;
+                    page-break-inside: auto;
+                    margin-bottom: 20px;
+                }
+                th, td {
+                    border: 1px solid #333;
+                    padding: 8px;
+                    text-align: center;
+                    page-break-inside: avoid;
+                }
+                th {
+                    background-color: #2c3e50;
+                    color: white;
+                    font-weight: bold;
+                    border-bottom: 2px solid #000;
+                }
+                tr:nth-child(even) {
+                    background-color: #f8f9fa;
+                }
+                .number {
+                    text-align: right;
+                    font-family: "Courier New", monospace;
+                }
+                .print-footer {
+                    margin-top: 30px;
+                    padding-top: 15px;
+                    border-top: 1px solid #ddd;
+                    font-size: 9pt;
+                    color: #666;
+                    text-align: center;
+                }
+                .no-print {
+                    display: none;
+                }
+                @page {
+                    size: landscape;
+                    margin: 1cm;
+                }
+                @media print {
+                    body { 
+                        margin: 0; 
+                        padding: 15px;
+                    }
+                    .header-container { 
+                        margin-bottom: 15px; 
+                    }
+                    .print-info {
+                        background-color: #f8f9fa !important;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header-container">
+                <div class="logo-container">
+                    <img src="/images/assets/baliwasan.png" alt="BSCI Logo" class="logo" onerror="this.style.display='none'">
+                </div>
+                <div class="header-content">
+                    <h1>COMPLETE INVENTORY REPORT</h1>
+                    <div class="subtitle">All Items Summary</div>
+                    <div class="department">Baliwasan Central School Inventory System</div>
+                </div>
+            </div>
+            
+            <div class="print-info">
+                <div class="info-item">
+                    <strong>Generated Date</strong>
+                    <span>${currentDate}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Total Items</strong>
+                    <span>${visibleRows.length}</span>
+                </div>
+                
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+    `;
+
+    // Add headers (already filtered to exclude image and action columns)
+    headers.forEach(header => {
+        tableHTML += `<th>${header}</th>`;
+    });
+
+    tableHTML += `
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    // Add visible rows with only visible columns
+    visibleRows.forEach(row => {
+        const cells = Array.from(row.cells);
+        tableHTML += '<tr>';
+        
+        cells.forEach((cell, index) => {
+            // Skip image column (index 3) and actions column (index 12)
+            if (index === 3 || index === 12) return;
+            
+            // Skip if column is hidden by filter
+            const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
+            if (colCheckbox && !colCheckbox.checked) {
+                return;
+            }
+            
+            let cellContent = cell.textContent.trim();
+            
+            // Clean up cell content
+            cellContent = cellContent.replace(/—/g, 'N/A').trim();
+            
+            // Apply formatting based on column type
+            let formattedContent = cellContent;
+            let cellClass = '';
+            
+            // Format quantity column
+            if (index === 9) {
+                cellClass = 'number';
+            }
+            
+            tableHTML += `<td class="${cellClass}">${formattedContent || ''}</td>`;
+        });
+        
+        tableHTML += '</tr>';
+    });
+
+    tableHTML += `
+                </tbody>
+            </table>
+            
+           
+            
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 500);
+                };
+            </script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(tableHTML);
+    printWindow.document.close();
 }

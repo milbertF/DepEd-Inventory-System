@@ -48,7 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_employee'])) {
     $address = htmlspecialchars(trim($_POST['address']));
     $positionId = (int)$_POST['employee_position'];
     $officeId = (int)$_POST['employee_office'];
-    $role = in_array($_POST['account_role'], ['Admin', 'Employee']) ? $_POST['account_role'] : 'Employee';
+    $role = in_array($_POST['account_role'], ['Admin', 'Employee', 'Inactive',' logisticsOfficer ']) ? $_POST['account_role'] : 'Employee';
+
     $username = htmlspecialchars(trim($_POST['username'] ?? ''));
     $password = trim($_POST['password'] ?? '');
     $confirmPassword = trim($_POST['confirmPassword'] ?? '');

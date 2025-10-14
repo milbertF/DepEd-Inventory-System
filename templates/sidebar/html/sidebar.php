@@ -46,7 +46,8 @@
     </div>
     <label>Office</label>
   </button>
-  <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+  <?php if (isset($_SESSION['user']['role']) && 
+         ($_SESSION['user']['role'] === 'Admin' || $_SESSION['user']['role'] === 'logisticsOfficer')): ?>
     
 
   <button class="part" onclick="redirect('request')">

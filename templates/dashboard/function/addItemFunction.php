@@ -2,14 +2,28 @@
 require_once __DIR__ . '/../../../database/dbConnection.php';
 require_once __DIR__ . '/../../../sweetalert/sweetalert.php';
 
-function generateUniqueID($conn, $table, $column) {
+function generateItemUniqueID($conn, $table, $column, $year = null) {
+    
+    if ($year === null) {
+        $year = date('Y');
+    }
+    
+   
+    $year = substr(strval($year), 0, 4);
+    
     do {
-        $id = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+     
+        $random_digits = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+        
+ 
+        $id = $year . $random_digits;
+        
         $check = $conn->prepare("SELECT $column FROM `$table` WHERE $column = ?");
         $check->bind_param("s", $id);
         $check->execute();
         $check->store_result();
     } while ($check->num_rows > 0);
+    
     return $id;
 }
 
@@ -57,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         }
     }
 
-    // Handle serial numbers
+  
     $serials = [];
     if (!empty($_POST['serial_number'])) {
         $serials[] = trim($_POST['serial_number']);
@@ -75,8 +89,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
 
     $success_count = 0;
 
+ 
+    $year = null;
+    if (!empty($date_acquired)) {
+        $year = date('Y', strtotime($date_acquired));
+    }
+
     foreach ($serials as $serial) {
-        $item_id = generateUniqueID($conn, 'deped_inventory_items', 'item_id');
+      
+        $item_id = generateItemUniqueID($conn, 'deped_inventory_items', 'item_id', $year);
         
         $stmt = $conn->prepare("
             INSERT INTO deped_inventory_items (

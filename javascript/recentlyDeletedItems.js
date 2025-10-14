@@ -82,21 +82,24 @@ function populateCategoryFilters() {
 function initializeTable() {
   allRows = Array.from(domElements.tableBody.querySelectorAll("tr"));
   
-  // Pre-calculate row data for faster filtering
+  // Pre-calculate row data for faster filtering - FIXED COLUMN MAPPINGS
   allRows.forEach((row, index) => {
       const cells = row.cells;
       row._data = {
-          category: (cells[1]?.textContent || '').toLowerCase().trim(),
-          serialNumber: (cells[2]?.textContent || '').toLowerCase(),
-          itemName: (cells[4]?.textContent || '').toLowerCase(),
-          brand: (cells[5]?.textContent || '').toLowerCase().trim(),
-          model: (cells[6]?.textContent || '').toLowerCase(),
-          quantity: parseInt(cells[7]?.textContent || 0),
-          dateAcquired: cells[8]?.textContent.trim(),
-          deletedBy: (cells[9]?.textContent || '').toLowerCase().trim(),
-          deletedDate: cells[10]?.textContent.trim(),
-          deletedTime: cells[11]?.textContent.trim()
+          category: (cells[2]?.textContent || '').toLowerCase().trim(), 
+          serialNumber: (cells[4]?.textContent || '').toLowerCase(),
+          itemName: (cells[5]?.textContent || '').toLowerCase(), 
+          brand: (cells[6]?.textContent || '').toLowerCase().trim(), 
+          model: (cells[7]?.textContent || '').toLowerCase(), 
+          quantity: parseInt(cells[8]?.textContent || 0), 
+          dateAcquired: cells[9]?.textContent.trim(), 
+          deletedBy: (cells[11]?.textContent || '').toLowerCase().trim(), 
+          deletedDate: cells[12]?.textContent.trim(), 
+          deletedTime: cells[13]?.textContent.trim() 
       };
+      
+    
+     
   });
   
   filteredRows = [...allRows];
@@ -191,12 +194,17 @@ function filterItems() {
           if (currentFilters.quantity === "out" && data.quantity !== 0) return false;
           if (currentFilters.quantity === "available" && data.quantity <= 0) return false;
           
-          // Date acquired filter
+          // Date acquired filter - FIXED
           if (currentFilters.dateFrom || currentFilters.dateTo) {
               const itemDate = parseTableDate(data.dateAcquired);
               if (!itemDate) return false;
               
-              if (currentFilters.dateFrom && itemDate < new Date(currentFilters.dateFrom)) return false;
+              if (currentFilters.dateFrom) {
+                  const fromDate = new Date(currentFilters.dateFrom);
+                  fromDate.setHours(0, 0, 0, 0);
+                  if (itemDate < fromDate) return false;
+              }
+              
               if (currentFilters.dateTo) {
                   const toDate = new Date(currentFilters.dateTo);
                   toDate.setHours(23, 59, 59, 999);
@@ -204,12 +212,17 @@ function filterItems() {
               }
           }
           
-          // Deleted date filter
+          // Deleted date filter - FIXED
           if (currentFilters.deletedDateFrom || currentFilters.deletedDateTo) {
               const deletedDate = parseTableDate(data.deletedDate);
               if (!deletedDate) return false;
               
-              if (currentFilters.deletedDateFrom && deletedDate < new Date(currentFilters.deletedDateFrom)) return false;
+              if (currentFilters.deletedDateFrom) {
+                  const fromDate = new Date(currentFilters.deletedDateFrom);
+                  fromDate.setHours(0, 0, 0, 0);
+                  if (deletedDate < fromDate) return false;
+              }
+              
               if (currentFilters.deletedDateTo) {
                   const toDate = new Date(currentFilters.deletedDateTo);
                   toDate.setHours(23, 59, 59, 999);
@@ -217,11 +230,13 @@ function filterItems() {
               }
           }
           
-          // Deleted by filter
-       // Deleted by filter
-if (currentFilters.deletedBy.length > 0 && !currentFilters.deletedBy.some(deletedBy => data.deletedBy.includes(deletedBy))) {
-  return false;
-}
+          // Deleted by filter - FIXED
+          if (currentFilters.deletedBy.length > 0) {
+              const matches = currentFilters.deletedBy.some(filterDeletedBy => 
+                  data.deletedBy.includes(filterDeletedBy.toLowerCase())
+              );
+              if (!matches) return false;
+          }
           
           // Search filter
           if (searchValue && !(
@@ -245,7 +260,6 @@ if (currentFilters.deletedBy.length > 0 && !currentFilters.deletedBy.some(delete
       updateDisplay();
   });
 }
-
 function generateFilterKey() {
   const searchValue = domElements.searchInput?.value || '';
   return `${currentFilters.category.join(',')}|${currentFilters.quantity}|${currentFilters.dateFrom}|${currentFilters.dateTo}|${currentFilters.deletedBy}|${currentFilters.deletedDateFrom}|${currentFilters.deletedDateTo}|${searchValue}`;
@@ -261,37 +275,57 @@ function updateDisplay() {
 
 const dateCache = new Map();
 function parseTableDate(dateString) {
-  if (!dateString || dateString === 'N/A') return null;
-  
-  if (dateCache.has(dateString)) {
-      return dateCache.get(dateString);
-  }
-  
-  try {
-      const parts = dateString.split('-');
-      let result = null;
-      
-      if (parts.length === 3) {
-          const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-          const month = monthNames.indexOf(parts[0]);
-          const day = parseInt(parts[1]);
-          const year = parseInt(parts[2]);
-          
-          if (month !== -1 && !isNaN(day) && !isNaN(year)) {
-              result = new Date(year, month, day);
-          }
-      }
-      
-      if (!result) {
-          result = new Date(dateString);
-          if (isNaN(result.getTime())) result = null;
-      }
-      
-      dateCache.set(dateString, result);
-      return result;
-  } catch (e) {
-      return null;
-  }
+    if (!dateString || dateString === 'N/A' || dateString === '—' || dateString === '') {
+        return null;
+    }
+    
+    if (dateCache.has(dateString)) {
+        return dateCache.get(dateString);
+    }
+    
+    try {
+        let result = null;
+        
+        // Format 1: "Mar-15-2024" (M-d-Y) - FIXED VERSION
+        if (dateString.match(/^[A-Za-z]{3}-\d{1,2}-\d{4}$/)) {
+            const monthNames = {
+                "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+                "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+            };
+            const parts = dateString.split('-');
+            const month = monthNames[parts[0]];
+            const day = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            
+            if (month !== undefined && !isNaN(day) && !isNaN(year)) {
+                result = new Date(year, month, day);
+                // Validate the parsed date
+                if (result.getDate() !== day || result.getMonth() !== month || result.getFullYear() !== year) {
+                    result = null;
+                }
+            }
+        }
+        // Format 2: "2024-03-15" (ISO)
+        else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            result = new Date(dateString);
+        }
+        // Try native parsing for other formats
+        else {
+            result = new Date(dateString);
+        }
+        
+        // Final validation
+        if (!result || isNaN(result.getTime())) {
+            console.warn('Invalid date:', dateString);
+            result = null;
+        }
+        
+        dateCache.set(dateString, result);
+        return result;
+    } catch (e) {
+        console.error('Date parsing error:', e, 'for date:', dateString);
+        return null;
+    }
 }
 
 function updateRowNumbers() {
@@ -437,6 +471,22 @@ function initFilterControls() {
           closeAllFilters();
       }
   });
+
+  document.getElementById("filterByDeletedDateBtn")?.addEventListener("click", () => {
+    currentFilters.deletedDateFrom = domElements.deletedDateFrom.value;
+    currentFilters.deletedDateTo = domElements.deletedDateTo.value;
+    filterItems();
+    closeAllFilters();
+});
+
+  document.getElementById("resetDeletedDateFilterBtn")?.addEventListener("click", () => {
+        domElements.deletedDateFrom.value = "";
+        domElements.deletedDateTo.value = "";
+        currentFilters.deletedDateFrom = "";
+        currentFilters.deletedDateTo = "";
+        filterItems();
+        closeAllFilters();
+    });
 
   filterToggles.forEach(({ container }) => {
       container?.addEventListener('click', e => e.stopPropagation());

@@ -117,16 +117,15 @@ function updatePageInfo() {
     const totalItems = filteredRows.length;
     
     // Update page info display if element exists
-    const pageInfoElement = document.getElementById('pageInfo');
+    const pageInfoElement = document.getElementById('pageInfo'); // ← This element doesn't exist!
     if (pageInfoElement) {
-        if (totalItems > 0) {
-            pageInfoElement.textContent = `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`;
-        } else {
-            pageInfoElement.textContent = 'No entries to show';
-        }
+      if (totalItems > 0) {
+        pageInfoElement.textContent = `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`;
+      } else {
+        pageInfoElement.textContent = 'No entries to show';
+      }
     }
-}
-
+  }
 function updateCountElement(elementId, count) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -201,18 +200,19 @@ function buildSearchIndex() {
     allRows.forEach((row, index) => {
         const cells = row.cells;
         const rowData = {
-            brand: (cells[5]?.textContent || '').toLowerCase().trim(),
-            quantity: parseInt(cells[8]?.textContent || 0),
-            dateAcquired: cells[10]?.textContent.trim(),
-            status: cells[11]?.textContent.trim(),
-            itemName: (cells[3]?.textContent || '').toLowerCase(),
-            model: (cells[6]?.textContent || '').toLowerCase(),
-            serialNumber: (cells[1]?.textContent || '').toLowerCase(),
-            description: (cells[4]?.textContent || '').toLowerCase(),
-            dateValue: parseTableDate(cells[10]?.textContent.trim())
+            brand: (cells[6]?.textContent || '').toLowerCase().trim(), 
+            quantity: parseInt(cells[9]?.textContent || 0), 
+            dateAcquired: cells[11]?.textContent.trim(), 
+            status: cells[12]?.textContent.trim(),
+            itemName: (cells[4]?.textContent || '').toLowerCase(), 
+            model: (cells[7]?.textContent || '').toLowerCase(), 
+            serialNumber: (cells[3]?.textContent || '').toLowerCase(), 
+            description: (cells[5]?.textContent || '').toLowerCase(), 
+            itemId: (cells[1]?.textContent || '').toLowerCase(), 
+            dateValue: parseTableDate(cells[11]?.textContent.trim()) 
         };
         
-        // Store data on row for backward compatibility
+
         row._data = rowData;
         
         // Update indexes
@@ -220,7 +220,7 @@ function buildSearchIndex() {
         if (rowData.status) dataIndex.statuses.add(rowData.status);
         
         // Build search index for terms longer than 2 characters
-        const searchableText = `${rowData.itemName} ${rowData.model} ${rowData.brand} ${rowData.serialNumber} ${rowData.description}`;
+        const searchableText = `${rowData.itemId} ${rowData.itemName} ${rowData.model} ${rowData.brand} ${rowData.serialNumber} ${rowData.description}`;
         const terms = searchableText.split(/\s+/).filter(term => term.length > 2);
         
         terms.forEach(term => {
@@ -231,7 +231,7 @@ function buildSearchIndex() {
         });
     });
 }
-
+// Optimized filtering with indexed search
 // Optimized filtering with indexed search
 function filterItems() {
     const filterKey = generateFilterKey();
@@ -249,6 +249,12 @@ function filterItems() {
     const startTime = performance.now();
     
     requestAnimationFrame(() => {
+        console.log('=== FILTERING STARTED (Category View) ===');
+        console.log('Date filters:', {
+            dateFrom: currentFilters.dateFrom,
+            dateTo: currentFilters.dateTo
+        });
+        
         let results;
         
         // Use indexed search for better performance with large datasets
@@ -260,6 +266,9 @@ function filterItems() {
         
         filteredRows = results;
         
+        console.log('=== FILTERING COMPLETE (Category View) ===');
+        console.log('Results:', filteredRows.length, 'of', allRows.length);
+        
         // Update cache with size limit
         if (filterCache.size >= maxCacheSize) {
             const firstKey = filterCache.keys().next().value;
@@ -269,16 +278,10 @@ function filterItems() {
         
         perf.filterTime = performance.now() - startTime;
         
-        // Log performance for large datasets
-        if (allRows.length > 1000) {
-            console.log(`Filtered ${allRows.length} items in ${perf.filterTime.toFixed(2)}ms`);
-        }
-        
         updateDisplay();
         updateItemCounts(); 
     });
 }
-
 function performIndexedSearch(selectedBrands, searchValue) {
     const searchTerms = searchValue.split(/\s+/).filter(term => term.length > 2);
     let matchingIndexes = new Set();
@@ -325,9 +328,10 @@ function performLinearSearch(selectedBrands, searchValue) {
             return false;
         }
         
-        // Apply search filter if pwede
+        // Apply search filter if present - ADD itemId HERE
         if (searchValue) {
             return (
+                data.itemId.includes(searchValue) || // Added itemId search
                 data.itemName.includes(searchValue) || 
                 data.model.includes(searchValue) || 
                 data.brand.includes(searchValue) ||
@@ -339,7 +343,6 @@ function performLinearSearch(selectedBrands, searchValue) {
         return true;
     });
 }
-
 function passesFilters(data, selectedBrands) {
     // Brand filter
     if (selectedBrands.length > 0 && !selectedBrands.some(brand => data.brand.includes(brand))) {
@@ -354,11 +357,18 @@ function passesFilters(data, selectedBrands) {
     if (currentFilters.dateFrom || currentFilters.dateTo) {
         if (!data.dateValue) return false;
         
-        if (currentFilters.dateFrom && data.dateValue < new Date(currentFilters.dateFrom)) return false;
+        const rowDate = data.dateValue;
+        
+        if (currentFilters.dateFrom) {
+            const fromDate = new Date(currentFilters.dateFrom);
+            fromDate.setHours(0, 0, 0, 0); // Start of day
+            if (rowDate < fromDate) return false;
+        }
+        
         if (currentFilters.dateTo) {
             const toDate = new Date(currentFilters.dateTo);
-            toDate.setHours(23, 59, 59, 999);
-            if (data.dateValue > toDate) return false;
+            toDate.setHours(23, 59, 59, 999); // End of day
+            if (rowDate > toDate) return false;
         }
     }
     
@@ -387,39 +397,58 @@ function updateDisplay() {
 
 const dateCache = new Map();
 function parseTableDate(dateString) {
-    if (!dateString || dateString === 'N/A') return null;
+    if (!dateString || dateString === 'N/A' || dateString === '—' || dateString === '') {
+        return null;
+    }
     
     if (dateCache.has(dateString)) {
         return dateCache.get(dateString);
     }
     
     try {
-        const parts = dateString.split('-');
         let result = null;
         
-        if (parts.length === 3) {
-            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            const month = monthNames.indexOf(parts[0]);
+        // Format 1: "Mar-15-2024" (M-d-Y) - FIXED VERSION
+        if (dateString.match(/^[A-Za-z]{3}-\d{1,2}-\d{4}$/)) {
+            const monthNames = {
+                "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+                "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+            };
+            const parts = dateString.split('-');
+            const month = monthNames[parts[0]];
             const day = parseInt(parts[1]);
             const year = parseInt(parts[2]);
             
-            if (month !== -1 && !isNaN(day) && !isNaN(year)) {
+            if (month !== undefined && !isNaN(day) && !isNaN(year)) {
                 result = new Date(year, month, day);
+                // Ensure it's valid
+                if (result.getDate() !== day || result.getMonth() !== month || result.getFullYear() !== year) {
+                    result = null;
+                }
             }
         }
-        
-        if (!result) {
+        // Format 2: "2024-03-15" (ISO)
+        else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
             result = new Date(dateString);
-            if (isNaN(result.getTime())) result = null;
+        }
+        // Format 3: Try native Date parsing for other formats
+        else {
+            result = new Date(dateString);
+        }
+        
+        // Validate the result
+        if (!result || isNaN(result.getTime())) {
+            console.warn('Invalid date:', dateString);
+            result = null;
         }
         
         dateCache.set(dateString, result);
         return result;
     } catch (e) {
+        console.error('Date parsing error:', e, 'for date:', dateString);
         return null;
     }
 }
-
 function updateRowNumbers() {
     // Only update visible rows for better performance
     const startIndex = (thisCurrentPage - 1) * rowsPerPage;
@@ -691,7 +720,7 @@ function resetAllFilters() {
     updateItemCounts(); 
 }
 
-// KEEP ALL OTHER FUNCTIONS EXACTLY THE SAME (they're already optimized)
+
 function initTableActions() {
     domElements.tableBody?.addEventListener('click', function(e) {
         const actionBtn = e.target.closest('.action-btn');
@@ -1048,7 +1077,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Memory cleanup for large datasets
+
 window.addEventListener('beforeunload', function() {
     filterCache.clear();
     dateCache.clear();
@@ -1067,7 +1096,7 @@ if (typeof PerformanceObserver !== 'undefined') {
 
     
     document.addEventListener('DOMContentLoaded', () => {
-        // Open modal when clicking the add button
+
         document.querySelectorAll('.action-btn.add').forEach(btn => {
           btn.addEventListener('click', () => {
             const itemId = btn.getAttribute('data-id');
@@ -1090,3 +1119,260 @@ if (typeof PerformanceObserver !== 'undefined') {
       }
       
      }
+
+     function printCurrentTableView() {
+        // Create a print-friendly version of the table
+        const printWindow = window.open('', '_blank');
+        const currentDate = new Date().toLocaleDateString();
+        const categoryName = document.querySelector('title')?.textContent.replace('BSCI-', '') || 'Inventory';
+        
+        // Get only visible rows (current page)
+        const visibleRows = Array.from(document.querySelectorAll('#inventoryTableBody tr'))
+            .filter(row => row.style.display !== 'none');
+        
+        // Get table headers (excluding image and action columns)
+        const headers = Array.from(document.querySelectorAll('.itemTable thead th'))
+            .map(th => th.textContent.trim())
+            .filter((header, index) => {
+                // Skip image column (index 2) and actions column (index 13)
+                if (index === 2 || index === 13) return false;
+                
+                // Check if column is visible (based on column filter)
+                const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
+                return !colCheckbox || colCheckbox.checked;
+            });
+    
+        // Build table HTML with only visible columns and rows
+        let tableHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>${categoryName} - Inventory Report</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        margin: 0;
+                        padding: 20px;
+                        color: #000;
+                    }
+                    .header-container {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 20px;
+                        border-bottom: 2px solid #000;
+                        padding-bottom: 15px;
+                    }
+                    .logo-container {
+                        flex: 0 0 auto;
+                        margin-left: 150px;
+                    }
+                    .logo {
+                        width: 120px;
+                        height: 120px;
+                        object-fit: contain;
+                    }
+                    .header-content {
+                        flex: 1;
+                        text-align: center;
+                    }
+                    .header-content h1 {
+                        margin: 0 0 8px 0;
+                        font-size: 24pt;
+                        color: #2c3e50;
+                    }
+                    .header-content .subtitle {
+                        font-size: 14pt;
+                        color: #666;
+                        margin-bottom: 5px;
+                    }
+                    .header-content .department {
+                        font-size: 12pt;
+                        color: #888;
+                        font-weight: bold;
+                    }
+                    .print-info {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 20px;
+                        padding: 12px;
+                        background-color: #f8f9fa;
+                        border: 1px solid #dee2e6;
+                        border-radius: 4px;
+                        font-size: 10pt;
+                    }
+                    .info-item {
+                        text-align: center;
+                        flex: 1;
+                    }
+                    .info-item strong {
+                        display: block;
+                        color: #2c3e50;
+                        margin-bottom: 3px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        font-size: 9pt;
+                        page-break-inside: auto;
+                        margin-bottom: 20px;
+                    }
+                    th, td {
+                        border: 1px solid #333;
+                        padding: 8px;
+                        text-align: center;
+                        page-break-inside: avoid;
+                    }
+                    th {
+                        background-color: #2c3e50;
+                        color: white;
+                        font-weight: bold;
+                        border-bottom: 2px solid #000;
+                    }
+                    tr:nth-child(even) {
+                        background-color: #f8f9fa;
+                    }
+                    .currency {
+                        text-align: right;
+                     
+                    }
+                    .number {
+                        text-align: right;
+                       
+                    }
+                    .print-footer {
+                        margin-top: 30px;
+                        padding-top: 15px;
+                        border-top: 1px solid #ddd;
+                        font-size: 9pt;
+                        color: #666;
+                        text-align: center;
+                    }
+                    .no-print {
+                        display: none;
+                    }
+                    @page {
+                        size: landscape;
+                        margin: 1cm;
+                    }
+                    @media print {
+                        body { 
+                            margin: 0; 
+                            padding: 15px;
+                        }
+                        .header-container { 
+                            margin-bottom: 15px; 
+                        }
+                        .print-info {
+                            background-color: #f8f9fa !important;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header-container">
+                    <div class="logo-container">
+                        <img src="/images/assets/baliwasan.png" alt="BSCI Logo" class="logo" onerror="this.style.display='none'">
+                    </div>
+                    <div class="header-content">
+                        <h1>INVENTORY REPORT</h1>
+                        <div class="subtitle">Category: ${categoryName} </div>
+                        <div class="department">Baliwasan Central School Inventory System</div>
+                    </div>
+                </div>
+                
+                <div class="print-info">
+                    <div class="info-item">
+                        <strong>Generated Date</strong>
+                        <span>${currentDate}</span>
+                    </div>
+                    <div class="info-item">
+                        <strong>Total Items</strong>
+                        <span>${visibleRows.length}</span>
+                    </div>
+                   
+                  
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+        `;
+    
+        // Add headers (already filtered to exclude image and action columns)
+        headers.forEach(header => {
+            tableHTML += `<th>${header}</th>`;
+        });
+    
+        tableHTML += `
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+    
+        // Add visible rows with only visible columns
+        visibleRows.forEach(row => {
+            const cells = Array.from(row.cells);
+            tableHTML += '<tr>';
+            
+            cells.forEach((cell, index) => {
+                // Skip image column (index 2) and actions column (index 13)
+                if (index === 2 || index === 13) return;
+                
+                // Skip if column is hidden by filter
+                const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
+                if (colCheckbox && !colCheckbox.checked) {
+                    return;
+                }
+                
+                let cellContent = cell.textContent.trim();
+                
+                // Clean up cell content
+                cellContent = cellContent.replace(/—/g, 'N/A').trim();
+                
+                // Apply formatting based on column type
+                let formattedContent = cellContent;
+                let cellClass = '';
+                
+                // Format currency columns (Unit Cost and Total Cost)
+                if ((index === 8 || index === 10) && cellContent && cellContent !== 'N/A') {
+                    const number = parseFloat(cellContent.replace(/[^\d.-]/g, ''));
+                    if (!isNaN(number)) {
+                        formattedContent = '₱' + number.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        cellClass = 'currency';
+                    }
+                }
+                // Format quantity column
+                else if (index === 9) {
+                    cellClass = 'number';
+                }
+                
+                tableHTML += `<td class="${cellClass}">${formattedContent || ''}</td>`;
+            });
+            
+            tableHTML += '</tr>';
+        });
+    
+        tableHTML += `
+                    </tbody>
+                </table>
+                
+               
+                
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        setTimeout(function() {
+                            window.close();
+                        }, 500);
+                    };
+                </script>
+            </body>
+            </html>
+        `;
+    
+        printWindow.document.write(tableHTML);
+        printWindow.document.close();
+    }

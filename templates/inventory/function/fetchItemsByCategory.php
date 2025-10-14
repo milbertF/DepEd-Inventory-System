@@ -28,7 +28,7 @@ $itemQuery = $conn->prepare("
            unit_cost, total_cost, created_at, date_acquired, item_status, item_photo 
     FROM deped_inventory_items 
     WHERE category_id = ? 
-    ORDER BY item_name ASC
+    ORDER BY date_acquired DESC
 ");
 $itemQuery->bind_param("i", $categoryId);
 $itemQuery->execute();

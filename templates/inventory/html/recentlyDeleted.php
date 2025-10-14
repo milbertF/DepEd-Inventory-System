@@ -163,19 +163,22 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
     <span>Show/Hide Columns</span>
   </div>
   <div class="column-checkboxes">
-    <label><input type="checkbox" data-column="1" checked> Category</label>
-    <label><input type="checkbox" data-column="2" checked> Serial Number</label>
+    <label><input type="checkbox" data-column="1" checked> Item ID</label>
+    <label><input type="checkbox" data-column="2" checked> Category</label>
     <label><input type="checkbox" data-column="3" checked> Image</label>
-    <label><input type="checkbox" data-column="4" checked> Item Name</label>
-    <label><input type="checkbox" data-column="5" checked> Brand</label>
-    <label><input type="checkbox" data-column="6" checked> Model</label>
-    <label><input type="checkbox" data-column="7" checked> Quantity</label>
-    <label><input type="checkbox" data-column="8" checked> Date Acquired</label>
-    <label><input type="checkbox" data-column="9" checked> Status</label>
-    <label><input type="checkbox" data-column="10" checked> Deleted By</label>
-    <label><input type="checkbox" data-column="11" checked> Deleted Date</label>
-    <label><input type="checkbox" data-column="12" > Deleted Time</label>
-    <label><input type="checkbox" data-column="13" checked> Actions</label>
+    <label><input type="checkbox" data-column="4" checked> Serial Number</label>
+   
+    <label><input type="checkbox" data-column="5" checked> Item Name</label>
+    <label><input type="checkbox" data-column="6" checked> Brand</label>
+    <label><input type="checkbox" data-column="7" checked> Model</label>
+    <label><input type="checkbox" data-column="8" checked> Quantity</label>
+
+    <label><input type="checkbox" data-column="9" checked> Date Acquired</label>
+    <label><input type="checkbox" data-column="10" checked> Status</label>
+    <label><input type="checkbox" data-column="11" checked> Deleted By</label>
+    <label><input type="checkbox" data-column="12" checked> Deleted Date</label>
+    <label><input type="checkbox" data-column="13" > Deleted Time</label>
+    <label><input type="checkbox" data-column="14" checked> Actions</label>
   </div>
   <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
 </div>
@@ -279,9 +282,11 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
           <thead>
             <tr>
               <th>#</th>
+              <th>Item ID</th>
               <th>Category</th>
+               <th>Image</th>
               <th>Serial Number</th>
-              <th>Image</th>
+             
               <th>Item Name</th>
               <th>Brand</th>
               <th>Model</th>
@@ -298,11 +303,13 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
             <?php foreach ($items as $index => $item): ?>
             <tr>
               <td><?= $index + 1 ?></td>
+              <td><?= htmlspecialchars($item['item_id']) ?></td>
               <td><?= htmlspecialchars($item['category_name']) ?></td>
-              <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
               <td>
                 <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>" class="item-photo" alt="Item Photo" />
               </td>
+              <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
+              
               <td><?= htmlspecialchars($item['item_name']) ?></td>
               <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
               <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>

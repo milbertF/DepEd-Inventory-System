@@ -21,7 +21,7 @@ $itemQuery = $conn->prepare("
         i.item_photo
     FROM deped_inventory_items i
     LEFT JOIN deped_inventory_item_category c ON i.category_id = c.category_id
-    ORDER BY i.created_at DESC
+    ORDER BY i.date_acquired DESC
 ");
 
 $itemQuery->execute();

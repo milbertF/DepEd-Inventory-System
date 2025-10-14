@@ -123,19 +123,20 @@ if (isset($_SESSION['deleted_item_name'])) {
                 </div>
 
                 <div class="column-checkboxes">
-                  
-                  <label><input type="checkbox" data-column="1" checked> Serial Number</label>
-                  <label><input type="checkbox" data-column="2" checked> Image</label>
-                  <label><input type="checkbox" data-column="3" checked> Item Name</label>
-                  <label><input type="checkbox" data-column="4" checked> Description</label>
-                  <label><input type="checkbox" data-column="5" checked> Brand</label>
-                  <label><input type="checkbox" data-column="6" checked> Model</label>
-                  <label><input type="checkbox" data-column="7" checked> Unit Cost</label>
-                  <label><input type="checkbox" data-column="8" checked> Quantity</label>
-                  <label><input type="checkbox" data-column="9" checked> Total Cost</label>
-                  <label><input type="checkbox" data-column="10" checked> Date Acquired</label>
-                  <label><input type="checkbox" data-column="11" checked> Status</label>
-                  <label><input type="checkbox" data-column="12" checked> Actions</label>
+                <label><input type="checkbox" data-column="1" >Item ID</label>
+                <label><input type="checkbox" data-column="2" checked> Image</label>
+                  <label><input type="checkbox" data-column="3" checked> Serial Number</label>
+                 
+                  <label><input type="checkbox" data-column="4" checked> Item Name</label>
+                  <label><input type="checkbox" data-column="5" checked> Description</label>
+                  <label><input type="checkbox" data-column="6" checked> Brand</label>
+                  <label><input type="checkbox" data-column="7" checked> Model</label>
+                  <label><input type="checkbox" data-column="8" checked> Unit Cost</label>
+                  <label><input type="checkbox" data-column="9" checked> Quantity</label>
+                  <label><input type="checkbox" data-column="10" checked> Total Cost</label>
+                  <label><input type="checkbox" data-column="11" checked> Date Acquired</label>
+                  <label><input type="checkbox" data-column="12" checked> Status</label>
+                  <label><input type="checkbox" data-column="13" checked> Actions</label>
                 </div>
 
                 <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
@@ -152,7 +153,7 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <?php
                   $allBrands = array_column($items, 'brand');
                   $filteredBrands = array_filter($allBrands, function ($brand) {
-                    return $brand !== null && $brand !== '' && $brand !== 'None';
+                    return $brand !== null && $brand !== '' && $brand !== '';
                   });
                   $uniqueBrands = array_unique($filteredBrands);
                   sort($uniqueBrands);
@@ -227,7 +228,7 @@ if (isset($_SESSION['deleted_item_name'])) {
                   sort($uniqueStatuses);
                   
                   foreach ($uniqueStatuses as $status): 
-                    if (!empty($status) && $status !== 'None'): ?>
+                    if (!empty($status) && $status !== ''): ?>
                       <label>
                         <input type="checkbox" name="statusFilter" value="<?= htmlspecialchars($status) ?>" >
                         <?= htmlspecialchars($status) ?>
@@ -243,11 +244,20 @@ if (isset($_SESSION['deleted_item_name'])) {
               </div>
             </div>
           </div>
-
+          <?php if (isset($_SESSION['user']['role']) && 
+         ($_SESSION['user']['role'] === 'Admin' || $_SESSION['user']['role'] === 'logisticsOfficer')): ?>
           <button class="excel-export-btn" style="margin-bottom:1rem" onclick="document.getElementById('exportModal').style.display='flex'">
             <i class="fas fa-file-excel"></i>
             Export to Excel
           </button>
+
+          <button class="excel-export-btn" style="margin-bottom:1rem" onclick="printCurrentTableView()">
+    <i class="fas fa-print" style="color: #2b579a;"></i>
+    Print 
+</button>
+
+
+          <?php endif; ?>
 
           <?php require __DIR__ . '/exportModal.php'; ?>
           
@@ -257,8 +267,10 @@ if (isset($_SESSION['deleted_item_name'])) {
             <thead>
               <tr>
                 <th>#</th>
-                <th>Serial Number</th>
+                <th>Item ID </th>
                 <th>Image</th>
+                <th>Serial Number</th>
+           
                 <th>Item Name</th>
                 <th>Description</th>
                 <th>Brand</th>
@@ -275,15 +287,18 @@ if (isset($_SESSION['deleted_item_name'])) {
               <?php foreach ($items as $index => $item): ?>
                 <tr>
                   <td><?= $index + 1 ?></td>
-                  <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
+                  <td><?= htmlspecialchars($item['item_id']) ?></td>
                   <td>
                     <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>"
                       alt="Item Photo" class="item-photo" />
                   </td>
+                  <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : '—' ?></td>
+
+                  
                   <td><?= htmlspecialchars($item['item_name']) ?></td>
-                  <td><?= htmlspecialchars($item['description']) ?></td>
-                  <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
-                  <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
+                  <td><?=  !empty($item['description']) ? htmlspecialchars($item['description']) :  '—' ?></td>
+                  <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
+                  <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
                   <td>₱<?= number_format($item['unit_cost'], 2) ?></td>
                   <td><?= htmlspecialchars($item['quantity']) ?></td>
                   <td>₱<?= number_format($item['total_cost'], 2) ?></td>
@@ -309,8 +324,8 @@ if (isset($_SESSION['deleted_item_name'])) {
                       <i class="fas fa-eye"></i>
                       <span class="tooltip">View Item</span>
                     </button>
-
-                    <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+                    <?php if (isset($_SESSION['user']['role']) && 
+         ($_SESSION['user']['role'] === 'Admin' || $_SESSION['user']['role'] === 'logisticsOfficer')): ?>
                       <button class="action-btn edit" title="Edit Item"
                         data-id="<?= $item['item_id'] ?>"
                         data-photo="<?= htmlspecialchars($item['item_photo']) ?>"

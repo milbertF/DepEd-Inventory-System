@@ -163,8 +163,11 @@ require __DIR__ . '/../function/fetchOffPosFunction.php';
             <div class="inputs">
               <select id="addEmployee-accountType" name="account_role" required>
                 <option value="" disabled selected>Select a role</option>
+                
                 <option value="Admin">Admin</option>
                 <option value="Employee">Employee</option>
+                <option value="Inactive">Inactive</option>
+                <option value="logisticsOfficer">Logistics Officer</option>
               </select>
             </div>
           </div>

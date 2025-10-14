@@ -85,7 +85,19 @@ require __DIR__ . '/../../settings/settings.php';
 
                   <td><?= htmlspecialchars(ucwords(strtolower("{$employee['first_name']} {$employee['middle_name']} {$employee['last_name']}"))) ?></td>
 
-                  <td><?= htmlspecialchars(strtolower($employee['role']) === 'deactivate' ? 'Deactivated' : ($employee['role'] ?? '—')) ?></td>
+                  <td>
+  <?php
+    $role = $employee['role'] ?? '—';
+    if (strtolower($role) === 'deactivate') {
+        echo 'Deactivated';
+    } else {
+    
+        $formattedRole = ucwords(preg_replace('/([a-z])([A-Z])/', '$1 $2', $role));
+        echo htmlspecialchars($formattedRole);
+    }
+  ?>
+</td>
+
 
                   <td><?= htmlspecialchars($employee['position_title'] ?? '—') ?></td>
                   <td><?= htmlspecialchars($employee['office_name'] ?? '—') ?></td>
@@ -98,14 +110,15 @@ require __DIR__ . '/../../settings/settings.php';
 
                   <td>
 
-                    <button
-                      class="action-btn view"
-                      data-id="<?= $employee['info_id'] ?>"
-                      data-user-id="<?= $employee['user_id'] ?>"
-                      title="View Employee">
-                      <i class="fas fa-eye"></i>
-                      <span class="tooltip">View Profile</span>
-                    </button>
+                  <button
+  class="action-btn view"
+  data-id="<?= $employee['info_id'] ?>"
+  data-user-id="<?= $employee['user_id'] ?>"
+  data-role="<?= htmlspecialchars($formattedRole) ?>"
+  title="View Employee">
+  <i class="fas fa-eye"></i>
+  <span class="tooltip">View Profile</span>
+</button>
                     <button
                       class="action-btn edit"
                       data-id="<?= $employee['info_id'] ?>"

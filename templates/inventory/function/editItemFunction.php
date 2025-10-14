@@ -6,21 +6,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
     $item_id = $_POST['item_id'] ?? '';
     $item_name = trim($_POST['item_name']);
     $category_id = intval($_POST['category_id']);
-    
-    // ✅ Save "None" instead of NULL for empty values
-    $description = (!empty(trim($_POST['description'] ?? ''))) ? trim($_POST['description']) : 'None';
-    $brand = (!empty(trim($_POST['brand'] ?? ''))) ? trim($_POST['brand']) : 'None';
-    $model = (!empty(trim($_POST['model'] ?? ''))) ? trim($_POST['model']) : 'None';
-    $serial_number = (!empty(trim($_POST['serial_number'] ?? ''))) ? trim($_POST['serial_number']) : 'None';
-    
+
+
+    $description = !empty(trim($_POST['description'] ?? '')) ? trim($_POST['description']) : null;
+    $brand = !empty(trim($_POST['brand'] ?? '')) ? trim($_POST['brand']) : null;
+    $model = !empty(trim($_POST['model'] ?? '')) ? trim($_POST['model']) : null;
+    $serial_number = !empty(trim($_POST['serial_number'] ?? '')) ? trim($_POST['serial_number']) : null;
     $quantity = intval($_POST['quantity']);
-    $unit = (!empty(trim($_POST['unit']))) ? trim($_POST['unit']) : 'None';
-    
+    $unit = !empty(trim($_POST['unit'] ?? '')) ? trim($_POST['unit']) : null;
+
     $unit_cost = floatval($_POST['unit_cost']);
-    $date_acquired = (!empty($_POST['date_acquired']) && $_POST['date_acquired'] !== '0000-00-00') 
-        ? $_POST['date_acquired'] 
+    $date_acquired = (!empty($_POST['date_acquired']) && $_POST['date_acquired'] !== '0000-00-00')
+        ? $_POST['date_acquired']
         : null;
     $item_status = trim($_POST['item_status']);
+
 
     $stmt_old = $conn->prepare("SELECT item_photo FROM deped_inventory_items WHERE item_id = ?");
     $stmt_old->bind_param("s", $item_id);
@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
 
     $photo_path = $existing_photo;
 
+  
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $photo_tmp = $_FILES['photo']['tmp_name'];
         $photo_name = basename($_FILES['photo']['name']);
@@ -74,8 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
     ");
 
     if ($stmt) {
+    
         $stmt->bind_param(
-            "ssissssisdssi", 
+            "ssissssisdssi",
             $photo_path,
             $item_name,
             $category_id,
@@ -90,6 +92,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             $item_status,
             $item_id
         );
+
+        
+        foreach (['description', 'brand', 'model', 'serial_number', 'unit', 'date_acquired'] as $field) {
+            if ($$field === null) {
+                $stmt->send_long_data(array_search($field, ['description', 'brand', 'model', 'serial_number', 'unit', 'date_acquired']), null);
+            }
+        }
 
         if ($stmt->execute()) {
             showSweetAlert(

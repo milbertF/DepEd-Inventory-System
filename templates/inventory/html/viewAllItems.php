@@ -109,18 +109,19 @@ if (isset($_SESSION['deleted_all_item_name'])) {
               <span>Show/Hide Columns</span>
             </div>
             <div class="column-checkboxes">
-        
-              <label><input type="checkbox" data-column="1" checked> Category</label>
-              <label><input type="checkbox" data-column="2" checked> Serial Number</label>
+            <label><input type="checkbox" data-column="1" > Item ID</label>
+              <label><input type="checkbox" data-column="2" checked> Category</label>
               <label><input type="checkbox" data-column="3" checked> Image</label>
-              <label><input type="checkbox" data-column="4" checked> Item Name</label>
-              <label><input type="checkbox" data-column="5" checked> Description</label>
-              <label><input type="checkbox" data-column="6" checked> Brand</label>
-              <label><input type="checkbox" data-column="7" checked> Model</label>
-              <label><input type="checkbox" data-column="8" checked> Quantity</label>
-              <label><input type="checkbox" data-column="9" checked> Date Acquired</label>
-              <label><input type="checkbox" data-column="10" checked> Status</label>
-              <label><input type="checkbox" data-column="11" checked> Actions</label>
+              <label><input type="checkbox" data-column="4" checked> Serial Number</label>
+
+              <label><input type="checkbox" data-column="5" checked> Item Name</label>
+              <label><input type="checkbox" data-column="6" checked> Description</label>
+              <label><input type="checkbox" data-column="7" checked> Brand</label>
+              <label><input type="checkbox" data-column="8" checked> Model</label>
+              <label><input type="checkbox" data-column="9" checked> Quantity</label>
+              <label><input type="checkbox" data-column="10" checked> Date Acquired</label>
+              <label><input type="checkbox" data-column="11" checked> Status</label>
+              <label><input type="checkbox" data-column="12" checked> Actions</label>
             </div>
             <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
           </div>
@@ -138,7 +139,7 @@ if (isset($_SESSION['deleted_all_item_name'])) {
               sort($uniqueStatuses);
               
               foreach ($uniqueStatuses as $status): 
-                if (!empty($status) && $status !== 'None'): ?>
+                if (!empty($status) && $status !== ''): ?>
                   <label>
                     <input type="checkbox" name="statusFilter" value="<?= htmlspecialchars($status) ?>" >
                     <?= htmlspecialchars($status) ?>
@@ -184,11 +185,19 @@ if (isset($_SESSION['deleted_all_item_name'])) {
           </div>
         </div>
       </div>
+      <?php if (isset($_SESSION['user']['role']) && 
+         ($_SESSION['user']['role'] === 'Admin' || $_SESSION['user']['role'] === 'logisticsOfficer')): ?>
 
       <button class="excel-export-btn" style="margin-bottom:1rem" onclick="document.getElementById('exportModal').style.display='flex'">
         <i class="fas fa-file-excel"></i>
         Export to Excel
       </button>
+      <button class="excel-export-btn" style="margin-bottom:1rem" onclick="printAllCurrentTableView()">
+    <i class="fas fa-print" style="color: #2b579a;"></i>
+    Print 
+</button>
+
+      <?php endif; ?>
       <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
 
       <!-- Items Table -->
@@ -196,9 +205,11 @@ if (isset($_SESSION['deleted_all_item_name'])) {
         <thead>
           <tr>
             <th>#</th>
+            <th>Item ID</th>
             <th>Category</th>
-            <th>Serial Number</th>
             <th>Image</th>
+            <th>Serial Number</th>
+         
             <th>Item Name</th>
             <th>Description</th>
             <th>Brand</th>
@@ -213,15 +224,17 @@ if (isset($_SESSION['deleted_all_item_name'])) {
           <?php foreach ($items as $index => $item): ?>
           <tr>
             <td><?= $index + 1 ?></td>
+            <td><?= htmlspecialchars($item['item_id']) ?></td>
             <td><?= htmlspecialchars($item['category_name']) ?></td>
-            <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
             <td>
               <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>" class="item-photo" alt="Item Photo" />
             </td>
+            <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : '—' ?></td>
+           
             <td><?= htmlspecialchars($item['item_name']) ?></td>
-            <td><?= !empty($item['description']) ? htmlspecialchars($item['description']) : 'None' ?></td>
-            <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
-            <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
+            <td><?= !empty($item['description']) ? htmlspecialchars($item['description']) : '—' ?></td>
+            <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
+            <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
             <td><?= htmlspecialchars($item['quantity']) ?></td>
             <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
             <td><?= htmlspecialchars($item['item_status']) ?></td>
@@ -246,7 +259,8 @@ if (isset($_SESSION['deleted_all_item_name'])) {
                 <span class="tooltip">View Item</span>
               </button>
 
-              <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+              <?php if (isset($_SESSION['user']['role']) && 
+         ($_SESSION['user']['role'] === 'Admin' || $_SESSION['user']['role'] === 'logisticsOfficer')): ?>
               <button class="action-btn edit" title="Edit Item"
                 data-id="<?= $item['item_id'] ?>"
                 data-photo="<?= htmlspecialchars($item['item_photo']) ?>"
@@ -295,6 +309,7 @@ if (isset($_SESSION['deleted_all_item_name'])) {
       </select>
       <span>entries</span>
     </div>
+
    
   </div>
   
