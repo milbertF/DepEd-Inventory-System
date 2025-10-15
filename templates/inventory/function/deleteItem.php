@@ -19,8 +19,8 @@ if (isset($_GET['id'])) {
 
     $conn->begin_transaction();
 
-    try {
-        // First, get the category name by joining with categories table
+    try {      
+  
         $fetchStmt = $conn->prepare("
             SELECT i.*, c.category_name 
             FROM deped_inventory_items i 
@@ -40,7 +40,7 @@ if (isset($_GET['id'])) {
 
             $deleted_id = generateDeletedID($conn);
 
-            // Insert into deleted table with category_name and initial_quantity
+           
             $insertStmt = $conn->prepare("
                 INSERT INTO deped_inventory_items_deleted
                 (deleted_id, item_id, item_photo, item_name, category_id, category_name, description, brand, model, serial_number, quantity, initial_quantity, date_acquired, unit, unit_cost, total_cost, item_status, created_at, deleted_by_user_id, deleted_by_fname, deleted_by_lname)
@@ -80,7 +80,7 @@ if (isset($_GET['id'])) {
             throw new Exception("Item not found in main items table");
         }
 
-        // CHECK IF THIS IS THE LAST ITEM IN THE CATEGORY BEFORE DELETING
+   
         $checkLastItemStmt = $conn->prepare("SELECT COUNT(*) as item_count FROM deped_inventory_items WHERE category_id = ?");
         $checkLastItemStmt->bind_param("s", $item['category_id']);
         $checkLastItemStmt->execute();
@@ -88,9 +88,9 @@ if (isset($_GET['id'])) {
         $itemCount = $countResult->fetch_assoc()['item_count'];
         $checkLastItemStmt->close();
 
-        $is_last_item = ($itemCount == 1); // This will be true if we're deleting the last item
+        $is_last_item = ($itemCount == 1); 
 
-        // Delete from main items table
+        
         $stmt = $conn->prepare("DELETE FROM deped_inventory_items WHERE item_id = ?");
         $stmt->bind_param("s", $item_id);
 
@@ -98,21 +98,55 @@ if (isset($_GET['id'])) {
             throw new Exception("Failed to delete from main items table: " . $stmt->error);
         }
 
+        $user_id = $_SESSION['user']['user_id'] ?? null;
+        $action_type = 'item_deleted';
+        $message = "Item #{$item['item_id']} ({$item['item_name']}) was  deleted from the inventory.";
+        
+        $notifStmt = $conn->prepare("
+            INSERT INTO deped_inventory_notifications 
+            (user_id, item_id, item_name, action_type, old_quantity, new_quantity, quantity_added, message, is_read) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        $old_quantity = $item['quantity'];
+        $new_quantity = NULL;
+        $quantity_added = NULL;
+        $is_read = 0;
+        
+        $notifStmt->bind_param("isssiiisi", 
+            $user_id, 
+            $item['item_id'], 
+            $item['item_name'], 
+            $action_type, 
+            $old_quantity,
+            $new_quantity,
+            $quantity_added,
+            $message,
+            $is_read
+        );
+        
+        $notifStmt->execute();
+        $notifStmt->close();
+
         $conn->commit();
         
-        // Store data in session (like your working category deletion)
+ 
         $_SESSION['deleted_item_name'] = $item['item_name'];
         $_SESSION['deleted_is_last_item'] = $is_last_item;
         
-        // Simple redirect like your category deletion
-        header("Location: /itemsByCategory?category_id=$category_id&item_deleted=1");
+     
+        $redirect_category_id = $category_id ?: $item['category_id'];
+        
+ 
+        header("Location: /itemsByCategory?category_id=$redirect_category_id&item_deleted=1");
         exit;
     } catch (Exception $e) {
         $conn->rollback();
         error_log("Delete item failed: " . $e->getMessage());
         
-        header("Location: /itemsByCategory?category_id=$category_id&item_deleted=0");
+       
+        $redirect_category_id = $category_id ?: ($item['category_id'] ?? '');
+        header("Location: /itemsByCategory?category_id=$redirect_category_id&item_deleted=0");
         exit;
     }
 }
-?>

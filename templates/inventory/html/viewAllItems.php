@@ -5,6 +5,10 @@ require __DIR__ . '/../function/fetchAllItems.php';
 require __DIR__ . '/../function/editItemFunction.php';
 ?>
 
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -27,7 +31,7 @@ require __DIR__ . '/../function/editItemFunction.php';
 </div>
 
 <?php
-// Clear the session after setting the data attributes
+
 if (isset($_SESSION['deleted_all_item_name'])) {
     unset($_SESSION['deleted_all_item_name']);
     unset($_SESSION['deleted_all_is_last_item']);
@@ -118,10 +122,12 @@ if (isset($_SESSION['deleted_all_item_name'])) {
               <label><input type="checkbox" data-column="6" checked> Description</label>
               <label><input type="checkbox" data-column="7" checked> Brand</label>
               <label><input type="checkbox" data-column="8" checked> Model</label>
-              <label><input type="checkbox" data-column="9" checked> Quantity</label>
-              <label><input type="checkbox" data-column="10" checked> Date Acquired</label>
-              <label><input type="checkbox" data-column="11" checked> Status</label>
-              <label><input type="checkbox" data-column="12" checked> Actions</label>
+              <label><input type="checkbox" data-column="9" checked> Unit Cost</label>
+              <label><input type="checkbox" data-column="10" checked> Quantity</label>
+              <label><input type="checkbox" data-column="11" checked> Total Cost</label>
+              <label><input type="checkbox" data-column="12" checked> Date Acquired</label>
+              <label><input type="checkbox" data-column="13" checked> Status</label>
+              <label><input type="checkbox" data-column="14" checked> Actions</label>
             </div>
             <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
           </div>
@@ -214,7 +220,9 @@ if (isset($_SESSION['deleted_all_item_name'])) {
             <th>Description</th>
             <th>Brand</th>
             <th>Model</th>
+            <th>Unit Cost</th>
             <th>Quantity</th>
+            <th>Total Cost</th>
             <th>Date Acquired</th>
             <th>Status</th>
             <th>Actions</th>
@@ -222,7 +230,7 @@ if (isset($_SESSION['deleted_all_item_name'])) {
         </thead>
         <tbody id="inventoryTableBody">
           <?php foreach ($items as $index => $item): ?>
-          <tr>
+            <tr data-item-id="<?= $item['item_id'] ?>">
             <td><?= $index + 1 ?></td>
             <td><?= htmlspecialchars($item['item_id']) ?></td>
             <td><?= htmlspecialchars($item['category_name']) ?></td>
@@ -235,7 +243,9 @@ if (isset($_SESSION['deleted_all_item_name'])) {
             <td><?= !empty($item['description']) ? htmlspecialchars($item['description']) : '—' ?></td>
             <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
             <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
+            <td>₱<?= number_format($item['unit_cost'], 2) ?></td>
             <td><?= htmlspecialchars($item['quantity']) ?></td>
+            <td>₱<?= number_format($item['total_cost'], 2) ?></td>
             <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
             <td><?= htmlspecialchars($item['item_status']) ?></td>
             <td>
@@ -339,13 +349,13 @@ if (isset($_SESSION['deleted_all_item_name'])) {
          
 
               <script>
-                // checkAllItemsDeleteAlerts.js
+           
 function checkForAllDeletedItem() {
     const urlParams = new URLSearchParams(window.location.search);
     const itemDeleted = urlParams.get('item_all_deleted');
     
     if (itemDeleted === '1') {
-        // Get data from data attributes
+    
         const alertContainer = document.getElementById('allItemsDeleteAlertData');
         if (alertContainer) {
             const deletedName = alertContainer.getAttribute('data-all-deleted-name');
@@ -395,6 +405,10 @@ window.addEventListener('load', function() {
 window.addEventListener('pageshow', function() {
     checkForAllDeletedItem();
 })
+
+
+
+
               </script>
 
 

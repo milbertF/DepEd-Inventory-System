@@ -2,8 +2,8 @@
 require __DIR__ . '/../../header/html/header.php';
 require __DIR__ . '/../function/fetchItemsByCategory.php';
 require __DIR__ . '/../function/editItemFunction.php';
+require __DIR__ . '/../function/addQuantityFunction.php';
 ?>
-
 
 
 <!DOCTYPE html>
@@ -346,11 +346,13 @@ if (isset($_SESSION['deleted_item_name'])) {
                       </button>
 
                       <button class="action-btn delete"
-                        data-id="<?= $item['item_id'] ?>"
-                        data-name="<?= htmlspecialchars($item['item_name']) ?>">
-                        <i class="fas fa-trash-alt"></i>
-                        <span class="tooltip">Delete Item</span>
-                      </button>
+  data-id="<?= $item['item_id'] ?>"
+  data-name="<?= htmlspecialchars($item['item_name']) ?>"
+  data-category-id="<?= $item['category_id']; ?>">
+  <i class="fas fa-trash-alt"></i>
+  <span class="tooltip">Delete Item</span>
+</button>
+
                       <button 
   class="action-btn add"
   data-id="<?= $item['item_id'] ?>"
@@ -416,10 +418,9 @@ if (isset($_SESSION['deleted_item_name'])) {
   <script src="/javascript/sidebar.js"></script>
   <script src="/javascript/script.js"></script>
   <script src="/javascript/viewItemByCategory.js"></script>
-  
+ 
 
-  
-
+  <script></script>
   
  
 </body>

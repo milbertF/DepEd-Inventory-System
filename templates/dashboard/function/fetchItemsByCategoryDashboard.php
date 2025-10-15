@@ -29,5 +29,4 @@ while ($row = $itemResult->fetch_assoc()) {
     $items[] = $row;
 }
 
-$conn->close();
 ?>

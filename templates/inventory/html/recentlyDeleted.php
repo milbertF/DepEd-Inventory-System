@@ -8,6 +8,9 @@ require __DIR__ . '/../function/fetchWhoDeletedEmployees.php';
 
 ?>
 
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -301,18 +304,18 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
           </thead>
           <tbody id="inventoryTableBody">
             <?php foreach ($items as $index => $item): ?>
-            <tr>
+              <tr data-item-id="<?= $item['item_id'] ?>">
               <td><?= $index + 1 ?></td>
               <td><?= htmlspecialchars($item['item_id']) ?></td>
               <td><?= htmlspecialchars($item['category_name']) ?></td>
               <td>
                 <img src="<?= !empty($item['item_photo']) ? htmlspecialchars($item['item_photo']) : '/images/user-profile/default-image.jpg' ?>" class="item-photo" alt="Item Photo" />
               </td>
-              <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : 'None' ?></td>
+              <td><?= !empty($item['serial_number']) ? htmlspecialchars($item['serial_number']) : '—' ?></td>
               
               <td><?= htmlspecialchars($item['item_name']) ?></td>
-              <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : 'None' ?></td>
-              <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : 'None' ?></td>
+              <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
+              <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
               <td><?= htmlspecialchars($item['quantity']) ?></td>
               <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
               <td><?= htmlspecialchars($item['item_status']) ?></td>
@@ -407,13 +410,13 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
 
 
 <script>
-  // checkPermanentDeleteAlerts.js
+
 function checkForPermanentDeletedItem() {
     const urlParams = new URLSearchParams(window.location.search);
     const permanentDeleted = urlParams.get('permanent_deleted');
     
     if (permanentDeleted === '1') {
-        // Get data from data attributes
+       
         const alertContainer = document.getElementById('permanentDeleteAlertData');
         if (alertContainer) {
             const deletedName = alertContainer.getAttribute('data-permanent-deleted-name');

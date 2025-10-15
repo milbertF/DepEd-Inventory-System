@@ -1,6 +1,6 @@
 <div class="addEmployee" style="display: none;" id="addQuantityModal">
   <div class="esc">
-    <button id="btnEscQuantity" onclick="escQuantityModal()">
+    <button type="button" id="btnEscQuantity" onclick="escQuantityModal()">
       <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
@@ -9,14 +9,16 @@
     <h4>
       Add Quantity for 
       <span style="font-weight: 500; color: var(--textColor, #333);">
-        Item :
+        Item:
       </span>
       <span id="addQuantityItemName" style="color: var(--accentColor, #007bff);">
-        Bond Paper A4
+        <!-- Item name will be populated by JavaScript -->
       </span>
     </h4>
 
     <form method="POST" autocomplete="off" id="addQuantityForm">
+      <input type="hidden" name="item_id" id="addQuantityItemId">
+      
       <div class="inpart">
         <label for="quantity">Quantity to Add</label>
         <div class="inputs">
@@ -32,11 +34,10 @@
       </div>
 
       <div class="btnSave">
-        <button type="submit" id="submitQuantityBtn">
+        <button type="submit" name="add_quantity" id="submitQuantityBtn">
           <i class="fas fa-plus"></i> Add Quantity
         </button>
       </div>
     </form>
   </div>
 </div>
-

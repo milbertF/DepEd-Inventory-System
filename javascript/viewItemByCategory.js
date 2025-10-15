@@ -732,14 +732,44 @@ function initTableActions() {
             handleEditItem(actionBtn);
         } else if (actionBtn.classList.contains('view')) {
             handleViewItem(actionBtn);
+        } else if (actionBtn.classList.contains('add')) {
+            handleAddQuantity(actionBtn);
         }
+       
     });
+
+    // Keep the form submission handler here 
+    const addQuantityForm = document.getElementById('addQuantityForm');
+    if (addQuantityForm) {
+        addQuantityForm.addEventListener('submit', function(e) {
+          
+            
+            // console.log('FORM SUBMISSION INTERCEPTED - DEBUG MODE');
+            // console.log('Item ID:', document.getElementById('addQuantityItemId').value);
+            // console.log('Quantity:', document.getElementById('quantity').value);
+            
+            // 
+            // Swal.fire({
+            //     icon: 'info',
+            //     title: 'Debug Mode',
+            //     text: 'Form would submit with item: ' + document.getElementById('addQuantityItemId').value
+            // });
+            
+            
+        });
+    }
+}
+
+function handleAddQuantity(addBtn) {
+    const itemId = addBtn.getAttribute('data-id');
+    const itemName = addBtn.getAttribute('data-name');
+    openAddQuantityModal(itemId, itemName);
 }
 
 function handleDeleteItem(deleteBtn) {
     const itemId = deleteBtn.getAttribute('data-id');
     const itemName = deleteBtn.getAttribute('data-name');
-    const categoryId = new URLSearchParams(window.location.search).get('category_id');
+    const categoryId = deleteBtn.getAttribute('data-category-id'); // ← directly from button!
 
     Swal.fire({
         title: 'Are you sure?',
@@ -755,14 +785,17 @@ function handleDeleteItem(deleteBtn) {
             sessionStorage.setItem('deletedItemName', itemName);
             sessionStorage.setItem('deletedItemCategory', categoryId || 'none');
             
-            let url = `/templates/inventory/function/deleteItem.php?id=${itemId}&source=category`;
-            if (categoryId) url += `&category_id=${categoryId}`;
+            // Always include category_id in the redirect
+            const url = `/templates/inventory/function/deleteItem.php?id=${itemId}&category_id=${categoryId}&source=category`;
             window.location.href = url;
         }
     });
 }
 
 
+
+
+// checkDeleteAlerts.js
 // checkDeleteAlerts.js
 function checkForDeletedItem() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -789,10 +822,11 @@ function checkForDeletedItem() {
                         html: message,
                         confirmButtonColor: '#3085d6'
                     }).then(() => {
-                        // Clean up URL completely like category deletion
+                        // FIX: Only remove item_deleted parameter, keep category_id
                         const url = new URL(window.location.href);
                         url.searchParams.delete('item_deleted');
-                        window.history.replaceState({}, document.title, url.pathname);
+                        // Keep all other parameters including category_id
+                        window.history.replaceState({}, document.title, url.toString());
                     });
                 }, 100);
             }
@@ -804,13 +838,14 @@ function checkForDeletedItem() {
             text: 'Failed to delete item. Please try again.',
             confirmButtonColor: '#3085d6'
         }).then(() => {
+            // FIX: Only remove item_deleted parameter, keep category_id
             const url = new URL(window.location.href);
             url.searchParams.delete('item_deleted');
-            window.history.replaceState({}, document.title, url.pathname);
+            // Keep all other parameters including category_id
+            window.history.replaceState({}, document.title, url.toString());
         });
     }
 }
-
 
 
 window.addEventListener('load', function() {
@@ -1073,6 +1108,8 @@ document.addEventListener('keydown', function(e) {
         }
         if (domElements.itemViewModal?.style.display === 'flex') {
             closeItemView();
+        } if (document.getElementById('addQuantityModal')?.style.display === 'flex') {
+            escQuantityModal();
         }
     }
 });
@@ -1109,10 +1146,18 @@ if (typeof PerformanceObserver !== 'undefined') {
       function openAddQuantityModal(itemId, itemName) {
         const modal = document.getElementById('addQuantityModal');
         const itemNameEl = document.getElementById('addQuantityItemName');
-        itemNameEl.textContent = itemName;
-        modal.style.display = 'flex';
-        modal.setAttribute('data-item-id', itemId);
-      }
+        const itemIdInput = document.getElementById('addQuantityItemId');
+        
+        if (itemNameEl && itemIdInput) {
+            itemNameEl.textContent = itemName;
+            itemIdInput.value = itemId;
+            modal.style.display = 'flex';
+            
+            // Reset form and focus on quantity input
+            document.getElementById('quantity').value = '';
+            document.getElementById('quantity').focus();
+        }
+    }
       
       function escQuantityModal() {
         document.getElementById('addQuantityModal').style.display = 'none';
@@ -1141,6 +1186,27 @@ if (typeof PerformanceObserver !== 'undefined') {
                 const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
                 return !colCheckbox || colCheckbox.checked;
             });
+    
+        // Calculate total cost of all visible items
+        let totalCost = 0;
+        visibleRows.forEach(row => {
+            const actionBtn = row.querySelector('.action-btn.view');
+            if (actionBtn && actionBtn.dataset.totalcost) {
+                const itemTotalCost = parseFloat(actionBtn.dataset.totalcost) || 0;
+                totalCost += itemTotalCost;
+            } else if (actionBtn && actionBtn.dataset.qty && actionBtn.dataset.unitcost) {
+                // Fallback: Calculate from quantity and unit cost
+                const quantity = parseFloat(actionBtn.dataset.qty) || 0;
+                const unitCost = parseFloat(actionBtn.dataset.unitcost) || 0;
+                totalCost += quantity * unitCost;
+            }
+        });
+    
+        // Format total cost with currency
+        const formattedTotalCost = new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP'
+        }).format(totalCost);
     
         // Build table HTML with only visible columns and rows
         let tableHTML = `
@@ -1209,6 +1275,11 @@ if (typeof PerformanceObserver !== 'undefined') {
                         color: #2c3e50;
                         margin-bottom: 3px;
                     }
+                    .total-cost {
+                        color: #1d6f42;
+                        font-weight: bold;
+                        font-size: 11pt;
+                    }
                     table {
                         width: 100%;
                         border-collapse: collapse;
@@ -1233,11 +1304,16 @@ if (typeof PerformanceObserver !== 'undefined') {
                     }
                     .currency {
                         text-align: right;
-                     
+                        font-family: "Courier New", monospace;
                     }
                     .number {
                         text-align: right;
-                       
+                        font-family: "Courier New", monospace;
+                    }
+                    .cost-cell {
+                        text-align: right;
+                        font-family: "Courier New", monospace;
+                        font-weight: bold;
                     }
                     .print-footer {
                         margin-top: 30px;
@@ -1275,7 +1351,7 @@ if (typeof PerformanceObserver !== 'undefined') {
                     </div>
                     <div class="header-content">
                         <h1>INVENTORY REPORT</h1>
-                        <div class="subtitle">Category: ${categoryName} </div>
+                        <div class="subtitle">Category: ${categoryName}</div>
                         <div class="department">Baliwasan Central School Inventory System</div>
                     </div>
                 </div>
@@ -1289,8 +1365,10 @@ if (typeof PerformanceObserver !== 'undefined') {
                         <strong>Total Items</strong>
                         <span>${visibleRows.length}</span>
                     </div>
-                   
-                  
+                    <div class="info-item">
+                        <strong>Total Inventory Value</strong>
+                        <span class="total-cost">${formattedTotalCost}</span>
+                    </div>
                 </div>
                 
                 <table>
@@ -1349,6 +1427,11 @@ if (typeof PerformanceObserver !== 'undefined') {
                     cellClass = 'number';
                 }
                 
+                // Check if this is a cost-related column and format accordingly
+                if (cellContent.includes('₱') || cell.textContent.includes('PHP')) {
+                    cellClass = 'cost-cell';
+                }
+                
                 tableHTML += `<td class="${cellClass}">${formattedContent || ''}</td>`;
             });
             
@@ -1359,7 +1442,9 @@ if (typeof PerformanceObserver !== 'undefined') {
                     </tbody>
                 </table>
                 
-               
+                <div class="print-footer">
+                    <p>Report generated on ${currentDate} | Category: ${categoryName} | Total Items: ${visibleRows.length} | Total Inventory Value: ${formattedTotalCost}</p>
+                </div>
                 
                 <script>
                     window.onload = function() {

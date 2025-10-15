@@ -659,7 +659,11 @@
     font-weight: 600;
   }
   
-
+  .highlight-item {
+    background-color: #fff3cd !important;
+    box-shadow: 0 0 10px #ffeb3b;
+    transition: background-color 1s ease, box-shadow 1s ease;
+}
 
   
   
