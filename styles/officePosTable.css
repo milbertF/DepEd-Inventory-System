@@ -1,50 +1,85 @@
-/* ========== TABLE BASE ========== */
+
+@import url(actionBtnToolTip.css);
+
+
 .officeTable,
 .positionTable {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 0.5rem;
-  font-size: 0.95rem;
+  border-collapse: collapse; 
+  font-size: 0.875rem;
+  line-height: 1.5;
   background-color: white;
 }
 
-/* ========== HEADER ========== */
+
+.tableContainer {
+  margin-top: 1.5rem;
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+  border: 1px solid #f0f0f0;
+}
+
+
 .officeTable thead,
 .positionTable thead {
-  background-color: #f2f2f2;
-  color: white;
+  background-color: #f8fafc;
+  position: sticky;
+  top: 0;
 }
 
-/* ========== CELL ========== */
 .officeTable th,
-.officeTable td,
-.positionTable th,
-.positionTable td {
-  text-align: center;
-  padding: 0.5rem 0.75rem;
-  font-size: 0.95rem;
+.positionTable th {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #334155;
+  border-bottom: 2px solid #e2e8f0;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  border-bottom: 1px solid #eee;
 }
 
-/* ========== ROW HOVER EFFECT ========== */
+
+
+
+.officeTable td,
+.positionTable td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(  --textColor);
+  vertical-align: middle;
+  text-align: left;
+}
+
+
+.officeTable tbody tr:nth-child(odd),
+.positionTable tbody tr:nth-child(odd) {
+  background-color: #ffffff;
+}
+
+.officeTable tbody tr:nth-child(even),
+.positionTable tbody tr:nth-child(even) {
+  background-color: #f8fafc;
+}
+
+
 .officeTable tbody tr:hover,
 .positionTable tbody tr:hover {
-  background-color: #f9f9f9;
+  background-color: #f1f5f9 !important;
 }
 
-/* ========== CONSISTENT COLUMN WIDTHS ========== */
-/* # Column */
+
+
 .officeTable th:nth-child(1),
 .officeTable td:nth-child(1),
 .positionTable th:nth-child(1),
 .positionTable td:nth-child(1) {
   width: 5%;
+  text-align: center;
 }
 
-/* Office Name / Position Name) */
+
 .officeTable th:nth-child(2),
 .officeTable td:nth-child(2),
 .positionTable th:nth-child(2),
@@ -52,7 +87,7 @@
   width: 25%;
 }
 
-/* Description / Location */
+
 .officeTable th:nth-child(3),
 .officeTable td:nth-child(3),
 .positionTable th:nth-child(3),
@@ -60,7 +95,7 @@
   width: 30%;
 }
 
-/* Date Added */
+
 .officeTable th:nth-child(4),
 .officeTable td:nth-child(4),
 .positionTable th:nth-child(4),
@@ -68,92 +103,227 @@
   width: 20%;
 }
 
-/* Actions */
+
 .officeTable th:nth-child(5),
 .officeTable td:nth-child(5),
 .positionTable th:nth-child(5),
 .positionTable td:nth-child(5) {
   width: 20%;
+  min-width: 180px;
 }
 
-/* ========== SEARCH  ========== */
-#searchOffice,
-#searchPosition {
-  padding: 8px 12px;
-  width: 100%;
-  max-width: 300px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-}
 
-/* ========== TABLE CONTAINER ========== */
-.tableContainer {
-  margin-top: 1rem;
-  overflow-x: auto;
-  border-radius: 0.5rem;
-  box-shadow: var(--boxShadow);
-  padding: 1rem;
-  background-color: white;
-}
-
-/* ========== ACTION BUTTONS ========== */
 .action-btn {
   border: none;
-  padding: 0.4rem 0.6rem;
-  margin-right: 0.25rem;
-  border-radius: 4px;
+  padding: 0.45rem 0.65rem;
+  margin: 0 0.1rem;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  min-width: 2.2rem;
 }
 
 .action-btn i {
+  margin-right: 0.15rem;
+  font-size: 0.85rem;
   pointer-events: none;
 }
 
 .action-btn.edit {
-  color: white;
+  color: #3b82f6;
+  border-color: #bfdbfe;
 }
 
-/* ========== PAGINATION ========== */
+.action-btn.edit:hover {
+  background-color: #eff6ff;
+}
+
+.action-btn.delete {
+  color: #ef4444;
+  border-color: #fecaca;
+}
+
+.action-btn.delete:hover {
+  background-color: #fef2f2;
+}
+
+.action-btn:hover {
+  background-color: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#searchOffice,
+#searchPosition {
+  padding: 0.6rem 1rem;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background-color: #f8fafc;
+  margin-bottom: 1.5rem;
+}
+
+#searchOffice:focus,
+#searchPosition:focus {
+  border-color: #93c5fd;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.2);
+  background-color: white;
+}
+
+
 .pagination {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 0.5rem;
-  margin-top: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
 }
 
 .pagination a {
-  padding: 0.4rem 0.8rem;
-  background-color: var(--backgroundColor);
-  border: var(--border);
-  border-radius: 0.3rem;
-  color: var(--textColor);
+  padding: 0.6rem 0.9rem;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
   text-decoration: none;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  min-width: 2.5rem;
+  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.pagination a:hover {
-  background-color: var(--accentColor);
-  color: white;
+.pagination a:hover:not(.active) {
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .pagination a.active {
-  background-color: var(--accentColor);
+  background-color:  var(--accentColor);
+  border-color:  var(--accentColor);
   color: white;
-  pointer-events: none;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
 
+.pagination a.prev-next {
+  padding: 0.6rem 1rem;
+}
+
+.pagination a.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.pagination .ellipsis {
+  padding: 0.6rem 0.3rem;
+  color: #94a3b8;
+}
+
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #dee2e6;
+  margin-top: 20px;
+}
+
+.pagination-controls {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-top: 1rem;
+padding: 0.5rem 0;
+}
+
+.items-per-page-selector {
+display: flex;
+align-items: center;
+gap: 0.5rem;
+font-size: 0.875rem;
+color: #6c757d;
+}
+
+.items-per-page-selector select {
+width: auto;
+padding: 0.25rem 0.5rem;
+border: 1px solid #ced4da;
+border-radius: 0.25rem;
+background-color: white;
+}
 
 
-@media screen and (max-width: 768px) {
+@media (max-width: 768px) {
+  .pagination {
+    gap: 0.3rem;
+  }
+  
+  .pagination a {
+    padding: 0.5rem 0.7rem;
+    min-width: 2rem;
+    font-size: 0.85rem;
+  }
+  
+  .pagination a.prev-next {
+    padding: 0.5rem 0.8rem;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .tableContainer {
+    padding: 1rem;
+    border-radius: 0.5rem;
+  }
+  
   .officeTable,
   .positionTable {
+    min-width: 100%;
     font-size: 0.85rem;
+  }
+  
+  .officeTable th,
+  .officeTable td,
+  .positionTable th,
+  .positionTable td {
+    padding: 0.75rem;
+  }
+  
+  .action-btn {
+    padding: 0.4rem 0.6rem;
+    margin: 0.1rem;
+    min-width: 2rem;
+  }
+  
+  .action-btn i {
+    margin-right: 0;
+    font-size: 0.8rem;
+  }
+  
+  #searchOffice,
+  #searchPosition {
+    max-width: 100%;
   }
 }

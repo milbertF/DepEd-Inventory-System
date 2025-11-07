@@ -8,15 +8,17 @@ require __DIR__ . '/../function/loginController.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/images/assets/baliwasan.png" />
-    <title>DIS-Login</title>
+    <title>BCSI-Login</title>
     <link rel="stylesheet" href="/styles/login.css" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
+
 <body>
     <div class="index">
         <img src="/images/assets/DepEd.png" alt="DepEd Logo Background" />
@@ -52,21 +54,22 @@ require __DIR__ . '/../function/loginController.php';
         </form>
 
         <div class="credits">
-            <p>Built and maintained by <a href="#">CRAMATIX</a></p>
+            <p>Built and maintained by <a href="/templates/aboutus/aboutus.php">CRAMATIX</a></p>
         </div>
     </div>
 
 
 
     <?php if (isset($errorMessage)): ?>
-    <div id="login-error" data-message="<?= htmlspecialchars($errorMessage, ENT_QUOTES) ?>" style="display:none;"></div>
-<?php endif; ?>
+        <div id="login-error" data-message="<?= htmlspecialchars($errorMessage, ENT_QUOTES) ?>" style="display:none;"></div>
+    <?php endif; ?>
 
 
 
     <script src="/javascript/login.js"></script>
-  
+
 
 
 </body>
+
 </html>

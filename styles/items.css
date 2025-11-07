@@ -1,4 +1,5 @@
 @import url(style.css);
+@import url(actionBtnToolTip.css);
 
 
 .sidebar{
@@ -11,3 +12,20 @@
         }
     }
 }
+
+
+#searchCategory{
+    padding: 8px 12px;
+    width: 100%;
+    max-width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
+
+
+
+  
+
+
+  
+

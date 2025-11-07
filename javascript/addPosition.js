@@ -27,7 +27,7 @@ function addMorePosition() {
     newEntry.dataset.index = positionCount;
     
     newEntry.innerHTML = `
-        <button type="button" class="remove-office" onclick="removePosition(this)">
+        <button type="button" class="remove-position" onclick="removePosition(this)">
             <i class="fa-solid fa-xmark"></i>
         </button>
         <div class="inpart">

@@ -40,9 +40,9 @@ function addOffice() {
       </div>
   
       <div class="inpart">
-        <label for="office-location-${officeCount}">Location (optional)</label>
+        <label for="office-description-${officeCount}">description (optional)</label>
         <div class="inputs">
-          <input type="text" id="office-location-${officeCount}" name="offices[${officeCount}][location]" placeholder="e.g., Building A, 2nd Floor" />
+          <input type="text" id="office-description-${officeCount}" name="offices[${officeCount}][description]" placeholder="e.g., Building A, 2nd Floor" />
         </div>
       </div>
     `;

@@ -25,14 +25,14 @@ if (isset($_POST['submit_office'])) {
     if (isset($_POST['offices']) && is_array($_POST['offices'])) {
         foreach ($_POST['offices'] as $office) {
             $name = trim($office['name']);
-            $location = trim($office['location'] ?? '');
+            $description = trim($office['description'] ?? '');
             
             if (!empty($name)) {
              
-                $entryKey = strtolower($name) . '|' . strtolower($location);
+                $entryKey = strtolower($name) . '|' . strtolower($description);
                 if (isset($processedEntries[$entryKey])) {
                     $duplicateCount++;
-                    $duplicateMessages[] = "Duplicate in current submission: " . htmlspecialchars($name) . ($location ? " (" . htmlspecialchars($location) . ")" : "");
+                    $duplicateMessages[] = "Duplicate in current submission: " . htmlspecialchars($name) . ($description ? " (" . htmlspecialchars($description) . ")" : "");
                     continue;
                 }
                 $processedEntries[$entryKey] = true;
@@ -40,26 +40,26 @@ if (isset($_POST['submit_office'])) {
               
                 $check = $conn->prepare("SELECT office_id FROM deped_inventory_employee_office 
                                        WHERE LOWER(office_name) = LOWER(?) 
-                                       AND (LOWER(office_location) = LOWER(?) OR (office_location IS NULL AND ? = ''))");
-                $check->bind_param("sss", $name, $location, $location);
+                                       AND (LOWER(office_description) = LOWER(?) OR (office_description IS NULL AND ? = ''))");
+                $check->bind_param("sss", $name, $description, $description);
                 $check->execute();
                 $check->store_result();
 
                 if ($check->num_rows > 0) {
                     $duplicateCount++;
-                    $duplicateMessages[] = "Office  Title and Description already exists : " . htmlspecialchars($name) . ($location ? " (" . htmlspecialchars($location) . ")" : "");
+                    $duplicateMessages[] = "Office  Title and Description already exists : " . htmlspecialchars($name) . ($description ? " (" . htmlspecialchars($description) . ")" : "");
                     continue;
                 }
 
          
                 $office_id = generateOfficeID($conn);
-                $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_location, created_at) VALUES (?, ?, ?, NOW())");
-                $stmt->bind_param("sss", $office_id, $name, $location);
+                $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_description, created_at) VALUES (?, ?, ?, NOW())");
+                $stmt->bind_param("sss", $office_id, $name, $description);
                 
 
                 if ($stmt->execute()) {
                     $successCount++;
-                    $successNames[] = htmlspecialchars($name) . ($location ? " (" . htmlspecialchars($location) . ")" : "");
+                    $successNames[] = htmlspecialchars($name) . ($description ? " (" . htmlspecialchars($description) . ")" : "");
                 } else {
                     $errorCount++;
                     $errorMessages[] = "Error adding office " . htmlspecialchars($name) . ": " . addslashes($conn->error);
@@ -69,19 +69,19 @@ if (isset($_POST['submit_office'])) {
     } else {
        
         $name = trim($_POST['office_name'] ?? '');
-        $location = trim($_POST['office_location'] ?? '');
+        $description = trim($_POST['office_description'] ?? '');
         
         if (!empty($name)) {
        
             $check = $conn->prepare("SELECT office_id FROM deped_inventory_employee_office 
                                    WHERE LOWER(office_name) = LOWER(?) 
-                                   AND (LOWER(office_location) = LOWER(?) OR (office_location IS NULL AND ? = ''))");
-            $check->bind_param("sss", $name, $location, $location);
+                                   AND (LOWER(office_description) = LOWER(?) OR (office_description IS NULL AND ? = ''))");
+            $check->bind_param("sss", $name, $description, $description);
             $check->execute();
             $check->store_result();
 
             if ($check->num_rows > 0) {
-                $duplicateMessage = "Office Title and Description already exists : " . htmlspecialchars($name) . ($location ? " (" . htmlspecialchars($location) . ")" : "");
+                $duplicateMessage = "Office Title and Description already exists : " . htmlspecialchars($name) . ($description ? " (" . htmlspecialchars($description) . ")" : "");
                 showSweetAlert(
                     'info',
                     'Office Exists',
@@ -92,15 +92,15 @@ if (isset($_POST['submit_office'])) {
 
          
             $office_id = generateOfficeID($conn);
-            $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_location, created_at) VALUES (?, ?, ?, NOW())");
-            $stmt->bind_param("sss", $office_id, $name, $location);
+            $stmt = $conn->prepare("INSERT INTO deped_inventory_employee_office (office_id, office_name, office_description, created_at) VALUES (?, ?, ?, NOW())");
+            $stmt->bind_param("sss", $office_id, $name, $description);
             
 
             if ($stmt->execute()) {
                 showSweetAlert(
                     'success',
                     'Success',
-                    "Office <b>" . htmlspecialchars($name) . "</b>" . ($location ? " (" . htmlspecialchars($location) . ")" : "") . " added successfully!",
+                    "Office <b>" . htmlspecialchars($name) . "</b>" . ($description ? " (" . htmlspecialchars($description) . ")" : "") . " added successfully!",
                     $_SERVER['HTTP_REFERER']
                 );
             } else {

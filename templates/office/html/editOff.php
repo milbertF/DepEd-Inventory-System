@@ -19,9 +19,9 @@
       </div>
 
       <div class="inpart">
-        <label for="edit-office-location">Location (optional)</label>
+        <label for="edit-office-description">description (optional)</label>
         <div class="inputs">
-          <input type="text" id="edit-office-location" name="office_location" />
+          <input type="text" id="edit-office-description" name="office_description" />
         </div>
       </div>
 

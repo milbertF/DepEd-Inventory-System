@@ -1,0 +1,18 @@
+# Enable PHP error display (optional for debugging only — turn off in production)
+php_value display_errors On
+
+# Set default PHP timezone (adjust as needed)
+php_value date.timezone America/New_York
+
+# Enable URL rewriting for routing
+RewriteEngine On
+
+# Allow direct access to existing files or folders
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Custom rule for clean item category route
+RewriteRule ^items/category/([0-9]+)$ index.php?page=itemsByCategory&category_id=$1 [QSA,L]
+
+# Catch-all to index.php for everything else
+RewriteRule ^(.*)$ index.php [QSA,L]

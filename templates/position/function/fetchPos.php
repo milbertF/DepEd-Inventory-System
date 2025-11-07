@@ -2,36 +2,43 @@
 require __DIR__ . '/../../../database/dbConnection.php';
 
 $positions = [];
-
-$limit = 10; 
-$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
-$page = max($page, 1); 
-$offset = ($page - 1) * $limit;
-
-
-$totalQuery = "SELECT COUNT(*) AS total FROM deped_inventory_employee_position";
-$totalResult = $conn->query($totalQuery);
-$total = ($totalResult && $row = $totalResult->fetch_assoc()) ? (int)$row['total'] : 0;
-
-$totalPages = ceil($total / $limit);
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 
 $positionQuery = "SELECT position_id, position_title, position_description, created_at 
-                  FROM deped_inventory_employee_position 
-                  ORDER BY position_title ASC 
-                  LIMIT ? OFFSET ?";
+                  FROM deped_inventory_employee_position";
+
+$params = [];
+$types = '';
+
+
+if (!empty($search)) {
+    $positionQuery .= " WHERE position_title LIKE ? OR position_description LIKE ?";
+    $searchTerm = "%$search%";
+    $params = [$searchTerm, $searchTerm];
+    $types = 'ss';
+}
+
+$positionQuery .= " ORDER BY position_title ASC";
+
 $stmt = $conn->prepare($positionQuery);
-$stmt->bind_param("ii", $limit, $offset);
+
+if (!empty($params)) {
+    $stmt->bind_param($types, ...$params);
+}
+
 $stmt->execute();
 $result = $stmt->get_result();
+
 
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $positions[] = [
             'position_id' => $row['position_id'] ?? '',
-            'position_title' => $row['position_title'] ?? '',
-            'position_description' => $row['position_description'] ?? '',
+            'position_title' => ucfirst($row['position_title'] ?? ''),
+            'position_description' => ucfirst($row['position_description'] ?? ''),
             'created_at' => $row['created_at'] ?? ''
         ];
     }
 }
+?>
