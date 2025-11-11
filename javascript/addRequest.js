@@ -59,9 +59,52 @@ function updateSubmitButtonState() {
   const submitBtn = document.getElementById('submitRequestBtn');
   const tbody = document.querySelector('#request-items-table tbody');
   const hasItems = tbody && tbody.children.length > 0;
-  submitBtn.disabled = !hasItems;
-}
+  
+  if (!hasItems) {
+    submitBtn.disabled = true;
+    return;
+  }
 
+  let allValid = true;
+  const rows = tbody.querySelectorAll('tr');
+  
+  rows.forEach(row => {
+    const purposeDropdown = row.querySelector('.purpose-dropdown');
+    const quantityInput = row.querySelector('input[name="quantity_requested[]"]');
+    const dateInput = row.querySelector('input[name="date_needed[]"]');
+    const otherInput = row.querySelector('.other-purpose-input');
+    
+    
+    if (!purposeDropdown || !purposeDropdown.value) {
+      allValid = false;
+      return;
+    }
+    
+
+    if (purposeDropdown.value === 'Other') {
+      if (!otherInput || !otherInput.value.trim()) {
+        allValid = false;
+        return;
+      }
+    }
+    
+   
+    if (!quantityInput || !quantityInput.value || quantityInput.value <= 0) {
+      allValid = false;
+      return;
+    }
+    
+    if (!dateInput || !dateInput.value) {
+      allValid = false;
+      return;
+    }
+  });
+  
+  submitBtn.disabled = !allValid;
+  
+ 
+  console.log('Submit button state:', !allValid ? 'disabled' : 'enabled');
+}
 
 
 
@@ -235,59 +278,105 @@ function selectItem(id, quantity, serial_number, name, description, brand, model
   const today = new Date();
   const localDate = today.toISOString().split('T')[0];
 
-
+  // Create the row element
   const row = document.createElement('tr');
-  row.innerHTML = `
-  <td data-label="Available Quantity" class="qty-highlight">${quantity || '-'}</td>
-
-  <td data-label="Serial #">${serial_number || '-'}</td>
-    <td data-label="Item">${name}<input type="hidden" name="item_id[]" value="${id}"></td>
- 
-    <td data-label="Description">${description || '-'}</td>
-    <td data-label="Brand">${brand || '-'}</td>
-    <td data-label="Model">${model || '-'}</td>
-    <td data-label="Quantity"><input type="number" name="quantity_requested[]" min="1" max="${qty}" required></td>
-    <td data-label="Date Needed"><input type="date" name="date_needed[]" min="${localDate}" required></td>
-    <td data-label="Delete">
+  
+  // Create cells individually to avoid template literal issues
+  const cells = [
+    `<td data-label="Available Quantity" class="qty-highlight">${quantity || '-'}</td>`,
+    `<td data-label="Serial #">${serial_number || '-'}</td>`,
+    `<td data-label="Item">${name}<input type="hidden" name="item_id[]" value="${id}"></td>`,
+    `<td data-label="Description">${description || '-'}</td>`,
+    `<td data-label="Brand">${brand || '-'}</td>`,
+    `<td data-label="Model">${model || '-'}</td>`,
+    `<td data-label="Quantity"><input type="number" name="quantity_requested[]" min="1" max="${qty}" required></td>`,
+    `<td data-label="Purpose">
+      <select name="item_purpose[]" class="purpose-dropdown" required>
+        <option value="">Select Purpose</option>
+        <option value="Classroom teaching demonstration">Classroom teaching demonstration</option>
+        <option value="Lesson presentation">Lesson presentation</option>
+        <option value="Science experiment">Science experiment</option>
+        <option value="Mathematics activity">Mathematics activity</option>
+        <option value="MAPEH activity">MAPEH activity</option>
+        <option value="Arts and crafts">Arts and crafts</option>
+        <option value="Student activity">Student activity</option>
+        <option value="Group project">Group project</option>
+        <option value="School event">School event</option>
+        <option value="Sports activity">Sports activity</option>
+        <option value="Office work">Office work</option>
+        <option value="Meeting requirement">Meeting requirement</option>
+        <option value="Classroom maintenance">Classroom maintenance</option>
+        <option value="Cleaning activity">Cleaning activity</option>
+        <option value="Student club activity">Student club activity</option>
+        <option value="Brigada Eskwela">Brigada Eskwela</option>
+        <option value="Reading remediation">Reading remediation</option>
+        <option value="Teacher training">Teacher training</option>
+        <option value="Parent-teacher conference">Parent-teacher conference</option>
+        <option value="Other">Other</option>
+      </select>
+      <input type="text" class="other-purpose-input" placeholder="Specify purpose..." style="display: none; width: 100%; padding: 0.25rem; margin-top: 5px; font-size: 0.8rem;">
+    </td>`,
+    `<td data-label="Date Needed"><input type="date" name="date_needed[]" min="${localDate}" required></td>`,
+    `<td data-label="Delete">
       <button type="button" class="action-btn delete-item">
         <i class="fa fa-trash-alt"></i>
       </button>
-    </td>
-  `;
+    </td>`
+  ];
+  
+  row.innerHTML = cells.join('');
   tbody.appendChild(row);
+  
+  // Rest of the function remains the same...
   updateSubmitButtonState();
 
+  const purposeDropdown = row.querySelector('.purpose-dropdown');
+  const otherInput = row.querySelector('.other-purpose-input');
+  const quantityInput = row.querySelector('input[name="quantity_requested[]"]');
+  const dateInput = row.querySelector('input[name="date_needed[]"]');
+  
+  purposeDropdown.addEventListener('change', function() {
+    if (this.value === 'Other') {
+      otherInput.style.display = 'block';
+      otherInput.required = true;
+    } else {
+      otherInput.style.display = 'none';
+      otherInput.required = false;
+      otherInput.value = '';
+    }
+    updateSubmitButtonState();
+  });
 
+  otherInput.addEventListener('input', function() {
+    updateSubmitButtonState();
+  });
+
+  quantityInput.addEventListener('input', function() {
+    updateSubmitButtonState();
+  });
+
+  dateInput.addEventListener('change', function() {
+    updateSubmitButtonState();
+  });
 
   button.classList.add('delete-item'); 
   button.innerHTML = 'Remove';
   addedItems.add(id);
 
-
   const removeFunc = () => {
-   
     row.remove();
     updateSubmitButtonState();
-
-
     button.classList.remove('delete-item');
- 
     button.textContent = 'Select';
     button.style.fontSize = '13px'; 
-    button.onclick = () => selectItem(id,quantity, serial_number, name, description, brand, model, qty, button);
-
-
+    button.onclick = () => selectItem(id, quantity, serial_number, name, description, brand, model, qty, button);
     addedItems.delete(id);
   };
 
-
   button.onclick = removeFunc;
-
-
   const rowRemoveBtn = row.querySelector('button');
   rowRemoveBtn.onclick = removeFunc;
 }
-
 
 
 function removeRow(btn, id) {
@@ -301,18 +390,3 @@ function removeRow(btn, id) {
     selectBtn.classList.remove("selected-btn");
   }
 }
-
-document.getElementById('request-form').addEventListener('submit', function (e) {
-  const submitBtn = document.getElementById('submitRequestBtn');
-  
-
-  if (submitBtn.disabled) {
-    e.preventDefault();
-    return;
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = 'Submitting...';
-
-
-});

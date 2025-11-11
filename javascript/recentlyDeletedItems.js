@@ -949,7 +949,7 @@ function retrieveAllItems() {
     cancelButtonColor: '#6c757d',
     confirmButtonText: 'Yes, recover all!',
     cancelButtonText: 'Cancel',
-    reverseButtons: true
+  
   }).then((result) => {
     if (result.isConfirmed) {
       sessionStorage.setItem('recoveringAllItems', 'true');
