@@ -872,7 +872,10 @@ function handleEditItem(editBtn) {
             unitcost: editBtn.getAttribute('data-unitcost') || '',
             totalcost: editBtn.getAttribute('data-totalcost') || '',
             status: editBtn.getAttribute('data-item-status') || '',
+            remarks: editBtn.getAttribute('data-remarks') || '',
             qty: editBtn.getAttribute('data-qty') || '',
+            availableQty: editBtn.getAttribute('data-available-qty') || '',
+            
             photo: editBtn.getAttribute('data-photo') || '',
             dateAcquired: editBtn.getAttribute('data-date-acquired') || '',
             categoryId: editBtn.getAttribute('data-category-id') || ''
@@ -891,7 +894,9 @@ function handleEditItem(editBtn) {
         document.getElementById('edit-item-unit-cost').value = data.unitcost;
         document.getElementById('edit-item-total-cost').value = data.totalcost;
         document.getElementById('edit-item-status').value = data.status;
+        document.getElementById('edit-remarks').value = data.remarks;
         document.getElementById('edit-item-qty').value = data.qty;
+        document.getElementById('edit-available-item-qty').value = data.availableQty;
         document.getElementById('edit-item-photo').value = '';
         
         const dateAcquired = data.dateAcquired;
@@ -939,6 +944,7 @@ function handleViewItem(viewBtn) {
             dateAcquired: viewBtn.dataset.dateAcquired,
             created: viewBtn.dataset.created || 'N/A',
             itemstatus: viewBtn.dataset.itemstatus,
+            remarks: viewBtn.dataset.remarks|| 'None',
             photo: viewBtn.dataset.photo
         };
         viewDataCache.set(viewBtn, data);
@@ -952,6 +958,7 @@ function handleViewItem(viewBtn) {
         document.getElementById("view-item-model").textContent = data.model;
         document.getElementById("view-item-serial").textContent = data.serial;
         document.getElementById("view-item-quantity").textContent = data.qty;
+        document.getElementById("view-available-quantity").textContent = viewBtn.dataset.availableQty;
         document.getElementById("view-item-unit").textContent = data.unit;
         document.getElementById("view-item-unit-cost").textContent = data.unitcost;
         document.getElementById("view-item-total-cost").textContent = data.totalcost;
@@ -966,6 +973,7 @@ function handleViewItem(viewBtn) {
                 : 'N/A';
         document.getElementById("view-item-created-at").textContent = data.created;
         document.getElementById("view-item-status").textContent = data.itemstatus;
+        document.getElementById("view-item-remarks").textContent = data.remarks;
 
         const photo = data.photo;
         document.getElementById("view-item-photo").src =

@@ -190,67 +190,8 @@ require __DIR__ . '/../function/fetchRequest.php';
                                             <span class="tooltip">View Request</span>
                                         </button>
 
-                                        <?php 
-                                        $itemStatusCounts = $request['item_status_counts'];
-                                        $nonZeroStatuses = array_filter($itemStatusCounts);
-                                        $hasMixedStatus = count($nonZeroStatuses) > 1;
-                                        $allPending = !$hasMixedStatus && isset($itemStatusCounts['pending']) && $itemStatusCounts['pending'] > 0;
-                                        $allApproved = !$hasMixedStatus && isset($itemStatusCounts['approved']) && $itemStatusCounts['approved'] > 0;
-                                        $allReleased = !$hasMixedStatus && isset($itemStatusCounts['released']) && $itemStatusCounts['released'] > 0;
-                                        ?>
-
-                                        <?php if ($allPending || (!$hasMixedStatus && isset($itemStatusCounts['pending']))): ?>
-                                            <button class="action-btn quick-action approve <?= $allPending ? 'active-action' : 'disabled-action' ?>" 
-                                                    data-id="<?= $request['request_id'] ?>" 
-                                                    data-action="approve"
-                                                    title="<?= $allPending ? 'Approve All Items' : 'Cannot approve - mixed item statuses' ?>"
-                                                    <?= !$allPending ? 'disabled' : '' ?>>
-                                                <i class="fas fa-check"></i>
-                                                <span class="tooltip"><?= $allPending ? 'Approve All' : 'Mixed Status' ?></span>
-                                            </button>
-                                            <button class="action-btn quick-action decline <?= $allPending ? 'active-action' : 'disabled-action' ?>" 
-                                                    data-id="<?= $request['request_id'] ?>" 
-                                                    data-action="decline"
-                                                    title="<?= $allPending ? 'Decline All Items' : 'Cannot decline - mixed item statuses' ?>"
-                                                    <?= !$allPending ? 'disabled' : '' ?>>
-                                                <i class="fas fa-times"></i>
-                                                <span class="tooltip"><?= $allPending ? 'Decline All' : 'Mixed Status' ?></span>
-                                            </button>
-                                            
-                                        <?php elseif ($allApproved || (!$hasMixedStatus && isset($itemStatusCounts['approved']))): ?>
-                                            <button class="action-btn quick-action release <?= $allApproved ? 'active-action' : 'disabled-action' ?>" 
-                                                    data-id="<?= $request['request_id'] ?>" 
-                                                    data-action="release"
-                                                    title="<?= $allApproved ? 'Mark All Items as Released' : 'Cannot release - mixed item statuses' ?>"
-                                                    <?= !$allApproved ? 'disabled' : '' ?>>
-                                                <i class="fas fa-box-open"></i>
-                                                <span class="tooltip"><?= $allApproved ? 'Mark Released' : 'Mixed Status' ?></span>
-                                            </button>
-                                            
-                                        <?php elseif ($allReleased || (!$hasMixedStatus && isset($itemStatusCounts['released']))): ?>
-                                            <button class="action-btn quick-action returned <?= $allReleased ? 'active-action' : 'disabled-action' ?>" 
-                                                    data-id="<?= $request['request_id'] ?>" 
-                                                    data-action="returned"
-                                                    title="<?= $allReleased ? 'Mark All Items as Returned' : 'Cannot return - mixed item statuses' ?>"
-                                                    <?= !$allReleased ? 'disabled' : '' ?>>
-                                                <i class="fas fa-undo"></i>
-                                                <span class="tooltip"><?= $allReleased ? 'Mark Returned' : 'Mixed Status' ?></span>
-                                            </button>
-                                        <?php elseif ($hasMixedStatus): ?>
-                                            <!-- Show disabled buttons for mixed status -->
-                                            <button class="action-btn quick-action disabled-action" 
-                                                    title="Cannot approve - mixed item statuses"
-                                                    disabled>
-                                                <i class="fas fa-check"></i>
-                                                <span class="tooltip">Mixed Status</span>
-                                            </button>
-                                            <button class="action-btn quick-action disabled-action" 
-                                                    title="Cannot decline - mixed item statuses"
-                                                    disabled>
-                                                <i class="fas fa-times"></i>
-                                                <span class="tooltip">Mixed Status</span>
-                                            </button>
-                                        <?php endif; ?>
+                                       
+                                  
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

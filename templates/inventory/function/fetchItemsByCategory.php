@@ -24,8 +24,8 @@ $categoryName = ucfirst($category['category_name'] ?? '');
 
 
 $itemQuery = $conn->prepare("
-    SELECT item_id, item_name, category_id, brand, model, serial_number, quantity, unit, description,
-           unit_cost, total_cost, created_at, date_acquired, item_status, item_photo 
+    SELECT item_id, item_name, category_id, brand, model, serial_number, quantity,initial_quantity,unit, description,
+           unit_cost, total_cost, created_at, date_acquired, item_status, remarks ,item_photo 
     FROM deped_inventory_items 
     WHERE category_id = ? 
     ORDER BY date_acquired DESC
@@ -44,13 +44,16 @@ while ($row = $itemsResult->fetch_assoc()) {
         'brand' => ucfirst($row['brand'] ?? ''),
         'model' => ucfirst($row['model'] ?? ''),
         'serial_number' => $row['serial_number'] ?? '',
+
         'quantity' => $row['quantity'] ?? 0,
+        'initial_quantity' => $row['initial_quantity'] ?? 0,
         'unit' => ucfirst($row['unit'] ?? ''),
         'unit_cost' => $row['unit_cost'] ?? 0,
         'total_cost' => $row['total_cost'] ?? 0,
         'created_at' => $row['created_at'] ?? '',
         'date_acquired' => $row['date_acquired'] ?? '',
         'item_status' => ucfirst($row['item_status'] ?? ''),
+        'remarks' => $row['remarks'] ?? '',
         'item_photo' => $row['item_photo'] ?? ''
     ];
 }

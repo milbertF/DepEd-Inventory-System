@@ -31,7 +31,7 @@
 
     <div class="borrow-item-table-container">
       <table class="borrow-item-table">
-        <thead>aaaaaaaz
+        <thead>
           <tr>
        
             <th>Serial #</th>

@@ -95,6 +95,13 @@ require __DIR__ . '/../function/addItemFunction.php';
   </div>
 </div>
 
+<div class="inpart">
+        <label for="item-remarks">Remarks</label>
+        <div class="inputs">
+          <input id="item-remarks" name="remarks"placeholder="e.g., 2 Items for Repair"></input>
+        </div>
+      </div>
+
 
       <div class="info">
         <p>For items with identical details (same item details), you can add multiple serial numbers to track individual units.</p>

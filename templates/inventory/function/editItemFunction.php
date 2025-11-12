@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../../../database/dbConnection.php';
 require_once __DIR__ . '/../../../sweetalert/sweetalert.php';
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) {
     $item_id = $_POST['item_id'] ?? '';
     $item_name = trim($_POST['item_name']);
@@ -13,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
     $model = !empty(trim($_POST['model'] ?? '')) ? trim($_POST['model']) : null;
     $serial_number = !empty(trim($_POST['serial_number'] ?? '')) ? trim($_POST['serial_number']) : null;
     $quantity = intval($_POST['quantity']);
+    $initial_quantity = intval($_POST['initial_quantity']);
     $unit = !empty(trim($_POST['unit'] ?? '')) ? trim($_POST['unit']) : null;
 
     $unit_cost = floatval($_POST['unit_cost']);
@@ -20,15 +20,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
         ? $_POST['date_acquired']
         : null;
     $item_status = trim($_POST['item_status']);
+    $remarks = !empty(trim($_POST['remarks'] ?? '')) ? trim($_POST['remarks']) : null;
 
     // Get current user info
     $user_id = $_SESSION['user']['id'] ?? $_SESSION['user']['user_id'] ?? null;
     
-    // Get old item data for comparison
-    $stmt_old = $conn->prepare("SELECT item_name, quantity, category_id FROM deped_inventory_items WHERE item_id = ?");
+    // Get old item data for comparison - UPDATED: Added initial_quantity and remarks
+    $stmt_old = $conn->prepare("SELECT item_name, quantity, initial_quantity, category_id, remarks FROM deped_inventory_items WHERE item_id = ?");
     $stmt_old->bind_param("s", $item_id);
     $stmt_old->execute();
-    $stmt_old->bind_result($old_item_name, $old_quantity, $old_category_id);
+    $stmt_old->bind_result($old_item_name, $old_quantity, $old_initial_quantity, $old_category_id, $old_remarks);
     $stmt_old->fetch();
     $stmt_old->close();
 
@@ -77,16 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             model = ?,
             serial_number = ?,
             quantity = ?,
+            initial_quantity = ?,
             unit = ?,
             unit_cost = ?,
             date_acquired = ?,
-            item_status = ?
+            item_status = ?,
+            remarks = ?
         WHERE item_id = ?
     ");
 
     if ($stmt) {
         $stmt->bind_param(
-            "ssissssisdssi",
+            "ssissssiisdsssi",
             $photo_path,
             $item_name,
             $category_id,
@@ -95,10 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             $model,
             $serial_number,
             $quantity,
+            $initial_quantity,
             $unit,
             $unit_cost,
             $date_acquired,
             $item_status,
+            $remarks,
             $item_id
         );
 
@@ -110,7 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
 
         if ($stmt->execute()) {
            
-            createItemUpdateNotification($conn, $user_id, $item_id, $item_name, $old_item_name, $quantity, $old_quantity);
+            // UPDATED: Pass initial_quantity and remarks to the notification function
+            createItemUpdateNotification($conn, $user_id, $item_id, $item_name, $old_item_name, $quantity, $old_quantity, $initial_quantity, $old_initial_quantity, $remarks, $old_remarks);
             
             showSweetAlert(
                 'success',
@@ -126,41 +132,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
     } else {
         showSweetAlert('error', 'Database Error', $conn->error);
     }
-
-    
 }
 
-
-function createItemUpdateNotification($conn, $user_id, $item_id, $new_item_name, $old_item_name, $new_quantity, $old_quantity) {
+// UPDATED: Added initial_quantity parameters to the function
+function createItemUpdateNotification($conn, $user_id, $item_id, $new_item_name, $old_item_name, $new_quantity, $old_quantity, $new_initial_quantity, $old_initial_quantity, $new_remarks, $old_remarks) {
     if (!$user_id) return;
     
     $action_type = 'item_updated';
     $message = '';
     
-  
     $changes = [];
     
+    // Check for item name changes
     if ($new_item_name !== $old_item_name) {
-        $changes[] = "name from '$old_item_name' to '$new_item_name'";
+        $changes[] = "name changed from '$old_item_name' to '$new_item_name'";
     }
     
+    // Check for quantity changes
     if ($new_quantity != $old_quantity) {
-        $quantity_diff = $new_quantity - $old_quantity;
-        if ($quantity_diff > 0) {
-            $changes[] = "quantity increased by $quantity_diff";
+        $changes[] = "quantity changed from $old_quantity to $new_quantity";
+    }
+    
+    // Check for initial quantity changes
+    if ($new_initial_quantity != $old_initial_quantity) {
+        $changes[] = "initial quantity changed from $old_initial_quantity to $new_initial_quantity";
+    }
+    
+    // Check for remarks changes
+    if ($new_remarks !== $old_remarks) {
+        if (empty($new_remarks)) {
+            $changes[] = "remarks removed";
+        } elseif (empty($old_remarks)) {
+            $changes[] = "remarks added: '$new_remarks'";
         } else {
-            $changes[] = "quantity decreased by " . abs($quantity_diff);
+            $changes[] = "remarks updated to: '$new_remarks'";
         }
     }
     
-    if (empty($changes)) {
-        $changes[] = "details";
+    // Build the message based on changes detected
+    if (!empty($changes)) {
+        $change_text = implode(', ', $changes);
+        $message = "Item #$item_id ($new_item_name) was updated: $change_text";
+    } else {
+        $message = "Item #$item_id ($new_item_name) was updated with no visible changes";
     }
     
-    $change_text = implode(', ', $changes);
-    $message = "Item #$item_id ($new_item_name) was updated: $change_text";
-    
-  
     $stmt = $conn->prepare("
         INSERT INTO deped_inventory_notifications 
         (user_id, item_id, item_name, action_type, old_quantity, new_quantity, message) 
@@ -180,7 +196,4 @@ function createItemUpdateNotification($conn, $user_id, $item_id, $new_item_name,
     $stmt->execute();
     $stmt->close();
 }
-
-
-
 ?>

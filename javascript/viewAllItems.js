@@ -719,7 +719,9 @@ function handleEditItem(editBtn) {
     document.getElementById('edit-item-unit-cost').value = getData('data-unitcost');
     document.getElementById('edit-item-total-cost').value = getData('data-totalcost');
     document.getElementById('edit-item-qty').value = getData('data-qty');
+    document.getElementById('edit-available-item-qty').value = getData('data-available-qty');
     document.getElementById('edit-item-status').value = getData('data-item-status');
+    document.getElementById('edit-remarks').value = getData('data-remarks');
     document.getElementById('edit-item-photo').value = '';
 
     const dateAcquired = getData('data-date-acquired');
@@ -752,6 +754,7 @@ function handleViewItem(viewBtn) {
     document.getElementById("view-item-model").textContent = viewBtn.dataset.model || 'None';
     document.getElementById("view-item-serial").textContent = viewBtn.dataset.serial || 'None';
     document.getElementById("view-item-quantity").textContent = viewBtn.dataset.qty;
+    document.getElementById("view-available-quantity").textContent = viewBtn.dataset.availableQty || viewBtn.dataset.qty;
     document.getElementById("view-item-unit").textContent = viewBtn.dataset.unit || 'None';
     document.getElementById("view-item-unit-cost").textContent = viewBtn.dataset.unitcost;
     document.getElementById("view-item-total-cost").textContent = viewBtn.dataset.totalcost;
@@ -766,6 +769,7 @@ function handleViewItem(viewBtn) {
             : 'N/A';
     document.getElementById("view-item-created-at").textContent = viewBtn.dataset.created || 'N/A';
     document.getElementById("view-item-status").textContent = viewBtn.dataset.itemstatus;
+    document.getElementById("view-item-remarks").textContent = viewBtn.dataset.remarks|| 'None';
 
     const photo = viewBtn.dataset.photo;
     document.getElementById("view-item-photo").src =
@@ -1014,38 +1018,41 @@ function printAllCurrentTableView() {
             return !colCheckbox || colCheckbox.checked;
         });
 
-    // Calculate total cost of all visible items
+    // FIXED: Calculate total cost correctly - only count each item once
     let totalCost = 0;
     visibleRows.forEach(row => {
-        const cells = Array.from(row.cells);
-        cells.forEach((cell, index) => {
-            // Look for total cost in the data attributes or calculate from quantity and unit cost
-            if (index === 13) { // Actions column - skip
-                return;
-            }
-            
-            // Try to get total cost from data attributes if available
+        const actionBtn = row.querySelector('.action-btn.view');
+        if (actionBtn && actionBtn.dataset.totalcost) {
+            // Use the total_cost from database (already calculated as quantity * unit_cost)
+            const itemTotalCost = parseFloat(actionBtn.dataset.totalcost) || 0;
+            totalCost += itemTotalCost;
+        }
+    });
+
+    // Alternative calculation if totalcost data attribute is not available
+    if (totalCost === 0) {
+        visibleRows.forEach(row => {
             const actionBtn = row.querySelector('.action-btn.view');
-            if (actionBtn && actionBtn.dataset.totalcost) {
-                const itemTotalCost = parseFloat(actionBtn.dataset.totalcost) || 0;
-                totalCost += itemTotalCost;
-                return;
-            }
-            
-            // Alternative: Calculate from quantity and unit cost if available
             if (actionBtn && actionBtn.dataset.qty && actionBtn.dataset.unitcost) {
                 const quantity = parseFloat(actionBtn.dataset.qty) || 0;
                 const unitCost = parseFloat(actionBtn.dataset.unitcost) || 0;
                 totalCost += quantity * unitCost;
             }
         });
-    });
+    }
 
     // Format total cost with commas and 2 decimal places
     const formattedTotalCost = new Intl.NumberFormat('en-PH', {
         style: 'currency',
         currency: 'PHP'
     }).format(totalCost);
+
+    // Debug log to check calculation
+    console.log('Total cost calculation:', {
+        visibleRows: visibleRows.length,
+        totalCost: totalCost,
+        formattedTotalCost: formattedTotalCost
+    });
 
     let tableHTML = `
         <!DOCTYPE html>
@@ -1276,7 +1283,6 @@ function printAllCurrentTableView() {
     printWindow.document.write(tableHTML);
     printWindow.document.close();
 }
-
 // =============================================
 // EVENT LISTENERS
 // =============================================

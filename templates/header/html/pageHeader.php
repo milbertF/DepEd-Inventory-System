@@ -72,11 +72,7 @@ if ($user_id > 0) {
         <?php endif; ?>
       </div>
       
-      <?php if (count($notifications) >= 15): ?>
-        <div class="notif-footer">
-          <a href="/notifications" id="viewAll">View all notifications</a>
-        </div>
-      <?php endif; ?>
+   
     </div>
   </div>
 </div>
@@ -87,7 +83,7 @@ if ($user_id > 0) {
 class NotificationManager {
     constructor() {
         this.lastUpdate = 0;
-        this.updateInterval = 30000; // 30 seconds
+        this.updateInterval = 30000;
         this.isUpdating = false;
         this.unreadCount = parseInt(document.getElementById('notifCount')?.textContent || 0);
         this.userAuthenticated = this.unreadCount >= 0;
@@ -106,25 +102,25 @@ class NotificationManager {
         const dropdown = document.getElementById('notifDropdown');
         const markAllRead = document.getElementById('markAllRead');
 
-        // Bell click handler
+      
         bell?.addEventListener('click', (e) => {
             e.stopPropagation();
             this.toggleDropdown();
         });
 
-        // Mark all as read
+      
         markAllRead?.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             this.markAllAsRead();
         });
 
-        // Close dropdown when clicking outside
+      
         document.addEventListener('click', () => {
             this.hideDropdown();
         });
 
-        // Prevent dropdown close when clicking inside
+     
         dropdown?.addEventListener('click', (e) => {
             e.stopPropagation();
         });
@@ -139,13 +135,13 @@ class NotificationManager {
     }
 
     startPeriodicUpdates() {
-        // Initial update after 1 second
+     
         setTimeout(() => this.updateNotifications(), 1000);
         
-        // Periodic updates (every 30 seconds)
+     
         setInterval(() => this.updateNotifications(), this.updateInterval);
         
-        // More frequent updates when dropdown is open
+     
         setInterval(() => {
             if (this.isDropdownVisible()) {
                 this.updateNotifications();
@@ -200,15 +196,15 @@ class NotificationManager {
     const oldCount = this.unreadCount;
     this.unreadCount = data.unread_count;
     
-    // Update count badge
+   
     this.updateCountBadge();
     
-    // Only update dropdown content if it's visible or count changed
+  
     if (this.isDropdownVisible() || Math.abs(oldCount - this.unreadCount) > 0) {
         this.updateDropdownContent(data.notifications);
     }
     
-    // Show notification sound/alert for new notifications
+   
     if (this.unreadCount > oldCount && oldCount > 0) {
         this.showNewNotificationAlert(this.unreadCount - oldCount);
     }
@@ -222,7 +218,7 @@ updateCountBadge() {
         countElement.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
         countElement.style.display = 'flex';
         
-        // Add pulse animation for new notifications
+      
         if (parseInt(countElement.textContent) < this.unreadCount) {
             countElement.classList.add('pulse');
             setTimeout(() => countElement.classList.remove('pulse'), 2000);
@@ -232,7 +228,7 @@ updateCountBadge() {
     }
 }
 
-// In your NotificationManager class, update the click handler:
+
   updateDropdownContent(notifications) {
     const notifList = document.getElementById('notifList');
     if (!notifList) return;
@@ -248,7 +244,7 @@ updateCountBadge() {
         return;
     }
 
-    // Build notification HTML
+
     notifList.innerHTML = notifications.map(notif => `
         <div class="notif-item ${notif.action_type} ${notif.is_read ? 'read' : 'unread'}" 
              data-id="${notif.notification_id}"
@@ -321,10 +317,10 @@ updateCountBadge() {
             this.unreadCount = 0;
             this.updateCountBadge();
             
-            // Refresh the list to show ALL notifications (including read ones)
+       
             this.updateNotifications();
             
-            // Show success message
+        
             if (result.marked_count > 0) {
            
             }
@@ -346,7 +342,7 @@ updateCountBadge() {
             this.hideDropdown();
         } else {
             this.showDropdown();
-            // Force update when opening dropdown
+          
             this.forceUpdate();
         }
     }
@@ -376,7 +372,7 @@ updateCountBadge() {
     }
 
     showNewNotificationAlert(count) {
-        // Optional: Play sound or show subtle notification
+    
         if (count > 0 && !this.isDropdownVisible()) {
             console.log(`You have ${count} new notification(s)`);
         }
@@ -421,7 +417,7 @@ updateCountBadge() {
     }
 }
 
-// Initialize when DOM is ready
+
 document.addEventListener('DOMContentLoaded', () => {
     new NotificationManager();
 });

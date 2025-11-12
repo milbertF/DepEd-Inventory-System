@@ -73,6 +73,7 @@ try {
                 ri.requested_quantity,
                 i.item_name,
                 r.user_id,
+                i.initial_quantity as current_initial_quantity,
                 i.quantity as current_quantity
             FROM deped_inventory_request_items ri
             LEFT JOIN deped_inventory_items i ON ri.item_id = i.item_id
@@ -108,6 +109,7 @@ try {
         $itemName = $itemData['item_name'];
         $requestedQty = $itemData['requested_quantity'];
         $requesterUserId = $itemData['user_id'];
+        $currentInitialQuantity = $itemData['current_initial_quantity'];
         $currentQuantity = $itemData['current_quantity'];
         
         $checkStmt->close();
@@ -159,20 +161,20 @@ try {
             $logMessage = getLogMessage($actionType, $itemName, $currentStatus, $newStatus, $requestedQty);
             logAction($conn, $logId, $reqItemId, $requestId, $itemId, $itemName, $requesterUserId, $actionType, $logMessage, $currentUserId);
             
-            // UPDATED: Handle inventory quantity changes
+            // UPDATED: Handle inventory quantity changes using initial_quantity
             if ($actionType === 'release') {
-                // Subtract the requested quantity from inventory
+                // Subtract the requested quantity from initial_quantity (borrowable quantity)
                 $deductStmt = $conn->prepare("
                     UPDATE deped_inventory_items 
-                    SET quantity = quantity - ? 
-                    WHERE item_id = ? AND quantity >= ?
+                    SET initial_quantity = initial_quantity - ? 
+                    WHERE item_id = ? AND initial_quantity >= ?
                 ");
                 
                 if ($deductStmt) {
                     $deductStmt->bind_param('iii', $requestedQty, $itemId, $requestedQty);
                     if ($deductStmt->execute()) {
                         if ($deductStmt->affected_rows === 0) {
-                            $errors[] = "Insufficient quantity for item '{$itemName}'. Available: {$currentQuantity}, Requested: {$requestedQty}";
+                            $errors[] = "Insufficient quantity for item '{$itemName}'. Available: {$currentInitialQuantity}, Requested: {$requestedQty}";
                             $successCount--; // Decrement success count since inventory update failed
                         }
                     } else {
@@ -182,16 +184,47 @@ try {
                     $deductStmt->close();
                 }
             } elseif ($actionType === 'return') {
-                // Add the requested quantity back to inventory
+                // Add the requested quantity back to initial_quantity (borrowable quantity)
                 $restoreStmt = $conn->prepare("
                     UPDATE deped_inventory_items 
-                    SET quantity = quantity + ? 
+                    SET initial_quantity = initial_quantity + ? 
                     WHERE item_id = ?
                 ");
                 
                 if ($restoreStmt) {
                     $restoreStmt->bind_param('ii', $requestedQty, $itemId);
-                    if (!$restoreStmt->execute()) {
+                    if ($restoreStmt->execute()) {
+                        // NEW: Ensure quantity is never lower than initial_quantity
+                        $syncStmt = $conn->prepare("
+                            UPDATE deped_inventory_items 
+                            SET quantity = GREATEST(quantity, initial_quantity) 
+                            WHERE item_id = ? AND quantity < initial_quantity
+                        ");
+                        
+                        if ($syncStmt) {
+                            $syncStmt->bind_param('i', $itemId);
+                            $syncStmt->execute();
+                            
+                            // Check if quantity was adjusted
+                            if ($syncStmt->affected_rows > 0) {
+                                $logMessage .= " (Quantity auto-adjusted to match initial_quantity)";
+                                
+                                // Update the log with the corrected message
+                                $updateLogStmt = $conn->prepare("
+                                    UPDATE deped_inventory_request_logs 
+                                    SET message = ? 
+                                    WHERE log_id = ?
+                                ");
+                                
+                                if ($updateLogStmt) {
+                                    $updateLogStmt->bind_param('ss', $logMessage, $logId);
+                                    $updateLogStmt->execute();
+                                    $updateLogStmt->close();
+                                }
+                            }
+                            $syncStmt->close();
+                        }
+                    } else {
                         $errors[] = "Failed to restore quantity for item '{$itemName}': " . $restoreStmt->error;
                         $successCount--; // Decrement success count since inventory update failed
                     }
