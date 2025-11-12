@@ -13,6 +13,8 @@ let rowsPerPage = parseInt(localStorage.getItem('itemsTableRowsPerPage')) || 10;
 let debounceTimer = null;
 let filterCache = new Map();
 let maxCacheSize = 100;
+let isRedirectingToItem = false;
+let targetItemId = null;
 
 // Performance monitoring
 let perf = {
@@ -21,6 +23,8 @@ let perf = {
 };
 
 let domElements = {};
+let columnMap = {};
+let currentSort = { field: null, order: null }; // Track current sort state
 
 // Data indexing for faster filtering
 let dataIndex = {
@@ -29,38 +33,39 @@ let dataIndex = {
     searchIndex: new Map()
 };
 
+// =============================================
+// INITIALIZATION
+// =============================================
 document.addEventListener('DOMContentLoaded', function() {
     initializeDOMCache();
+    buildColumnMap();
     initializeTable();
     initFilterControls();
     initTableActions();
     calculateEditTotalCost();
     initDateValidation();
-
     restoreColumnSettings();
     initRowsPerPageSelector();
+    
+    // Check for delete alerts
+    
 });
 
-// function for rows per page selector
 function initRowsPerPageSelector() {
     const rowsPerPageSelect = document.getElementById("rowsPerPageSelect");
     
     if (rowsPerPageSelect) {
-        // Load saved preference FIRST, before setting up event listener
         const savedRowsPerPage = localStorage.getItem('itemsTableRowsPerPage');
         if (savedRowsPerPage) {
             rowsPerPageSelect.value = savedRowsPerPage;
             rowsPerPage = parseInt(savedRowsPerPage);
         }
         
-        // Then set up the event listener
         rowsPerPageSelect.addEventListener('change', function() {
             rowsPerPage = parseInt(this.value);
-            thisCurrentPage = 1; // Reset to first page when changing rows per page
+            thisCurrentPage = 1;
             displayPage(thisCurrentPage);
             updateItemCounts();
-            
-            // Save preference to localStorage
             localStorage.setItem('itemsTableRowsPerPage', this.value);
         });
     }
@@ -90,7 +95,6 @@ function updateItemCounts() {
     const filteredItems = filteredRows.length;
     const isFiltered = filteredItems !== totalItems;
     
-    // Update all count displays
     updateCountElement('totalItemsCount', totalItems);
     updateCountElement('totalItemsCount2', totalItems);
     updateCountElement('visibleItemsCount', filteredItems);
@@ -99,33 +103,28 @@ function updateItemCounts() {
     updateCountElement('displayedCount', filteredItems);
     updateCountElement('totalItems', totalItems);
     
-    // Show/hide filtered count
     const filteredCountElement = document.getElementById('filteredItemsCount');
     if (filteredCountElement) {
         filteredCountElement.style.display = isFiltered ? 'inline' : 'none';
     }
     
-    // Update active filters display
     updateActiveFiltersDisplay();
-    updatePageInfo(); //  update page info
+    updatePageInfo();
 }
 
-//  function to show current page information
 function updatePageInfo() {
     const startIndex = (thisCurrentPage - 1) * rowsPerPage + 1;
     const endIndex = Math.min(thisCurrentPage * rowsPerPage, filteredRows.length);
     const totalItems = filteredRows.length;
     
-    // Update page info display if element exists
-    const pageInfoElement = document.getElementById('pageInfo'); // ← This element doesn't exist!
+    const pageInfoElement = document.getElementById('pageInfo');
     if (pageInfoElement) {
-      if (totalItems > 0) {
-        pageInfoElement.textContent = `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`;
-      } else {
-        pageInfoElement.textContent = 'No entries to show';
-      }
+        pageInfoElement.textContent = totalItems > 0 
+            ? `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`
+            : 'No entries to show';
     }
-  }
+}
+
 function updateCountElement(elementId, count) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -155,10 +154,7 @@ function updateActiveFiltersDisplay() {
     
     // Check date filters
     if (currentFilters.dateFrom || currentFilters.dateTo) {
-        let dateFilter = "Date: ";
-        if (currentFilters.dateFrom) dateFilter += `from ${currentFilters.dateFrom}`;
-        if (currentFilters.dateTo) dateFilter += ` to ${currentFilters.dateTo}`;
-        activeFilters.push(dateFilter);
+        activeFilters.push(`Date: ${currentFilters.dateFrom || 'any'} to ${currentFilters.dateTo || 'any'}`);
     }
     
     // Check status filters
@@ -172,7 +168,12 @@ function updateActiveFiltersDisplay() {
         activeFilters.push(`Search: "${searchValue}"`);
     }
     
-    // Update display
+    // Check sort
+    if (currentSort.field) {
+        const sortDirection = currentSort.order === "asc" ? "Low to High" : "High to Low";
+        activeFilters.push(`Sorted by: Quantity (${sortDirection})`);
+    }
+    
     if (activeFilters.length > 0) {
         activeFiltersElement.innerHTML = `<strong>Active filters:</strong> ${activeFilters.join(' • ')}`;
         activeFiltersElement.style.color = '#495057';
@@ -182,6 +183,88 @@ function updateActiveFiltersDisplay() {
     }
 }
 
+// =============================================
+// COLUMN MAPPING - OPTIMIZED VERSION
+// =============================================
+function buildColumnMap() {
+    const headerRow = document.querySelector('.itemTable thead tr');
+    if (!headerRow) {
+        console.error('No table header found!');
+        return {};
+    }
+    
+    const headers = Array.from(headerRow.cells);
+    console.log('=== BUILDING COLUMN MAP (Category View) ===');
+    
+    const mappings = [
+        { keywords: ['#', 'number'], property: 'rowNumber' },
+        { keywords: ['item id', 'id'], property: 'itemId' },
+        { keywords: ['image', 'photo'], property: 'image' },
+        { keywords: ['serial'], property: 'serialNumber' },
+        { keywords: ['item name', 'name'], property: 'itemName' },
+        { keywords: ['description'], property: 'description' },
+        { keywords: ['brand'], property: 'brand' },
+        { keywords: ['model'], property: 'model' },
+        { keywords: ['unit cost'], property: 'unitCost' },
+        { keywords: ['total quantity', 'quantity'], property: 'totalQuantity' },
+        { keywords: ['available quantity', 'available'], property: 'availableQuantity' },
+        { keywords: ['total cost'], property: 'totalCost' },
+        { keywords: ['date acquired', 'acquired'], property: 'dateAcquired' },
+        { keywords: ['status'], property: 'status' },
+        { keywords: ['remarks'], property: 'remarks' },
+        { keywords: ['actions', 'action'], property: 'actions' }
+    ];
+    
+    columnMap = {};
+    
+    headers.forEach((header, index) => {
+        const headerText = header.textContent.trim().toLowerCase().replace(/\s+/g, ' ');
+        let matched = false;
+        
+        for (const mapping of mappings) {
+            if (mapping.keywords.some(keyword => headerText.includes(keyword.toLowerCase()))) {
+                columnMap[mapping.property] = index;
+                console.log(` Mapped "${mapping.property}" to column ${index}: "${header.textContent.trim()}"`);
+                matched = true;
+                break;
+            }
+        }
+        
+        if (!matched) {
+            console.log(` Unmapped column ${index}: "${header.textContent.trim()}"`);
+        }
+    });
+    
+    // Apply fallback mapping for required columns
+    const fallbackMap = {
+        rowNumber: 0, itemId: 1, image: 2, serialNumber: 3, itemName: 4,
+        description: 5, brand: 6, model: 7, unitCost: 8, totalQuantity: 9,
+        availableQuantity: 10, totalCost: 11, dateAcquired: 12, status: 13,
+        remarks: 14, actions: 15
+    };
+    
+    Object.keys(fallbackMap).forEach(key => {
+        if (columnMap[key] === undefined) {
+            columnMap[key] = fallbackMap[key];
+            console.log(`🔁 Fallback mapped "${key}" to column ${fallbackMap[key]}`);
+        }
+    });
+    
+    console.log('=== FINAL COLUMN MAP (Category View) ===', columnMap);
+    return columnMap;
+}
+
+function getCellData(row, property) {
+    const index = columnMap[property];
+    if (index === undefined || !row.cells[index]) {
+        return '';
+    }
+    return row.cells[index].textContent || '';
+}
+
+// =============================================
+// TABLE INITIALIZATION WITH SEARCH INDEX
+// =============================================
 function initializeTable() {
     const startTime = performance.now();
     
@@ -192,34 +275,40 @@ function initializeTable() {
     
     filteredRows = [...allRows];
     displayPage(1);
-    updateItemCounts(); 
+    updateItemCounts();
+    
     perf.renderTime = performance.now() - startTime;
 }
 
 function buildSearchIndex() {
+    console.log('=== BUILDING SEARCH INDEX ===');
+    
     allRows.forEach((row, index) => {
-        const cells = row.cells;
         const rowData = {
-            brand: (cells[6]?.textContent || '').toLowerCase().trim(), 
-            quantity: parseInt(cells[9]?.textContent || 0), 
-            dateAcquired: cells[11]?.textContent.trim(), 
-            status: cells[12]?.textContent.trim(),
-            itemName: (cells[4]?.textContent || '').toLowerCase(), 
-            model: (cells[7]?.textContent || '').toLowerCase(), 
-            serialNumber: (cells[3]?.textContent || '').toLowerCase(), 
-            description: (cells[5]?.textContent || '').toLowerCase(), 
-            itemId: (cells[1]?.textContent || '').toLowerCase(), 
-            dateValue: parseTableDate(cells[11]?.textContent.trim()) 
+            brand: getCellData(row, 'brand').toLowerCase().trim(),
+            serialNumber: getCellData(row, 'serialNumber').toLowerCase(),
+            itemName: getCellData(row, 'itemName').toLowerCase(),
+            description: getCellData(row, 'description').toLowerCase(),
+            model: getCellData(row, 'model').toLowerCase(),
+            availableQuantity: parseInt(getCellData(row, 'availableQuantity') || 0),
+            totalQuantity: parseInt(getCellData(row, 'totalQuantity') || 0),
+            dateAcquired: getCellData(row, 'dateAcquired').trim(),
+            status: getCellData(row, 'status').trim(),
+            itemId: getCellData(row, 'itemId').toLowerCase(),
+            dateValue: parseTableDate(getCellData(row, 'dateAcquired').trim())
         };
         
-
+        console.log(`Row ${index} - Extracted status: "${rowData.status}", Available Qty: ${rowData.availableQuantity}`);
+        
         row._data = rowData;
         
         // Update indexes
         if (rowData.brand) dataIndex.brands.add(rowData.brand);
-        if (rowData.status) dataIndex.statuses.add(rowData.status);
+        if (rowData.status) {
+            dataIndex.statuses.add(rowData.status);
+        }
         
-        // Build search index for terms longer than 2 characters
+        // Build search index
         const searchableText = `${rowData.itemId} ${rowData.itemName} ${rowData.model} ${rowData.brand} ${rowData.serialNumber} ${rowData.description}`;
         const terms = searchableText.split(/\s+/).filter(term => term.length > 2);
         
@@ -230,9 +319,13 @@ function buildSearchIndex() {
             dataIndex.searchIndex.get(term).add(index);
         });
     });
+    
+    console.log('=== FINAL STATUS INDEX ===', Array.from(dataIndex.statuses));
 }
-// Optimized filtering with indexed search
-// Optimized filtering with indexed search
+
+// =============================================
+// FILTERING & SEARCH - OPTIMIZED PATTERN
+// =============================================
 function filterItems() {
     const filterKey = generateFilterKey();
     
@@ -242,58 +335,59 @@ function filterItems() {
         return;
     }
     
-    const selectedBrands = domElements.brandSelect ? 
-        Array.from(domElements.brandSelect.selectedOptions).map(opt => opt.value.toLowerCase().trim()) : [];
-    const searchValue = (domElements.searchInput?.value || '').toLowerCase();
-    
     const startTime = performance.now();
     
     requestAnimationFrame(() => {
-        console.log('=== FILTERING STARTED (Category View) ===');
-        console.log('Date filters:', {
-            dateFrom: currentFilters.dateFrom,
-            dateTo: currentFilters.dateTo
-        });
+        applyFiltersAndSort();
         
-        let results;
-        
-        // Use indexed search for better performance with large datasets
-        if (searchValue && searchValue.length > 2) {
-            results = performIndexedSearch(selectedBrands, searchValue);
-        } else {
-            results = performLinearSearch(selectedBrands, searchValue);
-        }
-        
-        filteredRows = results;
-        
-        console.log('=== FILTERING COMPLETE (Category View) ===');
-        console.log('Results:', filteredRows.length, 'of', allRows.length);
-        
-        // Update cache with size limit
-        if (filterCache.size >= maxCacheSize) {
-            const firstKey = filterCache.keys().next().value;
-            filterCache.delete(firstKey);
-        }
+        // Cache management
+        if (filterCache.size > maxCacheSize) filterCache.clear();
         filterCache.set(filterKey, filteredRows);
         
         perf.filterTime = performance.now() - startTime;
-        
         updateDisplay();
-        updateItemCounts(); 
     });
 }
+
+function applyFiltersAndSort() {
+    const searchValue = (domElements.searchInput?.value || '').toLowerCase();
+    const selectedBrands = domElements.brandSelect ? 
+        Array.from(domElements.brandSelect.selectedOptions).map(opt => opt.value.toLowerCase().trim()) : [];
+    
+    console.log('=== APPLYING FILTERS AND SORT ===');
+    console.log('Current filters:', currentFilters);
+    console.log('Current sort:', currentSort);
+    console.log('Selected brands:', selectedBrands);
+    
+    let results;
+    
+    // Use indexed search for better performance with search terms
+    if (searchValue && searchValue.length > 2) {
+        results = performIndexedSearch(selectedBrands, searchValue);
+    } else {
+        results = performLinearSearch(selectedBrands, searchValue);
+    }
+    
+    filteredRows = results;
+    
+    console.log('After filtering:', filteredRows.length, 'rows');
+    
+    // Then apply current sort if exists
+    if (currentSort.field) {
+        applyCurrentSort();
+    }
+}
+
 function performIndexedSearch(selectedBrands, searchValue) {
     const searchTerms = searchValue.split(/\s+/).filter(term => term.length > 2);
     let matchingIndexes = new Set();
     
-    // Start with all indexes for AND search
     if (searchTerms.length > 0) {
         searchTerms.forEach((term, index) => {
             const termMatches = dataIndex.searchIndex.get(term) || new Set();
             if (index === 0) {
                 termMatches.forEach(i => matchingIndexes.add(i));
             } else {
-                // Intersect with previous matches
                 const currentMatches = new Set(matchingIndexes);
                 matchingIndexes.clear();
                 termMatches.forEach(i => {
@@ -302,7 +396,6 @@ function performIndexedSearch(selectedBrands, searchValue) {
             }
         });
     } else {
-        // No search terms, include all items
         allRows.forEach((_, index) => matchingIndexes.add(index));
     }
     
@@ -328,10 +421,10 @@ function performLinearSearch(selectedBrands, searchValue) {
             return false;
         }
         
-        // Apply search filter if present - ADD itemId HERE
+        // Apply search filter if present
         if (searchValue) {
             return (
-                data.itemId.includes(searchValue) || // Added itemId search
+                data.itemId.includes(searchValue) ||
                 data.itemName.includes(searchValue) || 
                 data.model.includes(searchValue) || 
                 data.brand.includes(searchValue) ||
@@ -343,6 +436,7 @@ function performLinearSearch(selectedBrands, searchValue) {
         return true;
     });
 }
+
 function passesFilters(data, selectedBrands) {
     // Brand filter
     if (selectedBrands.length > 0 && !selectedBrands.some(brand => data.brand.includes(brand))) {
@@ -350,31 +444,36 @@ function passesFilters(data, selectedBrands) {
     }
     
     // Quantity filter
-    if (currentFilters.quantity === "out" && data.quantity !== 0) return false;
-    if (currentFilters.quantity === "available" && data.quantity <= 0) return false;
+    if (currentFilters.quantity === "out" && data.availableQuantity !== 0) return false;
+    if (currentFilters.quantity === "available" && data.availableQuantity <= 0) return false;
     
     // Date filter
-    if (currentFilters.dateFrom || currentFilters.dateTo) {
-        if (!data.dateValue) return false;
-        
-        const rowDate = data.dateValue;
-        
-        if (currentFilters.dateFrom) {
-            const fromDate = new Date(currentFilters.dateFrom);
-            fromDate.setHours(0, 0, 0, 0); // Start of day
-            if (rowDate < fromDate) return false;
-        }
-        
-        if (currentFilters.dateTo) {
-            const toDate = new Date(currentFilters.dateTo);
-            toDate.setHours(23, 59, 59, 999); // End of day
-            if (rowDate > toDate) return false;
-        }
-    }
+    if (!passesDateFilter(data.dateAcquired)) return false;
     
     // Status filter
     if (currentFilters.status.length > 0 && !currentFilters.status.includes(data.status)) {
         return false;
+    }
+    
+    return true;
+}
+
+function passesDateFilter(dateAcquired) {
+    if (!currentFilters.dateFrom && !currentFilters.dateTo) return true;
+    
+    const itemDate = parseTableDate(dateAcquired);
+    if (!itemDate) return false;
+    
+    if (currentFilters.dateFrom) {
+        const fromDate = new Date(currentFilters.dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (itemDate < fromDate) return false;
+    }
+    
+    if (currentFilters.dateTo) {
+        const toDate = new Date(currentFilters.dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (itemDate > toDate) return false;
     }
     
     return true;
@@ -385,110 +484,88 @@ function generateFilterKey() {
         Array.from(domElements.brandSelect.selectedOptions).map(opt => opt.value).sort().join(',') : '';
     const searchValue = domElements.searchInput?.value || '';
     
-    return `${selectedBrands}|${currentFilters.quantity}|${currentFilters.dateFrom}|${currentFilters.dateTo}|${currentFilters.status.sort().join(',')}|${searchValue}`;
+    return `${selectedBrands}|${currentFilters.quantity}|${currentFilters.dateFrom}|${currentFilters.dateTo}|${currentFilters.status.sort().join(',')}|${searchValue}|${currentSort.field}|${currentSort.order}`;
 }
 
-function updateDisplay() {
-    updateRowNumbers();
-    showNoResultsMessage(filteredRows.length === 0);
+// =============================================
+// SORTING FUNCTIONS - OPTIMIZED
+// =============================================
+function sortByQuantity(order = "asc") {
+    console.log('=== SORTING BY QUANTITY ===');
+    console.log('Current filters:', currentFilters);
+    console.log('Current sort:', currentSort);
+    
+    // Update sort state
+    currentSort.field = 'availableQuantity';
+    currentSort.order = order;
+    
+    // Clear cache since we're changing sort
+    filterCache.clear();
+    
+    // Re-apply current filters with new sort order
+    applyFiltersAndSort();
+    
+    // Reset to first page and update display
     thisCurrentPage = 1;
+    updateTableDOM();
+    updateItemCounts();
+}
+
+function applyCurrentSort() {
+    if (!currentSort.field) return;
+    
+    console.log('Applying sort:', currentSort);
+    
+    filteredRows.sort((a, b) => {
+        const aVal = a._data[currentSort.field];
+        const bVal = b._data[currentSort.field];
+        
+        // Handle numeric sorting for quantities
+        if (currentSort.field === 'availableQuantity') {
+            const numA = parseInt(aVal) || 0;
+            const numB = parseInt(bVal) || 0;
+            const result = currentSort.order === "asc" ? numA - numB : numB - numA;
+            console.log(`Sorting: ${numA} vs ${numB} = ${result}`);
+            return result;
+        }
+        
+        // Default string sorting for other fields
+        if (aVal < bVal) return currentSort.order === "asc" ? -1 : 1;
+        if (aVal > bVal) return currentSort.order === "asc" ? 1 : -1;
+        return 0;
+    });
+    
+    console.log('First 5 items after sort:', filteredRows.slice(0, 5).map(r => r._data.availableQuantity));
+}
+
+function updateTableDOM() {
+    const tableBody = document.getElementById("inventoryTableBody");
+    
+    console.log('Updating table DOM with', filteredRows.length, 'rows');
+    console.log('Current sort:', currentSort);
+    console.log('Current filters:', currentFilters);
+    
+    // Clear and rebuild table in correct order
+    tableBody.innerHTML = '';
+    filteredRows.forEach(row => tableBody.appendChild(row));
+    
+    // Update display
+    updateRowNumbers();
     displayPage(thisCurrentPage);
 }
 
-const dateCache = new Map();
-function parseTableDate(dateString) {
-    if (!dateString || dateString === 'N/A' || dateString === '—' || dateString === '') {
-        return null;
-    }
-    
-    if (dateCache.has(dateString)) {
-        return dateCache.get(dateString);
-    }
-    
-    try {
-        let result = null;
-        
-        // Format 1: "Mar-15-2024" (M-d-Y) - FIXED VERSION
-        if (dateString.match(/^[A-Za-z]{3}-\d{1,2}-\d{4}$/)) {
-            const monthNames = {
-                "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
-                "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
-            };
-            const parts = dateString.split('-');
-            const month = monthNames[parts[0]];
-            const day = parseInt(parts[1]);
-            const year = parseInt(parts[2]);
-            
-            if (month !== undefined && !isNaN(day) && !isNaN(year)) {
-                result = new Date(year, month, day);
-                // Ensure it's valid
-                if (result.getDate() !== day || result.getMonth() !== month || result.getFullYear() !== year) {
-                    result = null;
-                }
-            }
-        }
-        // Format 2: "2024-03-15" (ISO)
-        else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            result = new Date(dateString);
-        }
-        // Format 3: Try native Date parsing for other formats
-        else {
-            result = new Date(dateString);
-        }
-        
-        // Validate the result
-        if (!result || isNaN(result.getTime())) {
-            console.warn('Invalid date:', dateString);
-            result = null;
-        }
-        
-        dateCache.set(dateString, result);
-        return result;
-    } catch (e) {
-        console.error('Date parsing error:', e, 'for date:', dateString);
-        return null;
-    }
-}
-function updateRowNumbers() {
-    // Only update visible rows for better performance
-    const startIndex = (thisCurrentPage - 1) * rowsPerPage;
-    const endIndex = Math.min(startIndex + rowsPerPage, filteredRows.length);
-    
-    for (let i = startIndex; i < endIndex; i++) {
-        const row = filteredRows[i];
-        const cell = row.cells[0];
-        if (cell.textContent !== (i + 1).toString()) {
-            cell.textContent = i + 1;
-        }
-    }
-}
-
-function showNoResultsMessage(show) {
-    let noResultsRow = document.getElementById('noResultsMessage');
-    
-    if (show && !noResultsRow) {
-        noResultsRow = document.createElement("tr");
-        noResultsRow.id = 'noResultsMessage';
-        noResultsRow.innerHTML = `<td colspan="13" style="text-align:center; color:#666; padding:20px;">No items found matching your filters.</td>`;
-        domElements.tableBody.appendChild(noResultsRow);
-    } else if (!show && noResultsRow) {
-        noResultsRow.remove();
-    }
-}
-
+// =============================================
+// TABLE DISPLAY & PAGINATION
+// =============================================
 function displayPage(page = 1) {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
-    
-    const startTime = performance.now();
 
     requestAnimationFrame(() => {
-        // Hide all rows first 
-        allRows.forEach(row => {
-            row.style.display = "none";
-        });
+        // Hide all rows first
+        allRows.forEach(row => row.style.display = "none");
         
-        // Show only current page rows
+        // Show only rows for current page
         for (let i = start; i < Math.min(end, filteredRows.length); i++) {
             if (filteredRows[i]) {
                 filteredRows[i].style.display = "";
@@ -496,8 +573,7 @@ function displayPage(page = 1) {
         }
         
         updatePagination(page);
-        
-        perf.renderTime = performance.now() - startTime;
+        updatePageInfo();
     });
 }
 
@@ -511,11 +587,9 @@ function updatePagination(page) {
     }
     
     domElements.pagination.style.display = "flex";
-    
-    const currentHTML = domElements.pagination.innerHTML;
     const newHTML = generatePaginationHTML(page, totalPages);
     
-    if (currentHTML !== newHTML) {
+    if (domElements.pagination.innerHTML !== newHTML) {
         domElements.pagination.innerHTML = newHTML;
         attachPaginationEvents(page, totalPages);
     }
@@ -525,29 +599,20 @@ function generatePaginationHTML(page, totalPages) {
     let html = '';
     const range = 2;
     
-    // First page button (<<) - always show if not on first page
+    // First and previous buttons
     if (page > 1) {
         html += `<a href="#" class="prev-next" data-page="1" title="First page"><i class="fas fa-angle-double-left"></i></a>`;
-    }
-    
-    // Previous button (<)
-    if (page > 1) {
         html += `<a href="#" class="prev-next" data-page="${page - 1}" title="Previous page"><i class="fas fa-chevron-left"></i></a>`;
     }
     
-    // Page numbers - always show current page and surrounding pages
+    // Page numbers
     for (let i = Math.max(1, page - range); i <= Math.min(totalPages, page + range); i++) {
-        const activeClass = i === page ? "active" : "";
-        html += `<a href="#" class="${activeClass}" data-page="${i}">${i}</a>`;
+        html += `<a href="#" class="${i === page ? 'active' : ''}" data-page="${i}">${i}</a>`;
     }
     
-    // Next button (>)
+    // Next and last buttons
     if (page < totalPages) {
         html += `<a href="#" class="prev-next" data-page="${page + 1}" title="Next page"><i class="fas fa-chevron-right"></i></a>`;
-    }
-    
-    // Last page button (>>) - always show if not on last page
-    if (page < totalPages) {
         html += `<a href="#" class="prev-next" data-page="${totalPages}" title="Last page"><i class="fas fa-angle-double-right"></i></a>`;
     }
     
@@ -567,7 +632,46 @@ function attachPaginationEvents(page, totalPages) {
     });
 }
 
-// FILTER CONTROLS FOR CLOSE-OPEN
+function updateRowNumbers() {
+    filteredRows.forEach((row, index) => {
+        const cell = row.cells[columnMap.rowNumber || 0];
+        if (cell) {
+            cell.textContent = index + 1;
+        }
+    });
+}
+
+function showNoResultsMessage(show) {
+    let noResultsRow = document.getElementById('noResultsMessage');
+    
+    if (show && !noResultsRow) {
+        noResultsRow = document.createElement("tr");
+        noResultsRow.id = 'noResultsMessage';
+        noResultsRow.innerHTML = `<td colspan="17" style="text-align:center; color:#666; padding:20px;">No items found matching your filters.</td>`;
+        domElements.tableBody.appendChild(noResultsRow);
+    } else if (!show && noResultsRow) {
+        noResultsRow.remove();
+    }
+}
+
+function updateDisplay() {
+    updateRowNumbers();
+    showNoResultsMessage(filteredRows.length === 0);
+    
+    if (!isRedirectingToItem) {
+        thisCurrentPage = 1;
+    }
+    
+    displayPage(thisCurrentPage);
+    updateItemCounts();
+}
+
+// =============================================
+// FILTER CONTROLS WITH CLOSE ON APPLY
+// =============================================
+// =============================================
+// FILTER CONTROLS WITH CLOSE ON APPLY
+// =============================================
 function initFilterControls() {
     const filterToggles = [
         { id: "toggleBrandFilter", container: domElements.brandFilter },
@@ -583,12 +687,13 @@ function initFilterControls() {
         });
     }
 
+    // Global click handler for filter toggles
     document.addEventListener('click', function(e) {
         const toggle = e.target.closest('[id^="toggle"]');
         if (toggle) {
             e.stopPropagation();
             const filterConfig = filterToggles.find(f => f.id === toggle.id);
-            if (filterConfig && filterConfig.container) {
+            if (filterConfig?.container) {
                 const isHidden = filterConfig.container.classList.contains("hidden");
                 closeAllFilters();
                 if (isHidden) {
@@ -600,164 +705,179 @@ function initFilterControls() {
         }
     });
 
+    // Prevent filter containers from closing when clicked
     filterToggles.forEach(({ container }) => {
         container?.addEventListener('click', e => e.stopPropagation());
     });
 
-    // Optimized event handlers with  debouncing
-    const createOptimizedHandler = (callback) => {
-        return () => {
-            requestAnimationFrame(() => {
-                callback();
-            });
-        };
-    };
-
-    // Brand filter
-    document.getElementById("filterByBrandBtn")?.addEventListener("click", createOptimizedHandler(() => {
-        filterItems();
-        closeAllFilters();
-    }));
-    
-    document.getElementById("resetBrandFilterBtn")?.addEventListener("click", createOptimizedHandler(() => {
-        if (domElements.brandSelect) {
-            Array.from(domElements.brandSelect.options).forEach(option => option.selected = false);
-            filterItems();
-        }
-        closeAllFilters();
-    }));
-
-    // Search with  debouncing
-    domElements.searchInput?.addEventListener("input", () => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            filterItems();
-        }, 200);
-    });
-
-    // Quantity filter
-    const quantityHandlers = {
-        "sortLowToHigh": () => sortByQuantity("asc"),
-        "sortHighToLow": () => sortByQuantity("desc"),
-        "showOutOfStock": () => { currentFilters.quantity = "out"; filterItems(); },
-        "showAvailable": () => { currentFilters.quantity = "available"; filterItems(); },
-        "resetQuantityFilter": () => { currentFilters.quantity = ""; filterItems(); }
-    };
-
-    Object.entries(quantityHandlers).forEach(([id, handler]) => {
-        document.getElementById(id)?.addEventListener("click", createOptimizedHandler(() => {
-            handler();
-            closeAllFilters();
-        }));
-    });
-
-    // Date filter
-    document.getElementById("filterByDateBtn")?.addEventListener("click", createOptimizedHandler(() => {
-        currentFilters.dateFrom = domElements.dateFrom.value;
-        currentFilters.dateTo = domElements.dateTo.value;
-        filterItems();
-        closeAllFilters();
-    }));
-
-    document.getElementById("resetDateFilterBtn")?.addEventListener("click", createOptimizedHandler(() => {
-        domElements.dateFrom.value = "";
-        domElements.dateTo.value = "";
-        currentFilters.dateFrom = "";
-        currentFilters.dateTo = "";
-        filterItems();
-        closeAllFilters();
-    }));
-
-    // Status filter
-    document.getElementById("filterByStatusBtn")?.addEventListener("click", createOptimizedHandler(() => {
-        const statusCheckboxes = document.querySelectorAll('input[name="statusFilter"]:checked');
-        currentFilters.status = Array.from(statusCheckboxes).map(cb => cb.value);
-        filterItems();
-        closeAllFilters();
-    }));
-
-    document.getElementById("resetStatusFilterBtn")?.addEventListener("click", createOptimizedHandler(() => {
-        document.querySelectorAll('input[name="statusFilter"]').forEach(cb => cb.checked = true);
-        currentFilters.status = [];
-        filterItems();
-        closeAllFilters();
-    }));
+    // Setup individual filter handlers
+    setupBrandFilters();
+    setupQuantityFilters();
+    setupDateFilters();
+    setupStatusFilters();
 
     // Reset all filters
-    document.getElementById("resetAllFiltersBtn")?.addEventListener("click", createOptimizedHandler(resetAllFilters));
-}
+    document.getElementById("resetAllFiltersBtn")?.addEventListener("click", resetAllFilters);
 
-function sortByQuantity(order = "asc") {
-
-    filteredRows.sort((a, b) => {
-        const qA = a._data.quantity;
-        const qB = b._data.quantity;
-        return order === "asc" ? qA - qB : qB - qA;
+    // Search functionality
+    domElements.searchInput?.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => filterItems(), 150);
     });
 
-    updateRowNumbers();
-    displayPage(thisCurrentPage);
-    updateItemCounts(); 
+    function setupBrandFilters() {
+        document.getElementById("filterByBrandBtn")?.addEventListener("click", () => {
+            filterItems();
+            closeAllFilters(); // Close filter after applying
+        });
+
+        document.getElementById("resetBrandFilterBtn")?.addEventListener("click", () => {
+            if (domElements.brandSelect) {
+                Array.from(domElements.brandSelect.options).forEach(option => option.selected = false);
+                filterItems();
+            }
+            closeAllFilters(); // Close filter after resetting
+        });
+    }
+
+    function setupQuantityFilters() {
+        document.getElementById("sortLowToHigh")?.addEventListener("click", () => {
+            sortByQuantity("asc");
+            closeAllFilters(); // Close filter after applying
+        });
+
+        document.getElementById("sortHighToLow")?.addEventListener("click", () => {
+            sortByQuantity("desc");
+            closeAllFilters(); // Close filter after applying
+        });
+    }
+
+    function setupDateFilters() {
+        document.getElementById("filterByDateBtn")?.addEventListener("click", () => {
+            currentFilters.dateFrom = domElements.dateFrom.value;
+            currentFilters.dateTo = domElements.dateTo.value;
+            filterItems();
+            closeAllFilters(); // Close filter after applying
+        });
+
+        document.getElementById("resetDateFilterBtn")?.addEventListener("click", () => {
+            domElements.dateFrom.value = "";
+            domElements.dateTo.value = "";
+            currentFilters.dateFrom = "";
+            currentFilters.dateTo = "";
+            filterItems();
+            closeAllFilters(); // Close filter after resetting
+        });
+    }
+
+    function setupStatusFilters() {
+        document.getElementById("filterByStatusBtn")?.addEventListener("click", () => {
+            const statusCheckboxes = document.querySelectorAll('input[name="statusFilter"]:checked');
+            currentFilters.status = Array.from(statusCheckboxes).map(cb => cb.value);
+            filterItems();
+            closeAllFilters(); // Close filter after applying
+        });
+
+        document.getElementById("resetStatusFilterBtn")?.addEventListener("click", () => {
+            document.querySelectorAll('input[name="statusFilter"]').forEach(cb => cb.checked = false);
+            currentFilters.status = [];
+            filterItems();
+            closeAllFilters(); // Close filter after resetting
+        });
+    }
 }
 
 function resetAllFilters() {
+    // Reset brand filter
     if (domElements.brandSelect) {
         Array.from(domElements.brandSelect.options).forEach(option => option.selected = false);
     }
     
-    currentFilters.quantity = "";
+    // Reset other filters
     domElements.dateFrom.value = "";
     domElements.dateTo.value = "";
     currentFilters.dateFrom = "";
     currentFilters.dateTo = "";
-    document.querySelectorAll('input[name="statusFilter"]').forEach(cb => cb.checked = true);
+    document.querySelectorAll('input[name="statusFilter"]').forEach(cb => cb.checked = false);
     currentFilters.status = [];
     domElements.searchInput.value = "";
+    
+    // Clear sort when resetting all filters
+    currentSort.field = null;
+    currentSort.order = null;
     
     filterCache.clear();
     dateCache.clear();
     filterItems();
-    updateItemCounts(); 
 }
 
+// =============================================
+// COLUMN FILTERING
+// =============================================
+const columnFilterKey = "columnFilterSettings";
 
-function initTableActions() {
-    domElements.tableBody?.addEventListener('click', function(e) {
-        const actionBtn = e.target.closest('.action-btn');
-        if (!actionBtn) return;
-        
-        if (actionBtn.classList.contains('delete')) {
-            handleDeleteItem(actionBtn);
-        } else if (actionBtn.classList.contains('edit')) {
-            handleEditItem(actionBtn);
-        } else if (actionBtn.classList.contains('view')) {
-            handleViewItem(actionBtn);
-        } else if (actionBtn.classList.contains('add')) {
-            handleAddQuantity(actionBtn);
-        }
-       
+function restoreColumnSettings() {
+    const savedSettings = JSON.parse(localStorage.getItem(columnFilterKey)) || {};
+    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
+        const colIndex = cb.getAttribute("data-column");
+        cb.checked = savedSettings[colIndex] !== false;
+        cb.dispatchEvent(new Event("change"));
+    });
+}
+
+function saveColumnSettings() {
+    const settings = {};
+    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
+        const colIndex = cb.getAttribute("data-column");
+        settings[colIndex] = cb.checked;
+    });
+    localStorage.setItem(columnFilterKey, JSON.stringify(settings));
+}
+
+function initColumnFiltering() {
+    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(checkbox => {
+        checkbox.addEventListener("change", function () {
+            const colIndex = this.getAttribute("data-column");
+            const table = document.querySelector(".itemTable");
+
+            table.querySelectorAll(`thead th:nth-child(${parseInt(colIndex) + 1}), tbody tr td:nth-child(${parseInt(colIndex) + 1})`)
+                .forEach(element => element.style.display = this.checked ? "" : "none");
+
+            saveColumnSettings();
+        });
     });
 
-    // Keep the form submission handler here 
-    const addQuantityForm = document.getElementById('addQuantityForm');
-    if (addQuantityForm) {
-        addQuantityForm.addEventListener('submit', function(e) {
-          
-            
-            // console.log('FORM SUBMISSION INTERCEPTED - DEBUG MODE');
-            // console.log('Item ID:', document.getElementById('addQuantityItemId').value);
-            // console.log('Quantity:', document.getElementById('quantity').value);
-            
-            // 
-            // Swal.fire({
-            //     icon: 'info',
-            //     title: 'Debug Mode',
-            //     text: 'Form would submit with item: ' + document.getElementById('addQuantityItemId').value
-            // });
-            
-            
+    document.getElementById("resetColumnFilterBtn")?.addEventListener("click", () => {
+        document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
+            if (!cb.checked) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event("change"));
+            }
         });
-    }
+        localStorage.removeItem(columnFilterKey);
+    });
+}
+
+// Initialize column filtering
+initColumnFiltering();
+
+// =============================================
+// TABLE ACTIONS
+// =============================================
+function initTableActions() {
+    document.querySelector('.itemTable')?.addEventListener('click', function(e) {
+        const deleteBtn = e.target.closest('.action-btn.delete');
+        if (deleteBtn) return handleDeleteItem(deleteBtn);
+
+        const editBtn = e.target.closest('.action-btn.edit');
+        if (editBtn) return handleEditItem(editBtn);
+
+        const viewBtn = e.target.closest('.action-btn.view');
+        if (viewBtn) return handleViewItem(viewBtn);
+
+        const addBtn = e.target.closest('.action-btn.add');
+        if (addBtn) return handleAddQuantity(addBtn);
+    });
 }
 
 function handleAddQuantity(addBtn) {
@@ -791,18 +911,15 @@ function handleDeleteItem(deleteBtn) {
         }
     });
 }
-
-
-
-
-// checkDeleteAlerts.js
-// checkDeleteAlerts.js
+// =============================================
+// DELETE ALERT FUNCTIONALITY
+// =============================================
 function checkForDeletedItem() {
     const urlParams = new URLSearchParams(window.location.search);
     const itemDeleted = urlParams.get('item_deleted');
     
     if (itemDeleted === '1') {
-        // Get data from data attributes instead of PHP session
+  
         const alertContainer = document.getElementById('deleteAlertData');
         if (alertContainer) {
             const deletedName = alertContainer.getAttribute('data-deleted-name');
@@ -813,7 +930,7 @@ function checkForDeletedItem() {
                     let message = `Item <b>${deletedName}</b> was deleted successfully.`;
                     
                     if (isLastItem) {
-                        message += `<br><small><i class="fas fa-info-circle"></i> This was the last item in this category.</small>`;
+                      
                     }
                     
                     Swal.fire({
@@ -822,10 +939,10 @@ function checkForDeletedItem() {
                         html: message,
                         confirmButtonColor: '#3085d6'
                     }).then(() => {
-                        // FIX: Only remove item_deleted parameter, keep category_id
+               
                         const url = new URL(window.location.href);
                         url.searchParams.delete('item_deleted');
-                        // Keep all other parameters including category_id
+               
                         window.history.replaceState({}, document.title, url.toString());
                     });
                 }, 100);
@@ -838,7 +955,7 @@ function checkForDeletedItem() {
             text: 'Failed to delete item. Please try again.',
             confirmButtonColor: '#3085d6'
         }).then(() => {
-            // FIX: Only remove item_deleted parameter, keep category_id
+        
             const url = new URL(window.location.href);
             url.searchParams.delete('item_deleted');
             // Keep all other parameters including category_id
@@ -854,9 +971,7 @@ window.addEventListener('load', function() {
 
 window.addEventListener('pageshow', function() {
     checkForDeletedItem();
-});
-
-
+})
 const editDataCache = new WeakMap();
 function handleEditItem(editBtn) {
     let data = editDataCache.get(editBtn);
@@ -875,7 +990,6 @@ function handleEditItem(editBtn) {
             remarks: editBtn.getAttribute('data-remarks') || '',
             qty: editBtn.getAttribute('data-qty') || '',
             availableQty: editBtn.getAttribute('data-available-qty') || '',
-            
             photo: editBtn.getAttribute('data-photo') || '',
             dateAcquired: editBtn.getAttribute('data-date-acquired') || '',
             categoryId: editBtn.getAttribute('data-category-id') || ''
@@ -1019,6 +1133,9 @@ function previewItemEditPhoto(event) {
     }
 }
 
+// =============================================
+// UTILITY FUNCTIONS
+// =============================================
 function calculateEditTotalCost() {
     const qtyInput = document.getElementById("edit-item-qty");
     const unitCostInput = document.getElementById("edit-item-unit-cost");
@@ -1059,56 +1176,234 @@ function initDateValidation() {
     });
 }
 
-const columnFilterKey = "columnFilterSettings";
-
-function restoreColumnSettings() {
-    const savedSettings = JSON.parse(localStorage.getItem(columnFilterKey)) || {};
-    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
-        const colIndex = cb.getAttribute("data-column");
-        if (savedSettings[colIndex] === false) {
-            cb.checked = false;
-        } else {
-            cb.checked = true;
+// =============================================
+// DATE PARSING
+// =============================================
+const dateCache = new Map();
+function parseTableDate(dateString) {
+    if (!dateString || ['N/A', '—', ''].includes(dateString)) {
+        return null;
+    }
+    
+    if (dateCache.has(dateString)) {
+        return dateCache.get(dateString);
+    }
+    
+    try {
+        let result = null;
+        
+        // Format: "Mar-15-2024"
+        if (dateString.match(/^[A-Za-z]{3}-\d{1,2}-\d{4}$/)) {
+            const monthNames = {
+                "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+                "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+            };
+            const parts = dateString.split('-');
+            const month = monthNames[parts[0]];
+            const day = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            
+            if (month !== undefined && !isNaN(day) && !isNaN(year)) {
+                result = new Date(year, month, day);
+                // Validate date
+                if (result.getDate() !== day || result.getMonth() !== month || result.getFullYear() !== year) {
+                    result = null;
+                }
+            }
         }
-        cb.dispatchEvent(new Event("change"));
-    });
+        // Format: "2024-03-15" (ISO)
+        else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            result = new Date(dateString);
+        }
+        // Try native parsing
+        else {
+            result = new Date(dateString);
+        }
+        
+        // Final validation
+        if (!result || isNaN(result.getTime())) {
+            console.warn('Invalid date:', dateString);
+            result = null;
+        }
+        
+        dateCache.set(dateString, result);
+        return result;
+    } catch (e) {
+        console.error('Date parsing error:', e, 'for date:', dateString);
+        return null;
+    }
 }
 
-function saveColumnSettings() {
-    const settings = {};
-    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
-        const colIndex = cb.getAttribute("data-column");
-        settings[colIndex] = cb.checked;
+// =============================================
+// ADD QUANTITY MODAL FUNCTIONS
+// =============================================
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.action-btn.add').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const itemId = btn.getAttribute('data-id');
+        const itemName = btn.getAttribute('data-name');
+        openAddQuantityModal(itemId, itemName);
+      });
     });
-    localStorage.setItem(columnFilterKey, JSON.stringify(settings));
-}
-
-document.querySelectorAll("#columnFilterContainer input[type='checkbox']")
-    .forEach(checkbox => {
-        checkbox.addEventListener("change", function () {
-            const colIndex = this.getAttribute("data-column");
-            const table = document.querySelector(".itemTable");
-
-            table.querySelectorAll("thead th:nth-child(" + (parseInt(colIndex) + 1) + ")")
-                .forEach(th => th.style.display = this.checked ? "" : "none");
-
-            table.querySelectorAll("tbody tr td:nth-child(" + (parseInt(colIndex) + 1) + ")")
-                .forEach(td => td.style.display = this.checked ? "" : "none");
-
-            saveColumnSettings();
-        });
-    });
-
-document.getElementById("resetColumnFilterBtn").addEventListener("click", () => {
-    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
-        if (!cb.checked) {
-            cb.checked = true;
-            cb.dispatchEvent(new Event("change"));
-        }
-    });
-    localStorage.removeItem(columnFilterKey);
 });
 
+function openAddQuantityModal(itemId, itemName) {
+    const modal = document.getElementById('addQuantityModal');
+    const itemNameEl = document.getElementById('addQuantityItemName');
+    const itemIdInput = document.getElementById('addQuantityItemId');
+    
+    if (itemNameEl && itemIdInput) {
+        itemNameEl.textContent = itemName;
+        itemIdInput.value = itemId;
+        modal.style.display = 'flex';
+        
+        // Reset form and focus on quantity input
+        document.getElementById('quantity').value = '';
+        document.getElementById('quantity').focus();
+    }
+}
+
+function escQuantityModal() {
+    document.getElementById('addQuantityModal').style.display = 'none';
+}
+
+// =============================================
+// PRINT FUNCTIONALITY
+// =============================================
+function printCurrentTableView() {
+    const printWindow = window.open('', '_blank');
+    const currentDate = new Date().toLocaleDateString();
+    const categoryName = document.querySelector('title')?.textContent.replace('BSCI-', '') || 'Inventory';
+    
+    const visibleRows = Array.from(document.querySelectorAll('#inventoryTableBody tr'))
+        .filter(row => row.style.display !== 'none');
+    
+    const headers = Array.from(document.querySelectorAll('.itemTable thead th'))
+        .map(th => th.textContent.trim())
+        .filter((header, index) => {
+            if (index === columnMap.image || index === columnMap.actions) return false;
+            const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
+            return !colCheckbox || colCheckbox.checked;
+        });
+
+    // Calculate total cost
+    let totalCost = visibleRows.reduce((sum, row) => {
+        const actionBtn = row.querySelector('.action-btn.view');
+        if (actionBtn?.dataset.totalcost) {
+            return sum + (parseFloat(actionBtn.dataset.totalcost) || 0);
+        } else if (actionBtn?.dataset.qty && actionBtn?.dataset.unitcost) {
+            return sum + (parseFloat(actionBtn.dataset.qty) || 0) * (parseFloat(actionBtn.dataset.unitcost) || 0);
+        }
+        return sum;
+    }, 0);
+
+    const formattedTotalCost = new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP'
+    }).format(totalCost);
+
+    const tableHTML = generatePrintHTML(headers, visibleRows, currentDate, formattedTotalCost, categoryName);
+    
+    printWindow.document.write(tableHTML);
+    printWindow.document.close();
+}
+
+function generatePrintHTML(headers, visibleRows, currentDate, formattedTotalCost, categoryName) {
+    return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${categoryName} - Inventory Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; }
+                .header-container { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+                .logo-container { flex: 0 0 auto; margin-left: 150px; }
+                .logo { width: 120px; height: 120px; object-fit: contain; }
+                .header-content { flex: 1; text-align: center; }
+                .header-content h1 { margin: 0 0 8px 0; font-size: 24pt; color: #2c3e50; }
+                .header-content .subtitle { font-size: 14pt; color: #666; margin-bottom: 5px; }
+                .header-content .department { font-size: 12pt; color: #888; font-weight: bold; }
+                .print-info { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 12px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; font-size: 10pt; }
+                .info-item { text-align: center; flex: 1; }
+                .info-item strong { display: block; color: #2c3e50; margin-bottom: 3px; }
+                .total-cost { color: #1d6f42; font-weight: bold; font-size: 11pt; }
+                table { width: 100%; border-collapse: collapse; font-size: 9pt; page-break-inside: auto; margin-bottom: 20px; }
+                th, td { border: 1px solid #333; padding: 8px; text-align: center; page-break-inside: avoid; }
+                th { background-color: #2c3e50; color: white; font-weight: bold; border-bottom: 2px solid #000; }
+                tr:nth-child(even) { background-color: #f8f9fa; }
+                .number, .cost-cell { text-align: right; font-family: "Courier New", monospace; }
+                .cost-cell { font-weight: bold; }
+                .print-footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 9pt; color: #666; text-align: center; }
+                .no-print { display: none; }
+                @page { size: landscape; margin: 1cm; }
+                @media print {
+                    body { margin: 0; padding: 15px; }
+                    .header-container { margin-bottom: 15px; }
+                    .print-info { background-color: #f8f9fa !important; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header-container">
+                <div class="logo-container">
+                    <img src="/images/assets/baliwasan.png" alt="BSCI Logo" class="logo" onerror="this.style.display='none'">
+                </div>
+                <div class="header-content">
+                    <h1>INVENTORY REPORT</h1>
+                    <div class="subtitle">Category: ${categoryName}</div>
+                    <div class="department">Baliwasan Central School Inventory System</div>
+                </div>
+            </div>
+            
+            <div class="print-info">
+                <div class="info-item"><strong>Generated Date</strong><span>${currentDate}</span></div>
+                <div class="info-item"><strong>Total Items</strong><span>${visibleRows.length}</span></div>
+                <div class="info-item"><strong>Total Inventory Value</strong><span class="total-cost">${formattedTotalCost}</span></div>
+            </div>
+            
+            <table>
+                <thead><tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr></thead>
+                <tbody>
+                    ${visibleRows.map(row => {
+                        const cells = Array.from(row.cells);
+                        return `<tr>${cells.map((cell, index) => {
+                            if (index === columnMap.image || index === columnMap.actions) return '';
+                            const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
+                            if (colCheckbox && !colCheckbox.checked) return '';
+                            
+                            let cellContent = cell.textContent.trim().replace(/—/g, 'N/A');
+                            let cellClass = '';
+                            
+                            if (index === columnMap.totalQuantity || index === columnMap.availableQuantity) {
+                                cellClass = 'number';
+                            } else if (cellContent.includes('₱') || cell.textContent.includes('PHP')) {
+                                cellClass = 'cost-cell';
+                            }
+                            
+                            return `<td class="${cellClass}">${cellContent || ''}</td>`;
+                        }).join('')}</tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+            
+            <div class="print-footer">
+                <p>Report generated on ${currentDate} | Category: ${categoryName} | Total Items: ${visibleRows.length} | Total Inventory Value: ${formattedTotalCost}</p>
+            </div>
+            
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(() => window.close(), 500);
+                };
+            </script>
+        </body>
+        </html>
+    `;
+}
+
+// =============================================
+// EVENT LISTENERS
+// =============================================
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         if (domElements.editItemModal?.style.display === 'flex') {
@@ -1122,13 +1417,13 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-
 window.addEventListener('beforeunload', function() {
     filterCache.clear();
     dateCache.clear();
     dataIndex.searchIndex.clear();
 });
 
+// Performance monitoring
 if (typeof PerformanceObserver !== 'undefined') {
     const observer = new PerformanceObserver((list) => {
         list.getEntries().forEach((entry) => {
@@ -1138,334 +1433,4 @@ if (typeof PerformanceObserver !== 'undefined') {
         });
     });
     observer.observe({entryTypes: ['measure']});
-
-    
-    document.addEventListener('DOMContentLoaded', () => {
-
-        document.querySelectorAll('.action-btn.add').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const itemId = btn.getAttribute('data-id');
-            const itemName = btn.getAttribute('data-name');
-            openAddQuantityModal(itemId, itemName);
-          });
-        });
-      });
-      
-      function openAddQuantityModal(itemId, itemName) {
-        const modal = document.getElementById('addQuantityModal');
-        const itemNameEl = document.getElementById('addQuantityItemName');
-        const itemIdInput = document.getElementById('addQuantityItemId');
-        
-        if (itemNameEl && itemIdInput) {
-            itemNameEl.textContent = itemName;
-            itemIdInput.value = itemId;
-            modal.style.display = 'flex';
-            
-            // Reset form and focus on quantity input
-            document.getElementById('quantity').value = '';
-            document.getElementById('quantity').focus();
-        }
-    }
-      
-      function escQuantityModal() {
-        document.getElementById('addQuantityModal').style.display = 'none';
-      }
-      
-     }
-
-     function printCurrentTableView() {
-        // Create a print-friendly version of the table
-        const printWindow = window.open('', '_blank');
-        const currentDate = new Date().toLocaleDateString();
-        const categoryName = document.querySelector('title')?.textContent.replace('BSCI-', '') || 'Inventory';
-        
-        // Get only visible rows (current page)
-        const visibleRows = Array.from(document.querySelectorAll('#inventoryTableBody tr'))
-            .filter(row => row.style.display !== 'none');
-        
-        // Get table headers (excluding image and action columns)
-        const headers = Array.from(document.querySelectorAll('.itemTable thead th'))
-            .map(th => th.textContent.trim())
-            .filter((header, index) => {
-                // Skip image column (index 2) and actions column (index 13)
-                if (index === 2 || index === 13) return false;
-                
-                // Check if column is visible (based on column filter)
-                const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
-                return !colCheckbox || colCheckbox.checked;
-            });
-    
-        // Calculate total cost of all visible items
-        let totalCost = 0;
-        visibleRows.forEach(row => {
-            const actionBtn = row.querySelector('.action-btn.view');
-            if (actionBtn && actionBtn.dataset.totalcost) {
-                const itemTotalCost = parseFloat(actionBtn.dataset.totalcost) || 0;
-                totalCost += itemTotalCost;
-            } else if (actionBtn && actionBtn.dataset.qty && actionBtn.dataset.unitcost) {
-                // Fallback: Calculate from quantity and unit cost
-                const quantity = parseFloat(actionBtn.dataset.qty) || 0;
-                const unitCost = parseFloat(actionBtn.dataset.unitcost) || 0;
-                totalCost += quantity * unitCost;
-            }
-        });
-    
-        // Format total cost with currency
-        const formattedTotalCost = new Intl.NumberFormat('en-PH', {
-            style: 'currency',
-            currency: 'PHP'
-        }).format(totalCost);
-    
-        // Build table HTML with only visible columns and rows
-        let tableHTML = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>${categoryName} - Inventory Report</title>
-                <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        margin: 0;
-                        padding: 20px;
-                        color: #000;
-                    }
-                    .header-container {
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 20px;
-                        border-bottom: 2px solid #000;
-                        padding-bottom: 15px;
-                    }
-                    .logo-container {
-                        flex: 0 0 auto;
-                        margin-left: 150px;
-                    }
-                    .logo {
-                        width: 120px;
-                        height: 120px;
-                        object-fit: contain;
-                    }
-                    .header-content {
-                        flex: 1;
-                        text-align: center;
-                    }
-                    .header-content h1 {
-                        margin: 0 0 8px 0;
-                        font-size: 24pt;
-                        color: #2c3e50;
-                    }
-                    .header-content .subtitle {
-                        font-size: 14pt;
-                        color: #666;
-                        margin-bottom: 5px;
-                    }
-                    .header-content .department {
-                        font-size: 12pt;
-                        color: #888;
-                        font-weight: bold;
-                    }
-                    .print-info {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-bottom: 20px;
-                        padding: 12px;
-                        background-color: #f8f9fa;
-                        border: 1px solid #dee2e6;
-                        border-radius: 4px;
-                        font-size: 10pt;
-                    }
-                    .info-item {
-                        text-align: center;
-                        flex: 1;
-                    }
-                    .info-item strong {
-                        display: block;
-                        color: #2c3e50;
-                        margin-bottom: 3px;
-                    }
-                    .total-cost {
-                        color: #1d6f42;
-                        font-weight: bold;
-                        font-size: 11pt;
-                    }
-                    table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        font-size: 9pt;
-                        page-break-inside: auto;
-                        margin-bottom: 20px;
-                    }
-                    th, td {
-                        border: 1px solid #333;
-                        padding: 8px;
-                        text-align: center;
-                        page-break-inside: avoid;
-                    }
-                    th {
-                        background-color: #2c3e50;
-                        color: white;
-                        font-weight: bold;
-                        border-bottom: 2px solid #000;
-                    }
-                    tr:nth-child(even) {
-                        background-color: #f8f9fa;
-                    }
-                    .currency {
-                        text-align: right;
-                        font-family: "Courier New", monospace;
-                    }
-                    .number {
-                        text-align: right;
-                        font-family: "Courier New", monospace;
-                    }
-                    .cost-cell {
-                        text-align: right;
-                        font-family: "Courier New", monospace;
-                        font-weight: bold;
-                    }
-                    .print-footer {
-                        margin-top: 30px;
-                        padding-top: 15px;
-                        border-top: 1px solid #ddd;
-                        font-size: 9pt;
-                        color: #666;
-                        text-align: center;
-                    }
-                    .no-print {
-                        display: none;
-                    }
-                    @page {
-                        size: landscape;
-                        margin: 1cm;
-                    }
-                    @media print {
-                        body { 
-                            margin: 0; 
-                            padding: 15px;
-                        }
-                        .header-container { 
-                            margin-bottom: 15px; 
-                        }
-                        .print-info {
-                            background-color: #f8f9fa !important;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header-container">
-                    <div class="logo-container">
-                        <img src="/images/assets/baliwasan.png" alt="BSCI Logo" class="logo" onerror="this.style.display='none'">
-                    </div>
-                    <div class="header-content">
-                        <h1>INVENTORY REPORT</h1>
-                        <div class="subtitle">Category: ${categoryName}</div>
-                        <div class="department">Baliwasan Central School Inventory System</div>
-                    </div>
-                </div>
-                
-                <div class="print-info">
-                    <div class="info-item">
-                        <strong>Generated Date</strong>
-                        <span>${currentDate}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Total Items</strong>
-                        <span>${visibleRows.length}</span>
-                    </div>
-                    <div class="info-item">
-                        <strong>Total Inventory Value</strong>
-                        <span class="total-cost">${formattedTotalCost}</span>
-                    </div>
-                </div>
-                
-                <table>
-                    <thead>
-                        <tr>
-        `;
-    
-        // Add headers (already filtered to exclude image and action columns)
-        headers.forEach(header => {
-            tableHTML += `<th>${header}</th>`;
-        });
-    
-        tableHTML += `
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-    
-        // Add visible rows with only visible columns
-        visibleRows.forEach(row => {
-            const cells = Array.from(row.cells);
-            tableHTML += '<tr>';
-            
-            cells.forEach((cell, index) => {
-                // Skip image column (index 2) and actions column (index 13)
-                if (index === 2 || index === 13) return;
-                
-                // Skip if column is hidden by filter
-                const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
-                if (colCheckbox && !colCheckbox.checked) {
-                    return;
-                }
-                
-                let cellContent = cell.textContent.trim();
-                
-                // Clean up cell content
-                cellContent = cellContent.replace(/—/g, 'N/A').trim();
-                
-                // Apply formatting based on column type
-                let formattedContent = cellContent;
-                let cellClass = '';
-                
-                // Format currency columns (Unit Cost and Total Cost)
-                if ((index === 8 || index === 10) && cellContent && cellContent !== 'N/A') {
-                    const number = parseFloat(cellContent.replace(/[^\d.-]/g, ''));
-                    if (!isNaN(number)) {
-                        formattedContent = '₱' + number.toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        cellClass = 'currency';
-                    }
-                }
-                // Format quantity column
-                else if (index === 9) {
-                    cellClass = 'number';
-                }
-                
-                // Check if this is a cost-related column and format accordingly
-                if (cellContent.includes('₱') || cell.textContent.includes('PHP')) {
-                    cellClass = 'cost-cell';
-                }
-                
-                tableHTML += `<td class="${cellClass}">${formattedContent || ''}</td>`;
-            });
-            
-            tableHTML += '</tr>';
-        });
-    
-        tableHTML += `
-                    </tbody>
-                </table>
-                
-                <div class="print-footer">
-                    <p>Report generated on ${currentDate} | Category: ${categoryName} | Total Items: ${visibleRows.length} | Total Inventory Value: ${formattedTotalCost}</p>
-                </div>
-                
-                <script>
-                    window.onload = function() {
-                        window.print();
-                        setTimeout(function() {
-                            window.close();
-                        }, 500);
-                    };
-                </script>
-            </body>
-            </html>
-        `;
-    
-        printWindow.document.write(tableHTML);
-        printWindow.document.close();
-    }
+}

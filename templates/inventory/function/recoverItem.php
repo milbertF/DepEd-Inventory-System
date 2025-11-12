@@ -15,7 +15,7 @@ $item_id = intval($_GET['id']);
 try {
     
     // Get the item from deleted table including category_name
-    $stmt = $conn->prepare("SELECT item_id, item_photo, item_name, category_id, category_name, description, brand, model, serial_number, quantity, initial_quantity,date_acquired, unit, unit_cost, total_cost, item_status, created_at 
+    $stmt = $conn->prepare("SELECT item_id, item_photo, item_name, category_id, category_name, description, brand, model, serial_number, total_quantity, available_quantity,date_acquired, unit, unit_cost, total_cost, item_status, created_at 
                             FROM deped_inventory_items_deleted WHERE item_id = ?");
     $stmt->bind_param("i", $item_id);
     $stmt->execute();
@@ -129,7 +129,7 @@ try {
 
     // Insert into main inventory with the (possibly new) category_id - FIXED SQL
     $insert = $conn->prepare("INSERT INTO deped_inventory_items 
-        (item_id, item_photo, item_name, category_id, description, brand, model, serial_number, quantity, initial_quantity, date_acquired, unit, unit_cost, total_cost, item_status, created_at) 
+        (item_id, item_photo, item_name, category_id, description, brand, model, serial_number, total_quantity,available_quantity, date_acquired, unit, unit_cost, total_cost, item_status, created_at) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     //  16 parameters, 16 characters in bind_param
@@ -143,8 +143,8 @@ try {
         $item['brand'],
         $item['model'],
         $item['serial_number'],
-        $item['initial_quantity'],
-        $item['quantity'],
+        $item['total_quantity'],
+        $item['available_quantity'],
         $item['date_acquired'],
         $item['unit'],
         $item['unit_cost'],

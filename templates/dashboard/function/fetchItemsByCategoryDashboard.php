@@ -18,7 +18,7 @@ $itemQuery = "
     i.brand, 
     i.model, 
     i.serial_number, 
-    i.initial_quantity, 
+    i.available_quantity, 
     i.description
   FROM deped_inventory_items i
   WHERE i.item_status = 'Good'

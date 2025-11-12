@@ -184,15 +184,7 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <button id="sortHighToLow" class="quantity-option">
                     <i class="fas fa-sort-amount-down"></i> Sort: High to Low
                   </button>
-                  <button id="showAvailable" class="quantity-option">
-                    <i class="fas fa-box"></i> Available (Qty > 0)
-                  </button>
-                  <button id="showOutOfStock" class="quantity-option">
-                    <i class="fas fa-box-open"></i> Out of Stock (Qty = 0)
-                  </button>
-                  <button id="resetQuantityFilter" class="quantity-option">
-                    <i class="fas fa-times"></i> Show All Quantities
-                  </button>
+                
                 </div>
               </div>
 
@@ -222,7 +214,7 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <span>Filter by Status</span>
                 </div>
 
-                <div class="status-checkboxes">
+                <div class="status-checkboxes" >
                   <?php
                   // Get unique statuses from items
                   $allStatuses = array_column($items, 'item_status');
@@ -272,7 +264,6 @@ if (isset($_SESSION['deleted_item_name'])) {
                 <th>Item ID </th>
                 <th>Image</th>
                 <th>Serial Number</th>
-           
                 <th>Item Name</th>
                 <th>Description</th>
                 <th>Brand</th>
@@ -305,8 +296,8 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
                   <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
                   <td>₱<?= number_format($item['unit_cost'], 2) ?></td>
-                  <td><?= htmlspecialchars($item['quantity']) ?></td>
-                  <td><?= htmlspecialchars($item['initial_quantity']) ?></td>
+                  <td><?= htmlspecialchars($item['total_quantity']) ?></td>
+                  <td><?= htmlspecialchars($item['available_quantity']) ?></td>
                   <td>₱<?= number_format($item['total_cost'], 2) ?></td>
                   <td><?= isset($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00' ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
                   <td><?= htmlspecialchars($item['item_status']) ?></td>
@@ -321,8 +312,8 @@ if (isset($_SESSION['deleted_item_name'])) {
                       data-brand="<?= htmlspecialchars($item['brand']) ?>"
                       data-model="<?= htmlspecialchars($item['model']) ?>"
                       data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
-                      data-qty="<?= $item['quantity'] ?>"
-                      data-available-qty="<?= $item['initial_quantity'] ?>"
+                      data-qty="<?= $item['total_quantity'] ?>"
+                      data-available-qty="<?= $item['available_quantity'] ?>"
                       data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
                       data-itemstatus="<?= $item['item_status'] ?>"
                       data-remarks="<?= $item['remarks'] ?>"
@@ -344,8 +335,8 @@ if (isset($_SESSION['deleted_item_name'])) {
                         data-brand="<?= $item['brand'] ?>"
                         data-model="<?= $item['model'] ?>"
                         data-serial="<?= $item['serial_number'] ?>"
-                        data-qty="<?= $item['quantity'] ?>"
-                        data-available-qty="<?= $item['initial_quantity'] ?>"
+                        data-qty="<?= $item['total_quantity'] ?>"
+                        data-available-qty="<?= $item['available_quantity'] ?>"
                         data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
                         data-item-status="<?= $item['item_status'] ?>"
                         data-remarks="<?= $item['remarks'] ?>"

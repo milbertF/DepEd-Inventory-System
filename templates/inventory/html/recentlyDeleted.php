@@ -212,9 +212,7 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
               <div class="quantity-options">
                 <button id="sortLowToHigh" class="quantity-option"><i class="fas fa-sort-amount-up"></i> Low to High</button>
                 <button id="sortHighToLow" class="quantity-option"><i class="fas fa-sort-amount-down"></i> High to Low</button>
-                <button id="showAvailable" class="quantity-option"><i class="fas fa-box"></i> Available (Qty > 0)</button>
-                <button id="showOutOfStock" class="quantity-option"><i class="fas fa-box-open"></i> Out of Stock (Qty = 0)</button>
-                <button id="resetQuantityFilter" class="quantity-option"><i class="fas fa-times"></i> Show All</button>
+                
               </div>
             </div>
 
@@ -287,14 +285,13 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
               <th>#</th>
               <th>Item ID</th>
               <th>Category</th>
-               <th>Image</th>
+              <th>Image</th>
               <th>Serial Number</th>
-             
               <th>Item Name</th>
               <th>Brand</th>
               <th>Model</th>
-              <th> Total Quantity</th>
-              <th> Available Quantity</th>
+              <th>Total Quantity</th>
+              <th>Available Quantity</th>
               <th>Date Acquired</th>
               <th>Item Status</th>
               <th>Deleted By</th>
@@ -317,8 +314,8 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
               <td><?= htmlspecialchars($item['item_name']) ?></td>
               <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
               <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
-              <td><?= htmlspecialchars($item['quantity']) ?></td>
-              <td><?= htmlspecialchars($item['initial_quantity']) ?></td>
+              <td><?= htmlspecialchars($item['total_quantity']) ?></td>
+              <td><?= htmlspecialchars($item['available_quantity']) ?></td>
               <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
               <td><?= htmlspecialchars($item['item_status']) ?></td>
               <td><?= htmlspecialchars($item['deleted_by_fname'] . ' ' . $item['deleted_by_lname']) ?></td>
@@ -335,7 +332,8 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
                   data-brand="<?= htmlspecialchars($item['brand']) ?>"
                   data-model="<?= htmlspecialchars($item['model']) ?>"
                   data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
-                  data-qty="<?= $item['quantity'] ?>"
+                  data-qty="<?= $item['total_quantity'] ?>"
+                  data-available-qty="<?= $item['available_quantity'] ?>"
                   data-deletedby="<?= htmlspecialchars($item['deleted_by_fname'] . ' ' . $item['deleted_by_lname']) ?>" 
                   data-deletedat="<?= (!empty($item['deleted_at']) ? date('Y-m-d H:i:s', strtotime($item['deleted_at'])) : '') ?>" 
                  

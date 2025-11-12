@@ -73,8 +73,8 @@ try {
                 ri.requested_quantity,
                 i.item_name,
                 r.user_id,
-                i.initial_quantity as current_initial_quantity,
-                i.quantity as current_quantity
+                i.available_quantity as current_available_quantity,
+                i.total_quantity as current_quantity
             FROM deped_inventory_request_items ri
             LEFT JOIN deped_inventory_items i ON ri.item_id = i.item_id
             LEFT JOIN deped_inventory_requests r ON ri.request_id = r.request_id
@@ -109,7 +109,7 @@ try {
         $itemName = $itemData['item_name'];
         $requestedQty = $itemData['requested_quantity'];
         $requesterUserId = $itemData['user_id'];
-        $currentInitialQuantity = $itemData['current_initial_quantity'];
+        $currentInitialQuantity = $itemData['current_available_quantity'];
         $currentQuantity = $itemData['current_quantity'];
         
         $checkStmt->close();
@@ -161,13 +161,13 @@ try {
             $logMessage = getLogMessage($actionType, $itemName, $currentStatus, $newStatus, $requestedQty);
             logAction($conn, $logId, $reqItemId, $requestId, $itemId, $itemName, $requesterUserId, $actionType, $logMessage, $currentUserId);
             
-            // UPDATED: Handle inventory quantity changes using initial_quantity
+            // UPDATED: Handle inventory quantity changes using available_quantity
             if ($actionType === 'release') {
-                // Subtract the requested quantity from initial_quantity (borrowable quantity)
+                // Subtract the requested quantity from available_quantity (borrowable quantity)
                 $deductStmt = $conn->prepare("
                     UPDATE deped_inventory_items 
-                    SET initial_quantity = initial_quantity - ? 
-                    WHERE item_id = ? AND initial_quantity >= ?
+                    SET available_quantity = available_quantity - ? 
+                    WHERE item_id = ? AND available_quantity >= ?
                 ");
                 
                 if ($deductStmt) {
@@ -184,21 +184,21 @@ try {
                     $deductStmt->close();
                 }
             } elseif ($actionType === 'return') {
-                // Add the requested quantity back to initial_quantity (borrowable quantity)
+                // Add the requested quantity back to available_quantity (borrowable quantity)
                 $restoreStmt = $conn->prepare("
                     UPDATE deped_inventory_items 
-                    SET initial_quantity = initial_quantity + ? 
+                    SET available_quantity = available_quantity + ? 
                     WHERE item_id = ?
                 ");
                 
                 if ($restoreStmt) {
                     $restoreStmt->bind_param('ii', $requestedQty, $itemId);
                     if ($restoreStmt->execute()) {
-                        // NEW: Ensure quantity is never lower than initial_quantity
+                        // NEW: Ensure quantity is never lower than available_quantity
                         $syncStmt = $conn->prepare("
                             UPDATE deped_inventory_items 
-                            SET quantity = GREATEST(quantity, initial_quantity) 
-                            WHERE item_id = ? AND quantity < initial_quantity
+                            SET total_quantity = GREATEST(total_quantity, available_quantity) 
+                            WHERE item_id = ? AND total_quantity < available_quantity
                         ");
                         
                         if ($syncStmt) {
@@ -207,7 +207,7 @@ try {
                             
                             // Check if quantity was adjusted
                             if ($syncStmt->affected_rows > 0) {
-                                $logMessage .= " (Quantity auto-adjusted to match initial_quantity)";
+                                $logMessage .= " (Quantity auto-adjusted to match available_quantity)";
                                 
                                 // Update the log with the corrected message
                                 $updateLogStmt = $conn->prepare("

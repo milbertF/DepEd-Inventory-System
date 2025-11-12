@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
     $remarks = trim($_POST['remarks'] ?? '');
     $unit_cost = floatval($_POST['unit_cost']);
     $date_acquired = !empty($_POST['date_acquired']) ? $_POST['date_acquired'] : null;
-    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
+    $quantity = isset($_POST['total_quantity']) ? intval($_POST['total_quantity']) : 1;
 
     if ($quantity < 1) {
         showSweetAlert('error', 'Invalid Quantity', 'Quantity must be at least 1.');
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         $stmt = $conn->prepare("
             INSERT INTO deped_inventory_items (
                 item_id, item_photo, item_name, category_id, description,
-                brand, model, serial_number, quantity, initial_quantity, unit,
+                brand, model, serial_number, total_quantity, available_quantity, unit,
                 unit_cost, date_acquired, item_status,remarks
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)
         ");

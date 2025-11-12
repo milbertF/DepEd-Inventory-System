@@ -11,7 +11,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 ob_end_clean();
 
-// Filters
+
 $minQty = isset($_GET['min_quantity']) && $_GET['min_quantity'] !== '' ? (int)$_GET['min_quantity'] : null;
 $maxQty = isset($_GET['max_quantity']) && $_GET['max_quantity'] !== '' ? (int)$_GET['max_quantity'] : null;
 $minCost = isset($_GET['min_cost']) && $_GET['min_cost'] !== '' ? (float)$_GET['min_cost'] : null;
@@ -19,15 +19,15 @@ $maxCost = isset($_GET['max_cost']) && $_GET['max_cost'] !== '' ? (float)$_GET['
 $startDate = $_GET['start_date'] ?? null;
 $endDate = $_GET['end_date'] ?? null;
 
-// MODIFIED: Added initial_quantity to the SELECT query
-$query = "SELECT item_name, brand, model, serial_number, quantity, initial_quantity, unit, unit_cost, total_cost, description, date_acquired
+
+$query = "SELECT item_name, brand, model, serial_number, total_quantity, available_quantity, unit, unit_cost, total_cost, description, date_acquired
           FROM deped_inventory_items WHERE 1=1";
 $params = [];
 $types = '';
 
 // Quantity filter
-if ($minQty !== null) { $query .= " AND quantity >= ?"; $types .= 'i'; $params[] = $minQty; }
-if ($maxQty !== null) { $query .= " AND quantity <= ?"; $types .= 'i'; $params[] = $maxQty; }
+if ($minQty !== null) { $query .= " AND total_quantity >= ?"; $types .= 'i'; $params[] = $minQty; }
+if ($maxQty !== null) { $query .= " AND total_quantity <= ?"; $types .= 'i'; $params[] = $maxQty; }
 
 // Unit cost filter
 if ($minCost !== null) { $query .= " AND unit_cost >= ?"; $types .= 'd'; $params[] = $minCost; }
@@ -76,8 +76,8 @@ while ($row = $result->fetch_assoc()) {
         $row['brand'],
         $row['model'],
         $row['serial_number'],
-        $row['quantity'], // Total Quantity
-        $row['initial_quantity'], // Available Quantity
+        $row['total_quantity'], // Total Quantity
+        $row['available_quantity'], // Available Quantity
         $row['unit'] ?: 'None',
         $row['unit_cost'],
         $row['total_cost'],

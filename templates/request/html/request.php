@@ -20,6 +20,9 @@ require __DIR__ . '/../function/fetchRequest.php';
     <link rel="stylesheet" href="/styles/viewRequestItemModal.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+<style>
+    
+</style>
 
 
 
@@ -202,10 +205,45 @@ require __DIR__ . '/../function/fetchRequest.php';
                         <?php endif; ?>
                     </tbody>
                 </table>
+                <div class="pagination" id="requestPagination"></div>
+
+<!-- Table Footer with Items Per Page Selector -->
+<div class="table-footer">
+  <div class="footer-left">
+    <div class="items-per-page-selector">
+      <label for="requestRowsPerPage">Show:</label>
+      <select id="requestRowsPerPage" class="form-select">
+        <option value="10">10</option>
+        <option value="20">20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+      </select>
+      <span>entries</span>
+    </div>
+  </div>
+  
+  <div class="footer-right-req">
+    <div class="item-count-display" style="background: #f8f9fa; padding: 8px 16px; border-radius: 20px; font-weight: 500; color: #495057;">
+      <span id="totalRequestsCount"><?= count($requests) ?></span> total requests
+      <span id="filteredRequestsCount" style="display: none;">
+        | Showing <span id="visibleRequestsCount">0</span> of <span id="totalRequestsCount2"><?= count($requests) ?></span>
+      </span>
+    </div>
+    <div id="pageInfo" style="margin-top: 8px; font-size: 14px; color: #6c757d;"></div>
+  </div>
+</div>
+
+                
             </div>
+            <!-- Pagination -->
+
+            
 
         </div>
     </div>
+
+
+    
 
     <script src="/javascript/header.js"></script>
     <script src="/javascript/sidebar.js"></script>

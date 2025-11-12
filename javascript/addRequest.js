@@ -119,8 +119,8 @@ function renderTable() {
   tbody.innerHTML = '';
 
   const sortedItems = [...filteredItems].sort((a, b) => {
-    const qtyA = Number(a.initial_quantity);
-    const qtyB = Number(b.initial_quantity);
+    const qtyA = Number(a.available_quantity);
+    const qtyB = Number(b.available_quantity);
     if (qtyA === 0 && qtyB > 0) return 1;
     if (qtyA > 0 && qtyB === 0) return -1;
     return 0;
@@ -139,7 +139,7 @@ function renderTable() {
   }
 
   itemsToShow.forEach(item => {
-    const qty = Number(item.initial_quantity);
+    const qty = Number(item.available_quantity);
     const isOutOfStock = qty === 0;
 
   
@@ -190,7 +190,7 @@ function renderTable() {
         btn.style.fontSize = '13px';
       } else if (!isOutOfStock) {
       
-        selectItem(item.item_id, item.initial_quantity, item.serial_number, item.item_name, item.description, item.brand, item.model, qty, btn);
+        selectItem(item.item_id, item.available_quantity, item.serial_number, item.item_name, item.description, item.brand, item.model, qty, btn);
       }
     };
   });
@@ -269,8 +269,8 @@ function applyFilters(event) {
 
 const addedItems = new Set(); 
 
-function selectItem(id, initial_quantity, serial_number, name, description, brand, model, qty, button) {
-  // Remove the quantity parameter since we're using initial_quantity
+function selectItem(id, available_quantity, serial_number, name, description, brand, model, qty, button) {
+  // Remove the quantity parameter since we're using available_quantity
   const tbody = document.querySelector('#request-items-table tbody');
 
   if (addedItems.has(id)) {
@@ -282,9 +282,9 @@ function selectItem(id, initial_quantity, serial_number, name, description, bran
 
   const row = document.createElement('tr');
   
-  // Fix: Use initial_quantity instead of quantity
+  // Fix: Use available_quantity instead of quantity
   const cells = [
-    `<td data-label="Available Quantity" class="qty-highlight">${initial_quantity || '-'}</td>`,
+    `<td data-label="Available Quantity" class="qty-highlight">${available_quantity || '-'}</td>`,
     `<td data-label="Serial #">${serial_number || '-'}</td>`,
     `<td data-label="Item">${name}<input type="hidden" name="item_id[]" value="${id}"></td>`,
     `<td data-label="Description">${description || '-'}</td>`,
@@ -369,7 +369,7 @@ function selectItem(id, initial_quantity, serial_number, name, description, bran
     button.classList.remove('delete-item');
     button.textContent = 'Select';
     button.style.fontSize = '13px'; 
-    button.onclick = () => selectItem(id, initial_quantity, serial_number, name, description, brand, model, qty, button);
+    button.onclick = () => selectItem(id, available_quantity, serial_number, name, description, brand, model, qty, button);
     addedItems.delete(id);
   };
 

@@ -34,7 +34,7 @@ $categoryRow = $categoryResult->fetch_assoc();
 $categoryName = $categoryRow ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $categoryRow['category_name']) : "Category_" . $categoryId;
 
 // MODIFIED: Added initial_quantity to the SELECT query
-$query = "SELECT item_name, brand, model, serial_number, quantity, initial_quantity, unit, unit_cost, total_cost, description, date_acquired, item_status 
+$query = "SELECT item_name, brand, model, serial_number, total_quantity, available_quantity, unit, unit_cost, total_cost, description, date_acquired, item_status 
           FROM deped_inventory_items 
           WHERE category_id = ?";
 $params = [$categoryId];
@@ -53,12 +53,12 @@ if (!empty($modelFilter) && $modelFilter !== 'all') {
 }
 
 if ($minQty !== null) {
-    $query .= " AND quantity >= ?";
+    $query .= " AND total_quantity >= ?";
     $types .= 'i';
     $params[] = $minQty;
 }
 if ($maxQty !== null) {
-    $query .= " AND quantity <= ?";
+    $query .= " AND total_quantity <= ?";
     $types .= 'i';
     $params[] = $maxQty;
 }
@@ -135,8 +135,8 @@ while ($row = $result->fetch_assoc()) {
         ucfirst($row['brand']),
         ucfirst($row['model']),
         $row['serial_number'],
-        $row['quantity'], // Total Quantity
-        $row['initial_quantity'], // Available Quantity
+        $row['total_quantity'], // Total Quantity
+        $row['available_quantity'], // Available Quantity
         ($row['unit'] == '0' || $row['unit'] === null || trim($row['unit']) === '') ? 'None' : ucfirst($row['unit']),
         $row['unit_cost'],
         $row['total_cost'],

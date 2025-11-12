@@ -108,7 +108,7 @@ require __DIR__ . '/../function/fetchCategory.php';
   
   <div class="footer-right">
     <div class="item-count-display" style="background: #f8f9fa; padding: 8px 16px; border-radius: 20px; font-weight: 500; color: #495057;">
-      <span id="totalItemsCount"><?= count($categories) ?></span> total items
+      <span id="totalItemsCount"><?= count($categories) ?></span> total categories
       <span id="filteredItemsCount" style="display: none;">
         | Showing <span id="visibleItemsCount">0</span> of <span id="totalItemsCount2"><?= count($categories) ?></span>
       </span>

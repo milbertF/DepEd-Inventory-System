@@ -3,7 +3,7 @@ let currentFilters = {
   quantity: "",
   dateFrom: "",
   dateTo: "",
-  deletedBy: "",
+  deletedBy: [],
   deletedDateFrom: "",
   deletedDateTo: ""
 };
@@ -14,8 +14,10 @@ let thisCurrentPage = 1;
 let rowsPerPage = parseInt(localStorage.getItem('deletedItemsTableRowsPerPage')) || 10;
 let debounceTimer = null;
 let filterCache = new Map();
+let currentSort = { field: null, order: null };
 
 let domElements = {};
+let columnMap = {};
 
 // =============================================
 // SCROLL & NAVIGATION VARIABLES
@@ -29,6 +31,7 @@ let isShowingDeletedItemNotFoundAlert = false;
 // =============================================
 document.addEventListener("DOMContentLoaded", function () {
   initializeDOMCache();
+  buildColumnMap();
   initializeTable();
   initFilterControls();
   initColumnFilter(); 
@@ -42,152 +45,183 @@ document.addEventListener("DOMContentLoaded", function () {
   }, 500);
 
   restoreColumnSettings();
+  initRowsPerPageSelector();
 });
 
 // =============================================
-// SCROLL TO DELETED ITEM FUNCTION
+// COLUMN MAPPING - OPTIMIZED VERSION
+// =============================================
+function buildColumnMap() {
+    const headerRow = document.querySelector('.itemTable thead tr');
+    if (!headerRow) {
+        console.error('No table header found!');
+        return {};
+    }
+    
+    const headers = Array.from(headerRow.cells);
+    console.log('=== BUILDING COLUMN MAP (Deleted Items) ===');
+    
+    const mappings = [
+        { keywords: ['#', 'number'], property: 'rowNumber' },
+        { keywords: ['item id', 'id'], property: 'itemId' },
+        { keywords: ['category'], property: 'category' },
+        { keywords: ['image', 'photo'], property: 'image' },
+        { keywords: ['serial'], property: 'serialNumber' },
+        { keywords: ['item name', 'name'], property: 'itemName' },
+        { keywords: ['brand'], property: 'brand' },
+        { keywords: ['model'], property: 'model' },
+        { keywords: ['total quantity', 'quantity'], property: 'totalQuantity' },
+        { keywords: ['available quantity', 'available'], property: 'availableQuantity' },
+        { keywords: ['date acquired', 'acquired'], property: 'dateAcquired' },
+        { keywords: ['status'], property: 'status' },
+        { keywords: ['deleted by'], property: 'deletedBy' },
+        { keywords: ['deleted date'], property: 'deletedDate' },
+        { keywords: ['deleted time'], property: 'deletedTime' },
+        { keywords: ['actions', 'action'], property: 'actions' }
+    ];
+    
+    columnMap = {};
+    
+    headers.forEach((header, index) => {
+        const headerText = header.textContent.trim().toLowerCase().replace(/\s+/g, ' ');
+        let matched = false;
+        
+        for (const mapping of mappings) {
+            if (mapping.keywords.some(keyword => headerText.includes(keyword.toLowerCase()))) {
+                columnMap[mapping.property] = index;
+                console.log(` Mapped "${mapping.property}" to column ${index}: "${header.textContent.trim()}"`);
+                matched = true;
+                break;
+            }
+        }
+        
+        if (!matched) {
+            console.log(` Unmapped column ${index}: "${header.textContent.trim()}"`);
+        }
+    });
+    
+    // Apply fallback mapping for required columns
+    const fallbackMap = {
+        rowNumber: 0, itemId: 1, category: 2, image: 3, serialNumber: 4,
+        itemName: 5, brand: 6, model: 7, totalQuantity: 8, availableQuantity: 9,
+        dateAcquired: 10, status: 11, deletedBy: 12, deletedDate: 13,
+        deletedTime: 14, actions: 15
+    };
+    
+    Object.keys(fallbackMap).forEach(key => {
+        if (columnMap[key] === undefined) {
+            columnMap[key] = fallbackMap[key];
+            console.log(`🔁 Fallback mapped "${key}" to column ${fallbackMap[key]}`);
+        }
+    });
+    
+    console.log('=== FINAL COLUMN MAP (Deleted Items) ===', columnMap);
+    return columnMap;
+}
+
+function getCellData(row, property) {
+    const index = columnMap[property];
+    if (index === undefined || !row.cells[index]) {
+        return '';
+    }
+    return row.cells[index].textContent || '';
+}
+
+// =============================================
+// SCROLL TO DELETED ITEM FUNCTION - OPTIMIZED
 // =============================================
 window.scrollToDeletedItem = function(itemId) {
-    console.log('scrollToDeletedItem called for:', itemId);
-    
-    if (!itemId) {
-        console.warn('No itemId provided to scrollToDeletedItem');
-        return;
-    }
-    
-    if (isRedirectingToDeletedItem) {
-        console.log('Already redirecting to a deleted item, skipping...');
-        return;
-    }
+    if (!itemId || isRedirectingToDeletedItem) return;
     
     isRedirectingToDeletedItem = true;
     targetDeletedItemId = itemId;
     
     if (typeof resetAllFilters === 'function') {
-        console.log('Resetting filters for deleted items...');
         resetAllFilters();
     }
     
-    function attemptScroll() {
-        console.log('Attempting to scroll to deleted item:', itemId);
-        
-        const allItemRows = Array.from(document.querySelectorAll('#inventoryTableBody tr[data-item-id]'));
-        console.log(`Found ${allItemRows.length} total deleted item rows in DOM`);
-        
-        const targetRow = allItemRows.find(row => row.getAttribute('data-item-id') === itemId);
-        const rowIndex = allItemRows.findIndex(row => row.getAttribute('data-item-id') === itemId);
-        
-        if (rowIndex !== -1 && targetRow) {
-            console.log(`Found deleted item at row index: ${rowIndex}`);
-            
-            const itemsPerPage = rowsPerPage;
-            const targetPage = Math.floor(rowIndex / itemsPerPage) + 1;
-            const totalPages = Math.ceil(allItemRows.length / itemsPerPage);
-            
-            console.log(`Item is on page ${targetPage} of ${totalPages}`);
-            
-            if (thisCurrentPage !== targetPage) {
-                console.log(`Switching from page ${thisCurrentPage} to page ${targetPage}`);
-                thisCurrentPage = targetPage;
-                
-                setTimeout(() => {
-                    displayPage(targetPage);
-                    
-                    setTimeout(() => {
-                        scrollToDeletedItemOnCurrentPage(itemId);
-                    }, 300);
-                }, 100);
-            } else {
-                console.log('Already on correct page, scrolling directly');
-                scrollToDeletedItemOnCurrentPage(itemId);
-            }
-            
-        } else {
-            console.warn('Deleted item not found in the table:', itemId);
-            showDeletedItemNotFoundMessage(itemId);
-        }
-    }
-    
-    function scrollToDeletedItemOnCurrentPage(itemId) {
-        console.log('scrollToDeletedItemOnCurrentPage for:', itemId);
-        
-        const targetRow = document.querySelector(`tr[data-item-id="${itemId}"]`);
-        
-        if (targetRow && targetRow.style.display !== 'none') {
-            console.log('Found visible deleted item row, scrolling and highlighting...');
-            
-            targetRow.classList.add('highlight-item');
-            void targetRow.offsetWidth;
-            
-            setTimeout(() => {
-                targetRow.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center',
-                    inline: 'nearest'
-                });
-            }, 100);
-            
-            setTimeout(() => {
-                targetRow.classList.add('highlight-item-strong');
-            }, 500);
-            
-            setTimeout(() => {
-                targetRow.classList.remove('highlight-item-strong');
-            }, 3000);
-            
-            setTimeout(() => {
-                targetRow.classList.remove('highlight-item');
-                isRedirectingToDeletedItem = false;
-                targetDeletedItemId = null;
-                
-                const url = new URL(window.location);
-                if (url.searchParams.get('item_id') === itemId) {
-                    url.searchParams.delete('item_id');
-                    window.history.replaceState({}, '', url);
-                }
-            }, 6000);
-            
-        } else {
-            console.warn('Deleted item not visible on current page:', itemId);
-            showDeletedItemNotFoundMessage(itemId);
-        }
-    }
-    
-    setTimeout(attemptScroll, 500);
+    setTimeout(() => attemptScroll(itemId), 500);
 };
+
+function attemptScroll(itemId) {
+    const allItemRows = Array.from(document.querySelectorAll('#inventoryTableBody tr[data-item-id]'));
+    const targetRow = allItemRows.find(row => row.getAttribute('data-item-id') === itemId);
+    const rowIndex = allItemRows.findIndex(row => row.getAttribute('data-item-id') === itemId);
+    
+    if (rowIndex !== -1 && targetRow) {
+        const itemsPerPage = rowsPerPage;
+        const targetPage = Math.floor(rowIndex / itemsPerPage) + 1;
+        
+        if (thisCurrentPage !== targetPage) {
+            thisCurrentPage = targetPage;
+            setTimeout(() => {
+                displayPage(targetPage);
+                setTimeout(() => scrollToDeletedItemOnCurrentPage(itemId), 300);
+            }, 100);
+        } else {
+            scrollToDeletedItemOnCurrentPage(itemId);
+        }
+    } else {
+        showDeletedItemNotFoundMessage(itemId);
+    }
+}
+
+function scrollToDeletedItemOnCurrentPage(itemId) {
+    const targetRow = document.querySelector(`tr[data-item-id="${itemId}"]`);
+    
+    if (targetRow && targetRow.style.display !== 'none') {
+        targetRow.classList.add('highlight-item');
+        
+        setTimeout(() => {
+            targetRow.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center',
+                inline: 'nearest'
+            });
+            targetRow.classList.add('highlight-item-strong');
+        }, 100);
+        
+        setTimeout(() => {
+            targetRow.classList.remove('highlight-item-strong');
+        }, 3000);
+        
+        setTimeout(() => {
+            targetRow.classList.remove('highlight-item');
+            cleanupScrollState(itemId);
+        }, 6000);
+    } else {
+        showDeletedItemNotFoundMessage(itemId);
+    }
+}
+
+function cleanupScrollState(itemId) {
+    isRedirectingToDeletedItem = false;
+    targetDeletedItemId = null;
+    
+    const url = new URL(window.location);
+    if (url.searchParams.get('item_id') === itemId) {
+        url.searchParams.delete('item_id');
+        window.history.replaceState({}, document.title, url);
+    }
+}
 
 // =============================================
 // ALERT FUNCTIONS
 // =============================================
 function showDeletedItemNotFoundMessage(itemId) {
-    if (isShowingDeletedItemNotFoundAlert) {
-        console.log('Alert already showing, skipping...');
-        return;
-    }
+    if (isShowingDeletedItemNotFoundAlert) return;
     
     isShowingDeletedItemNotFoundAlert = true;
     
     Swal.fire({
         icon: 'warning',
         title: 'Deleted Item Not Found',
-        html: `
-            The deleted item (ID: <b>${itemId}</b>) could not be found in the current view.<br>
-            It may have been <b>permanently deleted</b>, filtered out, or no longer exists.
-        `,
+        html: `The deleted item (ID: <b>${itemId}</b>) could not be found in the current view.`,
         confirmButtonText: 'OK',
         confirmButtonColor: '#3085d6',
-        allowOutsideClick: true,
-        allowEscapeKey: true,
         background: '#fff',
-    }).then((result) => {
-        const url = new URL(window.location);
-        if (url.searchParams.get('item_id') === itemId) {
-            url.searchParams.delete('item_id');
-            window.history.replaceState({}, '', url);
-        }
-        
-        isRedirectingToDeletedItem = false;
-        targetDeletedItemId = null;
+    }).then(() => {
+        cleanupScrollState(itemId);
         isShowingDeletedItemNotFoundAlert = false;
     });
 }
@@ -200,11 +234,27 @@ function initializeScrollFromURL() {
     const itemId = urlParams.get('item_id');
     
     if (itemId) {
-        console.log('Found item_id in URL, will scroll to deleted item:', itemId);
+        setTimeout(() => scrollToDeletedItem(itemId), 1000);
+    }
+}
+
+function initRowsPerPageSelector() {
+    const rowsPerPageSelect = document.getElementById("rowsPerPageSelect");
+    
+    if (rowsPerPageSelect) {
+        const savedRowsPerPage = localStorage.getItem('deletedItemsTableRowsPerPage');
+        if (savedRowsPerPage) {
+            rowsPerPageSelect.value = savedRowsPerPage;
+            rowsPerPage = parseInt(savedRowsPerPage);
+        }
         
-        setTimeout(() => {
-            scrollToDeletedItem(itemId);
-        }, 1000);
+        rowsPerPageSelect.addEventListener('change', function() {
+            rowsPerPage = parseInt(this.value);
+            thisCurrentPage = 1;
+            displayPage(thisCurrentPage);
+            updateItemCounts();
+            localStorage.setItem('deletedItemsTableRowsPerPage', this.value);
+        });
     }
 }
 
@@ -227,12 +277,13 @@ function initializeDOMCache() {
   };
 }
 
+// =============================================
+// TABLE INITIALIZATION - OPTIMIZED
+// =============================================
 function initializeTable() {
   allRows = Array.from(domElements.tableBody.querySelectorAll("tr"));
   
   allRows.forEach((row, index) => {
-      const cells = row.cells;
-      
       const viewBtn = row.querySelector('.action-btn.view');
       const itemId = viewBtn ? viewBtn.dataset.id : '';
       
@@ -241,17 +292,21 @@ function initializeTable() {
       }
       
       row._data = {
-          category: (cells[2]?.textContent || '').toLowerCase().trim(), 
-          serialNumber: (cells[4]?.textContent || '').toLowerCase(),
-          itemName: (cells[5]?.textContent || '').toLowerCase(), 
-          brand: (cells[6]?.textContent || '').toLowerCase().trim(), 
-          model: (cells[7]?.textContent || '').toLowerCase(), 
-          quantity: parseInt(cells[8]?.textContent || 0), 
-          dateAcquired: cells[9]?.textContent.trim(), 
-          deletedBy: (cells[11]?.textContent || '').toLowerCase().trim(), 
-          deletedDate: cells[12]?.textContent.trim(), 
-          deletedTime: cells[13]?.textContent.trim(),
-          itemId: itemId
+          category: getCellData(row, 'category').toLowerCase().trim(),
+          serialNumber: getCellData(row, 'serialNumber').toLowerCase(),
+          itemName: getCellData(row, 'itemName').toLowerCase(),
+          brand: getCellData(row, 'brand').toLowerCase().trim(),
+          model: getCellData(row, 'model').toLowerCase(),
+          totalQuantity: parseInt(getCellData(row, 'totalQuantity') || 0),
+          availableQuantity: parseInt(getCellData(row, 'availableQuantity') || 0),
+          dateAcquired: getCellData(row, 'dateAcquired').trim(),
+          status: getCellData(row, 'status').trim(),
+          deletedBy: getCellData(row, 'deletedBy').trim(),
+          deletedDate: getCellData(row, 'deletedDate').trim(),
+          deletedTime: getCellData(row, 'deletedTime').trim(),
+          itemId: itemId,
+          dateValue: parseTableDate(getCellData(row, 'dateAcquired').trim()),
+          deletedDateValue: parseTableDate(getCellData(row, 'deletedDate').trim())
       };
   });
   
@@ -262,16 +317,14 @@ function initializeTable() {
 }
 
 // =============================================
-// TABLE DISPLAY & PAGINATION
+// TABLE DISPLAY & PAGINATION - OPTIMIZED
 // =============================================
 function displayPage(page = 1) {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
     requestAnimationFrame(() => {
-        allRows.forEach(row => {
-            row.style.display = "none";
-        });
+        allRows.forEach(row => row.style.display = "none");
         
         for (let i = start; i < Math.min(end, filteredRows.length); i++) {
             if (filteredRows[i]) {
@@ -286,7 +339,6 @@ function displayPage(page = 1) {
             setTimeout(() => {
                 const targetRow = document.querySelector(`tr[data-item-id="${targetDeletedItemId}"]`);
                 if (targetRow && targetRow.style.display !== 'none') {
-                    console.log('Highlighting deleted item on page change');
                     targetRow.classList.add('highlight-item');
                 }
             }, 200);
@@ -304,11 +356,9 @@ function updatePagination(page) {
   }
   
   domElements.pagination.style.display = "flex";
-  
-  const currentHTML = domElements.pagination.innerHTML;
   const newHTML = generatePaginationHTML(page, totalPages);
   
-  if (currentHTML !== newHTML) {
+  if (domElements.pagination.innerHTML !== newHTML) {
       domElements.pagination.innerHTML = newHTML;
       attachPaginationEvents(page, totalPages);
   }
@@ -318,24 +368,20 @@ function generatePaginationHTML(page, totalPages) {
   let html = '';
   const range = 2;
   
+  // First and previous buttons
   if (page > 1) {
       html += `<a href="#" class="prev-next" data-page="1" title="First page"><i class="fas fa-angle-double-left"></i></a>`;
-  }
-  
-  if (page > 1) {
       html += `<a href="#" class="prev-next" data-page="${page - 1}" title="Previous page"><i class="fas fa-chevron-left"></i></a>`;
   }
   
+  // Page numbers
   for (let i = Math.max(1, page - range); i <= Math.min(totalPages, page + range); i++) {
-      const activeClass = i === page ? "active" : "";
-      html += `<a href="#" class="${activeClass}" data-page="${i}">${i}</a>`;
+      html += `<a href="#" class="${i === page ? 'active' : ''}" data-page="${i}">${i}</a>`;
   }
   
+  // Next and last buttons
   if (page < totalPages) {
       html += `<a href="#" class="prev-next" data-page="${page + 1}" title="Next page"><i class="fas fa-chevron-right"></i></a>`;
-  }
-  
-  if (page < totalPages) {
       html += `<a href="#" class="prev-next" data-page="${totalPages}" title="Last page"><i class="fas fa-angle-double-right"></i></a>`;
   }
   
@@ -356,7 +402,7 @@ function attachPaginationEvents(page, totalPages) {
 }
 
 // =============================================
-// FILTERING & SEARCH
+// FILTERING & SEARCH - NEW PATTERN
 // =============================================
 function filterItems() {
   const filterKey = generateFilterKey();
@@ -367,96 +413,199 @@ function filterItems() {
       return;
   }
   
-  const searchValue = (domElements.searchInput?.value || '').toLowerCase();
-
   requestAnimationFrame(() => {
-      filteredRows = allRows.filter(row => {
-          const data = row._data;
-          
-          if (currentFilters.category.length > 0 && !currentFilters.category.includes(data.category)) {
-              return false;
-          }
-          
-          if (currentFilters.quantity === "out" && data.quantity !== 0) return false;
-          if (currentFilters.quantity === "available" && data.quantity <= 0) return false;
-          
-          if (currentFilters.dateFrom || currentFilters.dateTo) {
-              const itemDate = parseTableDate(data.dateAcquired);
-              if (!itemDate) return false;
-              
-              if (currentFilters.dateFrom) {
-                  const fromDate = new Date(currentFilters.dateFrom);
-                  fromDate.setHours(0, 0, 0, 0);
-                  if (itemDate < fromDate) return false;
-              }
-              
-              if (currentFilters.dateTo) {
-                  const toDate = new Date(currentFilters.dateTo);
-                  toDate.setHours(23, 59, 59, 999);
-                  if (itemDate > toDate) return false;
-              }
-          }
-          
-          if (currentFilters.deletedDateFrom || currentFilters.deletedDateTo) {
-              const deletedDate = parseTableDate(data.deletedDate);
-              if (!deletedDate) return false;
-              
-              if (currentFilters.deletedDateFrom) {
-                  const fromDate = new Date(currentFilters.deletedDateFrom);
-                  fromDate.setHours(0, 0, 0, 0);
-                  if (deletedDate < fromDate) return false;
-              }
-              
-              if (currentFilters.deletedDateTo) {
-                  const toDate = new Date(currentFilters.deletedDateTo);
-                  toDate.setHours(23, 59, 59, 999);
-                  if (deletedDate > toDate) return false;
-              }
-          }
-          
-          if (currentFilters.deletedBy.length > 0) {
-              const matches = currentFilters.deletedBy.some(filterDeletedBy => 
-                  data.deletedBy.includes(filterDeletedBy.toLowerCase())
-              );
-              if (!matches) return false;
-          }
-          
-          if (searchValue && !(
-              data.itemName.includes(searchValue) || 
-              data.model.includes(searchValue) || 
-              data.brand.includes(searchValue) ||
-              data.serialNumber.includes(searchValue) ||
-              data.category.includes(searchValue) ||
-              data.deletedBy.includes(searchValue)
-          )) {
-              return false;
-          }
-          
-          return true;
-      });
+      applyFiltersAndSort();
       
-      if (filterCache.size > 50) filterCache.clear(); 
+      // Cache management
+      if (filterCache.size > 50) filterCache.clear();
       filterCache.set(filterKey, filteredRows);
       
       updateDisplay();
   });
 }
 
-function generateFilterKey() {
-  const searchValue = domElements.searchInput?.value || '';
-  return `${currentFilters.category.join(',')}|${currentFilters.quantity}|${currentFilters.dateFrom}|${currentFilters.dateTo}|${currentFilters.deletedBy}|${currentFilters.deletedDateFrom}|${currentFilters.deletedDateTo}|${searchValue}`;
+function applyFiltersAndSort() {
+  const searchValue = (domElements.searchInput?.value || '').toLowerCase();
+  
+  console.log('=== APPLYING FILTERS AND SORT ===');
+  console.log('Current filters:', currentFilters);
+  console.log('Current sort:', currentSort);
+  
+  // First apply all filters from the full dataset
+  filteredRows = allRows.filter(row => {
+      const data = row._data;
+      
+      // Category filter
+      if (currentFilters.category.length > 0 && !currentFilters.category.includes(data.category)) {
+          return false;
+      }
+      
+      // Quantity filter - FIXED: Now using availableQuantity
+      if (currentFilters.quantity === "out" && data.availableQuantity !== 0) return false;
+      if (currentFilters.quantity === "available" && data.availableQuantity <= 0) return false;
+      
+      // Date acquired filter
+      if (!passesDateFilter(data.dateAcquired)) return false;
+      
+      // Deleted date filter
+      if (!passesDeletedDateFilter(data.deletedDate)) return false;
+      
+      // Deleted by filter - CASE INSENSITIVE FIX
+      if (currentFilters.deletedBy.length > 0) {
+          const rowDeletedBy = data.deletedBy.toLowerCase().trim();
+          let matches = false;
+          for (const filterName of currentFilters.deletedBy) {
+              if (rowDeletedBy.includes(filterName.toLowerCase())) {
+                  matches = true;
+                  break;
+              }
+          }
+          if (!matches) {
+              console.log('Filtered out by deletedBy:', data.itemName, 'deletedBy:', data.deletedBy);
+              return false;
+          }
+      }
+      
+      // Search filter
+      if (searchValue && !passesSearchFilter(data, searchValue)) return false;
+      
+      return true;
+  });
+  
+  console.log('After filtering:', filteredRows.length, 'rows');
+  
+  // Then apply current sort if exists
+  if (currentSort.field) {
+      applyCurrentSort();
+  }
 }
 
-function updateDisplay() {
-  updateRowNumbers();
-  showNoResultsMessage(filteredRows.length === 0);
-  thisCurrentPage = 1;
-  displayPage(thisCurrentPage);
-  updateItemCounts();
+function passesDateFilter(dateAcquired) {
+  if (!currentFilters.dateFrom && !currentFilters.dateTo) return true;
+  
+  const itemDate = parseTableDate(dateAcquired);
+  if (!itemDate) return false;
+  
+  if (currentFilters.dateFrom) {
+      const fromDate = new Date(currentFilters.dateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      if (itemDate < fromDate) return false;
+  }
+  
+  if (currentFilters.dateTo) {
+      const toDate = new Date(currentFilters.dateTo);
+      toDate.setHours(23, 59, 59, 999);
+      if (itemDate > toDate) return false;
+  }
+  
+  return true;
+}
+
+function passesDeletedDateFilter(deletedDate) {
+  if (!currentFilters.deletedDateFrom && !currentFilters.deletedDateTo) return true;
+  
+  const itemDeletedDate = parseTableDate(deletedDate);
+  if (!itemDeletedDate) return false;
+  
+  if (currentFilters.deletedDateFrom) {
+      const fromDate = new Date(currentFilters.deletedDateFrom);
+      fromDate.setHours(0, 0, 0, 0);
+      if (itemDeletedDate < fromDate) return false;
+  }
+  
+  if (currentFilters.deletedDateTo) {
+      const toDate = new Date(currentFilters.deletedDateTo);
+      toDate.setHours(23, 59, 59, 999);
+      if (itemDeletedDate > toDate) return false;
+  }
+  
+  return true;
+}
+
+function passesSearchFilter(data, searchValue) {
+  return data.itemId.includes(searchValue) ||
+         data.itemName.includes(searchValue) || 
+         data.model.includes(searchValue) || 
+         data.brand.includes(searchValue) ||
+         data.serialNumber.includes(searchValue) ||
+         data.category.includes(searchValue) ||
+         data.deletedBy.includes(searchValue);
+}
+
+function generateFilterKey() {
+  const searchValue = domElements.searchInput?.value || '';
+  return `${currentFilters.category.join(',')}|${currentFilters.quantity}|${currentFilters.dateFrom}|${currentFilters.dateTo}|${currentFilters.deletedBy.join(',')}|${currentFilters.deletedDateFrom}|${currentFilters.deletedDateTo}|${searchValue}|${currentSort.field}|${currentSort.order}`;
 }
 
 // =============================================
-// FILTER CONTROLS
+// SORTING FUNCTIONS - NEW PATTERN
+// =============================================
+function sortByQuantity(order = "asc") {
+  console.log('=== SORTING BY QUANTITY ===');
+  console.log('Current filters:', currentFilters);
+  console.log('Current sort:', currentSort);
+  
+  // Update sort state
+  currentSort.field = 'availableQuantity';
+  currentSort.order = order;
+  
+  // Clear cache since we're changing sort
+  filterCache.clear();
+  
+  // Re-apply current filters with new sort order
+  applyFiltersAndSort();
+  
+  // Reset to first page and update display
+  thisCurrentPage = 1;
+  updateTableDOM();
+  updateItemCounts();
+}
+
+function applyCurrentSort() {
+  if (!currentSort.field) return;
+  
+  console.log('Applying sort:', currentSort);
+  
+  filteredRows.sort((a, b) => {
+      const aVal = a._data[currentSort.field];
+      const bVal = b._data[currentSort.field];
+      
+      // Handle numeric sorting for quantities
+      if (currentSort.field === 'availableQuantity') {
+          const numA = parseInt(aVal) || 0;
+          const numB = parseInt(bVal) || 0;
+          const result = currentSort.order === "asc" ? numA - numB : numB - numA;
+          console.log(`Sorting: ${numA} vs ${numB} = ${result}`);
+          return result;
+      }
+      
+      // Default string sorting for other fields
+      if (aVal < bVal) return currentSort.order === "asc" ? -1 : 1;
+      if (aVal > bVal) return currentSort.order === "asc" ? 1 : -1;
+      return 0;
+  });
+  
+  console.log('First 5 items after sort:', filteredRows.slice(0, 5).map(r => r._data.availableQuantity));
+}
+
+function updateTableDOM() {
+  const tableBody = document.getElementById("inventoryTableBody");
+  
+  console.log('Updating table DOM with', filteredRows.length, 'rows');
+  console.log('Current sort:', currentSort);
+  console.log('Current filters:', currentFilters);
+  
+  // Clear and rebuild table in correct order
+  tableBody.innerHTML = '';
+  filteredRows.forEach(row => tableBody.appendChild(row));
+  
+  // Update display
+  updateRowNumbers();
+  displayPage(thisCurrentPage);
+}
+
+// =============================================
+// FILTER CONTROLS WITH CLOSE ON APPLY
 // =============================================
 function initFilterControls() {
   const filterToggles = [
@@ -474,12 +623,13 @@ function initFilterControls() {
       });
   }
 
+  // Global click handler for filter toggles
   document.addEventListener('click', function(e) {
       const toggle = e.target.closest('[id^="toggle"]');
       if (toggle) {
           e.stopPropagation();
           const filterConfig = filterToggles.find(f => f.id === toggle.id);
-          if (filterConfig && filterConfig.container) {
+          if (filterConfig?.container) {
               const isHidden = filterConfig.container.classList.contains("hidden");
               closeAllFilters();
               if (isHidden) {
@@ -491,117 +641,17 @@ function initFilterControls() {
       }
   });
 
-  document.getElementById("filterByDeletedDateBtn")?.addEventListener("click", () => {
-    currentFilters.deletedDateFrom = domElements.deletedDateFrom.value;
-    currentFilters.deletedDateTo = domElements.deletedDateTo.value;
-    filterItems();
-    closeAllFilters();
-});
-
-  document.getElementById("resetDeletedDateFilterBtn")?.addEventListener("click", () => {
-        domElements.deletedDateFrom.value = "";
-        domElements.deletedDateTo.value = "";
-        currentFilters.deletedDateFrom = "";
-        currentFilters.deletedDateTo = "";
-        filterItems();
-        closeAllFilters();
-    });
-
+  // Prevent filter containers from closing when clicked
   filterToggles.forEach(({ container }) => {
       container?.addEventListener('click', e => e.stopPropagation());
   });
 
-  // Category filter handlers
-  document.getElementById("filterByCategoryBtn")?.addEventListener("click", () => {
-      const categoryCheckboxes = document.querySelectorAll('input[name="categoryFilter"]:checked');
-      currentFilters.category = Array.from(categoryCheckboxes).map(cb => cb.value.toLowerCase());
-      filterItems();
-      closeAllFilters();
-  });
-
-  document.getElementById("resetCategoryFilterBtn")?.addEventListener("click", () => {
-      document.querySelectorAll('input[name="categoryFilter"]').forEach(cb => cb.checked = false);
-      currentFilters.category = [];
-      filterItems();
-      closeAllFilters();
-  });
-
-  // Quantity filter handlers
-  document.getElementById("sortLowToHigh")?.addEventListener("click", () => {
-      sortByQuantity("asc");
-      closeAllFilters();
-  });
-
-  document.getElementById("sortHighToLow")?.addEventListener("click", () => {
-      sortByQuantity("desc");
-      closeAllFilters();
-  });
-
-  document.getElementById("showAvailable")?.addEventListener("click", () => {
-      currentFilters.quantity = "available";
-      filterItems();
-      closeAllFilters();
-  });
-
-  document.getElementById("showOutOfStock")?.addEventListener("click", () => {
-      currentFilters.quantity = "out";
-      filterItems();
-      closeAllFilters();
-  });
-
-  document.getElementById("resetQuantityFilter")?.addEventListener("click", () => {
-      currentFilters.quantity = "";
-      filterItems();
-      closeAllFilters();
-  });
-
-  // Date acquired filter
-  document.getElementById("filterByDateBtn")?.addEventListener("click", () => {
-      currentFilters.dateFrom = domElements.dateFrom.value;
-      currentFilters.dateTo = domElements.dateTo.value;
-      filterItems();
-      closeAllFilters();
-  });
-
-  document.getElementById("resetDateFilterBtn")?.addEventListener("click", () => {
-      domElements.dateFrom.value = "";
-      domElements.dateTo.value = "";
-      currentFilters.dateFrom = "";
-      currentFilters.dateTo = "";
-      filterItems();
-      closeAllFilters();
-  });
-
-  document.getElementById("filterByDeletedByBtn")?.addEventListener("click", () => {
-    const deletedByCheckboxes = document.querySelectorAll('input[name="deletedByFilter"]:checked');
-    currentFilters.deletedBy = Array.from(deletedByCheckboxes).map(cb => cb.value.toLowerCase());
-    filterItems();
-    closeAllFilters();
-});
-
-  document.getElementById("resetDeletedDateFilterBtn")?.addEventListener("click", () => {
-      domElements.deletedDateFrom.value = "";
-      domElements.deletedDateTo.value = "";
-      currentFilters.deletedDateFrom = "";
-      currentFilters.deletedDateTo = "";
-      filterItems();
-      closeAllFilters();
-  });
-
-  // Deleted by filter
-  document.getElementById("filterByDeletedByBtn")?.addEventListener("click", () => {
-      const deletedByInput = document.getElementById("deletedBySearch");
-      currentFilters.deletedBy = deletedByInput.value;
-      filterItems();
-      closeAllFilters();
-  });
-
-  document.getElementById("resetDeletedByBtn")?.addEventListener("click", () => {
-    document.querySelectorAll('input[name="deletedByFilter"]').forEach(cb => cb.checked = false);
-    currentFilters.deletedBy = [];
-    filterItems();
-    closeAllFilters();
-});
+  // Setup individual filter handlers
+  setupCategoryFilters();
+  setupQuantityFilters();
+  setupDateFilters();
+  setupDeletedDateFilters();
+  setupDeletedByFilters();
 
   // Reset all filters
   document.getElementById("resetAllFiltersBtn")?.addEventListener("click", resetAllFilters);
@@ -609,32 +659,128 @@ function initFilterControls() {
   // Search functionality
   domElements.searchInput?.addEventListener("input", () => {
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-          filterItems();
-      }, 200);
+      debounceTimer = setTimeout(() => filterItems(), 150);
   });
 
-  // Rows per page selector
-  if (domElements.rowsPerPageSelect) {
-      domElements.rowsPerPageSelect.addEventListener('change', function() {
-          rowsPerPage = parseInt(this.value);
-          thisCurrentPage = 1;
-          displayPage(thisCurrentPage);
-          updateItemCounts();
-          
-          localStorage.setItem('deletedItemsTableRowsPerPage', this.value);
+  function setupCategoryFilters() {
+      document.getElementById("filterByCategoryBtn")?.addEventListener("click", () => {
+          const categoryCheckboxes = document.querySelectorAll('input[name="categoryFilter"]:checked');
+          currentFilters.category = Array.from(categoryCheckboxes).map(cb => cb.value.toLowerCase());
+          filterItems();
+          closeAllFilters();
       });
-      
-      const savedRowsPerPage = localStorage.getItem('deletedItemsTableRowsPerPage');
-    if (savedRowsPerPage) {
-        domElements.rowsPerPageSelect.value = savedRowsPerPage;
-        rowsPerPage = parseInt(savedRowsPerPage);
-    }
+
+      document.getElementById("resetCategoryFilterBtn")?.addEventListener("click", () => {
+          document.querySelectorAll('input[name="categoryFilter"]').forEach(cb => cb.checked = false);
+          currentFilters.category = [];
+          filterItems();
+          closeAllFilters();
+      });
+  }
+
+  function setupQuantityFilters() {
+      document.getElementById("sortLowToHigh")?.addEventListener("click", () => {
+          sortByQuantity("asc");
+          closeAllFilters();
+      });
+
+      document.getElementById("sortHighToLow")?.addEventListener("click", () => {
+          sortByQuantity("desc");
+          closeAllFilters();
+      });
+  }
+
+  function setupDateFilters() {
+      document.getElementById("filterByDateBtn")?.addEventListener("click", () => {
+          currentFilters.dateFrom = domElements.dateFrom.value;
+          currentFilters.dateTo = domElements.dateTo.value;
+          filterItems();
+          closeAllFilters();
+      });
+
+      document.getElementById("resetDateFilterBtn")?.addEventListener("click", () => {
+          domElements.dateFrom.value = "";
+          domElements.dateTo.value = "";
+          currentFilters.dateFrom = "";
+          currentFilters.dateTo = "";
+          filterItems();
+          closeAllFilters();
+      });
+  }
+
+  function setupDeletedDateFilters() {
+      document.getElementById("filterByDeletedDateBtn")?.addEventListener("click", () => {
+          currentFilters.deletedDateFrom = domElements.deletedDateFrom.value;
+          currentFilters.deletedDateTo = domElements.deletedDateTo.value;
+          filterItems();
+          closeAllFilters();
+      });
+
+      document.getElementById("resetDeletedDateFilterBtn")?.addEventListener("click", () => {
+          domElements.deletedDateFrom.value = "";
+          domElements.deletedDateTo.value = "";
+          currentFilters.deletedDateFrom = "";
+          currentFilters.deletedDateTo = "";
+          filterItems();
+          closeAllFilters();
+      });
+  }
+
+  function setupDeletedByFilters() {
+      document.getElementById("filterByDeletedByBtn")?.addEventListener("click", () => {
+          const deletedByCheckboxes = document.querySelectorAll('input[name="deletedByFilter"]:checked');
+          currentFilters.deletedBy = Array.from(deletedByCheckboxes).map(cb => cb.value.toLowerCase());
+          filterItems();
+          closeAllFilters();
+      });
+
+      document.getElementById("resetDeletedByBtn")?.addEventListener("click", () => {
+          document.querySelectorAll('input[name="deletedByFilter"]').forEach(cb => cb.checked = false);
+          currentFilters.deletedBy = [];
+          filterItems();
+          closeAllFilters();
+      });
   }
 }
 
+function resetAllFilters() {
+  // Reset category filter
+  document.querySelectorAll('input[name="categoryFilter"]').forEach(cb => cb.checked = false);
+  currentFilters.category = [];
+  
+  // Reset deleted by filter
+  document.querySelectorAll('input[name="deletedByFilter"]').forEach(cb => cb.checked = false);
+  currentFilters.deletedBy = [];
+  
+  // Reset quantity filter
+  currentFilters.quantity = "";
+  
+  // Reset date filters
+  domElements.dateFrom.value = "";
+  domElements.dateTo.value = "";
+  currentFilters.dateFrom = "";
+  currentFilters.dateTo = "";
+  
+  // Reset deleted date filters
+  domElements.deletedDateFrom.value = "";
+  domElements.deletedDateTo.value = "";
+  currentFilters.deletedDateFrom = "";
+  currentFilters.deletedDateTo = "";
+  
+  // Reset search
+  domElements.searchInput.value = "";
+  
+  // Clear sort when resetting all filters
+  currentSort.field = null;
+  currentSort.order = null;
+  
+  filterCache.clear();
+  dateCache.clear();
+  filterItems();
+}
+
 // =============================================
-// COLUMN FILTERING
+// COLUMN FILTERING - OPTIMIZED
 // =============================================
 const columnFilterKey = "deletedItemsColumnFilterSettings";
 
@@ -642,13 +788,8 @@ function restoreColumnSettings() {
   const savedSettings = JSON.parse(localStorage.getItem(columnFilterKey)) || {};
   document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
     const colIndex = cb.getAttribute("data-column");
-    if (savedSettings[colIndex] === false) {
-      cb.checked = false;
-      toggleColumnVisibility(parseInt(colIndex), false);
-    } else {
-      cb.checked = true;
-      toggleColumnVisibility(parseInt(colIndex), true);
-    }
+    cb.checked = savedSettings[colIndex] !== false;
+    cb.dispatchEvent(new Event("change"));
   });
 }
 
@@ -721,45 +862,38 @@ function populateCategoryFilters() {
   });
 }
 
-function sortByQuantity(order = "asc") {
-  filteredRows.sort((a, b) => {
-      const qA = a._data.quantity;
-      const qB = b._data.quantity;
-      return order === "asc" ? qA - qB : qB - qA;
-  });
-
+function updateDisplay() {
   updateRowNumbers();
+  showNoResultsMessage(filteredRows.length === 0);
+  
+  if (!isRedirectingToDeletedItem) {
+      thisCurrentPage = 1;
+  }
+  
   displayPage(thisCurrentPage);
   updateItemCounts();
 }
 
-function resetAllFilters() {
-  document.querySelectorAll('input[name="categoryFilter"]').forEach(cb => cb.checked = false);
-  document.querySelectorAll('input[name="deletedByFilter"]').forEach(cb => cb.checked = false);
-  currentFilters.category = [];
-  currentFilters.deletedBy = [];
+function updateRowNumbers() {
+  filteredRows.forEach((row, index) => {
+      const cell = row.cells[columnMap.rowNumber || 0];
+      if (cell) {
+          cell.textContent = index + 1;
+      }
+  });
+}
+
+function showNoResultsMessage(show) {
+  let noResultsRow = document.getElementById('noResultsMessage');
   
-  currentFilters.quantity = "";
-  
-  domElements.dateFrom.value = "";
-  domElements.dateTo.value = "";
-  currentFilters.dateFrom = "";
-  currentFilters.dateTo = "";
-  
-  domElements.deletedDateFrom.value = "";
-  domElements.deletedDateTo.value = "";
-  currentFilters.deletedDateFrom = "";
-  currentFilters.deletedDateTo = "";
-  
-  const deletedByInput = document.getElementById("deletedBySearch");
-  if (deletedByInput) deletedByInput.value = "";
-  currentFilters.deletedBy = "";
-  
-  domElements.searchInput.value = "";
-  
-  filterCache.clear();
-  dateCache.clear();
-  filterItems();
+  if (show && !noResultsRow) {
+      noResultsRow = document.createElement("tr");
+      noResultsRow.id = 'noResultsMessage';
+      noResultsRow.innerHTML = `<td colspan="17" style="text-align:center; color:#666; padding:20px;">No deleted items found matching your filters.</td>`;
+      domElements.tableBody.appendChild(noResultsRow);
+  } else if (!show && noResultsRow) {
+      noResultsRow.remove();
+  }
 }
 
 function updateItemCounts() {
@@ -770,20 +904,83 @@ function updateItemCounts() {
   updateCountElement('totalItemsCount', totalItems);
   updateCountElement('totalItemsCount2', totalItems);
   updateCountElement('visibleItemsCount', filteredItems);
+  updateCountElement('visibleCount', filteredItems);
+  updateCountElement('totalCount', totalItems);
+  updateCountElement('displayedCount', filteredItems);
+  updateCountElement('totalItems', totalItems);
   
   const filteredCountElement = document.getElementById('filteredItemsCount');
   if (filteredCountElement) {
       filteredCountElement.style.display = isFiltered ? 'inline' : 'none';
   }
   
+  updateActiveFiltersDisplay();
   updatePageInfo();
 }
 
-function updateCountElement(elementId, count) {
-  const element = document.getElementById(elementId);
-  if (element) {
-      element.textContent = count;
+function updateActiveFiltersDisplay() {
+    const activeFiltersElement = document.getElementById('activeFilters');
+    if (!activeFiltersElement) return;
+    
+    const activeFilters = [];
+    
+    // Check category filters
+    if (currentFilters.category.length > 0) {
+        activeFilters.push(`Category: ${currentFilters.category.length} selected`);
+    }
+    
+    // Check quantity filter
+    if (currentFilters.quantity === "out") {
+        activeFilters.push("Out of Stock");
+    } else if (currentFilters.quantity === "available") {
+        activeFilters.push("Available");
+    }
+    
+    // Check date filters
+    if (currentFilters.dateFrom || currentFilters.dateTo) {
+        activeFilters.push(`Date Acquired: ${currentFilters.dateFrom || 'any'} to ${currentFilters.dateTo || 'any'}`);
+    }
+    
+    // Check deleted date filters
+    if (currentFilters.deletedDateFrom || currentFilters.deletedDateTo) {
+        activeFilters.push(`Deleted Date: ${currentFilters.deletedDateFrom || 'any'} to ${currentFilters.deletedDateTo || 'any'}`);
+    }
+    
+    // Check deleted by filters
+  // In the applyFiltersAndSort function, update the deleted by filter section:
+if (currentFilters.deletedBy.length > 0) {
+  const rowDeletedBy = data.deletedBy.toLowerCase().trim();
+  let matches = false;
+  for (const filterName of currentFilters.deletedBy) {
+      if (rowDeletedBy.includes(filterName.toLowerCase())) {
+          matches = true;
+          break;
+      }
   }
+  if (!matches) {
+      return false;
+  }
+}
+    
+    // Check search
+    const searchValue = domElements.searchInput?.value || '';
+    if (searchValue) {
+        activeFilters.push(`Search: "${searchValue}"`);
+    }
+    
+    // Check sort
+    if (currentSort.field) {
+        const sortDirection = currentSort.order === "asc" ? "Low to High" : "High to Low";
+        activeFilters.push(`Sorted by: Quantity (${sortDirection})`);
+    }
+    
+    if (activeFilters.length > 0) {
+        activeFiltersElement.innerHTML = `<strong>Active filters:</strong> ${activeFilters.join(' • ')}`;
+        activeFiltersElement.style.color = '#495057';
+    } else {
+        activeFiltersElement.innerHTML = 'No active filters';
+        activeFiltersElement.style.color = '#6c757d';
+    }
 }
 
 function updatePageInfo() {
@@ -793,46 +990,25 @@ function updatePageInfo() {
   
   const pageInfoElement = document.getElementById('pageInfo');
   if (pageInfoElement) {
-      if (totalItems > 0) {
-          pageInfoElement.textContent = `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`;
-      } else {
-          pageInfoElement.textContent = 'No entries to show';
-      }
+      pageInfoElement.textContent = totalItems > 0 
+          ? `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`
+          : 'No entries to show';
   }
 }
 
-function updateRowNumbers() {
-  const startIndex = (thisCurrentPage - 1) * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, filteredRows.length);
-  
-  for (let i = startIndex; i < endIndex; i++) {
-      const row = filteredRows[i];
-      const cell = row.cells[0];
-      if (cell.textContent !== (i + 1).toString()) {
-          cell.textContent = i + 1;
-      }
-  }
-}
-
-function showNoResultsMessage(show) {
-  let noResultsRow = document.getElementById('noResultsMessage');
-  
-  if (show && !noResultsRow) {
-      noResultsRow = document.createElement("tr");
-      noResultsRow.id = 'noResultsMessage';
-      noResultsRow.innerHTML = `<td colspan="13" style="text-align:center; color:#666; padding:20px;">No deleted items found matching your filters.</td>`;
-      domElements.tableBody.appendChild(noResultsRow);
-  } else if (!show && noResultsRow) {
-      noResultsRow.remove();
+function updateCountElement(elementId, count) {
+  const element = document.getElementById(elementId);
+  if (element) {
+      element.textContent = count;
   }
 }
 
 // =============================================
-// DATE PARSING
+// DATE PARSING - OPTIMIZED
 // =============================================
 const dateCache = new Map();
 function parseTableDate(dateString) {
-    if (!dateString || dateString === 'N/A' || dateString === '—' || dateString === '') {
+    if (!dateString || ['N/A', '—', ''].includes(dateString)) {
         return null;
     }
     
@@ -843,6 +1019,7 @@ function parseTableDate(dateString) {
     try {
         let result = null;
         
+        // Format: "Mar-15-2024"
         if (dateString.match(/^[A-Za-z]{3}-\d{1,2}-\d{4}$/)) {
             const monthNames = {
                 "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
@@ -855,18 +1032,22 @@ function parseTableDate(dateString) {
             
             if (month !== undefined && !isNaN(day) && !isNaN(year)) {
                 result = new Date(year, month, day);
+                // Validate date
                 if (result.getDate() !== day || result.getMonth() !== month || result.getFullYear() !== year) {
                     result = null;
                 }
             }
         }
+        // Format: "2024-03-15" (ISO)
         else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
             result = new Date(dateString);
         }
+        // Try native parsing
         else {
             result = new Date(dateString);
         }
         
+        // Final validation
         if (!result || isNaN(result.getTime())) {
             console.warn('Invalid date:', dateString);
             result = null;
@@ -987,6 +1168,7 @@ function handleViewItem(viewBtn) {
   setContent("view-item-model", viewBtn.dataset.model);
   setContent("view-item-serial", viewBtn.dataset.serial);
   setContent("view-item-quantity", viewBtn.dataset.qty);
+  setContent("view-available-quantity", viewBtn.dataset.availableQty);
   setContent("view-item-unit", viewBtn.dataset.unit);
   setContent("view-item-unit-cost", viewBtn.dataset.unitcost);
   setContent("view-item-total-cost", viewBtn.dataset.totalcost);
