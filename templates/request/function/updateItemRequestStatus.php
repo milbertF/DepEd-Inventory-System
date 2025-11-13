@@ -24,7 +24,7 @@ if (!isset($input['actions']) || !is_array($input['actions']) || empty($input['a
     exit;
 }
 
-// ADDED: 6-digit log ID generation function
+// 6-digit log ID generation function
 function generateLogID($conn) {
     do {
         $id = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -118,7 +118,7 @@ try {
         
         $validTransitions = [
             'pending' => ['approve', 'decline'],
-            'approved' => ['release', 'decline'],
+            'approved' => ['release', 'decline','void'],
             'released' => ['return', 'void'],
             'returned' => ['release', 'void'],
             'declined' => ['approve'],
@@ -156,12 +156,12 @@ try {
         if ($updateStmt->execute()) {
             $successCount++;
             
-            // ADDED: Generate 6-digit log ID and log the action
+            // Generate 6-digit log ID and log the action
             $logId = generateLogID($conn);
             $logMessage = getLogMessage($actionType, $itemName, $currentStatus, $newStatus, $requestedQty);
             logAction($conn, $logId, $reqItemId, $requestId, $itemId, $itemName, $requesterUserId, $actionType, $logMessage, $currentUserId);
             
-            // UPDATED: Handle inventory quantity changes using available_quantity
+            // Handle inventory quantity changes using available_quantity
             if ($actionType === 'release') {
                 // Subtract the requested quantity from available_quantity (borrowable quantity)
                 $deductStmt = $conn->prepare("
@@ -194,7 +194,7 @@ try {
                 if ($restoreStmt) {
                     $restoreStmt->bind_param('ii', $requestedQty, $itemId);
                     if ($restoreStmt->execute()) {
-                        // NEW: Ensure quantity is never lower than available_quantity
+                        // Ensure quantity is never lower than available_quantity
                         $syncStmt = $conn->prepare("
                             UPDATE deped_inventory_items 
                             SET total_quantity = GREATEST(total_quantity, available_quantity) 
@@ -226,6 +226,67 @@ try {
                         }
                     } else {
                         $errors[] = "Failed to restore quantity for item '{$itemName}': " . $restoreStmt->error;
+                        $successCount--; // Decrement success count since inventory update failed
+                    }
+                    $restoreStmt->close();
+                }
+            } elseif ($actionType === 'void' && $currentStatus === 'released') {
+                // NEW: Handle void action when item was previously released - restore the quantity
+                $restoreStmt = $conn->prepare("
+                    UPDATE deped_inventory_items 
+                    SET available_quantity = available_quantity + ? 
+                    WHERE item_id = ?
+                ");
+                
+                if ($restoreStmt) {
+                    $restoreStmt->bind_param('ii', $requestedQty, $itemId);
+                    if ($restoreStmt->execute()) {
+                        // Ensure quantity is never lower than available_quantity
+                        $syncStmt = $conn->prepare("
+                            UPDATE deped_inventory_items 
+                            SET total_quantity = GREATEST(total_quantity, available_quantity) 
+                            WHERE item_id = ? AND total_quantity < available_quantity
+                        ");
+                        
+                        if ($syncStmt) {
+                            $syncStmt->bind_param('i', $itemId);
+                            $syncStmt->execute();
+                            
+                            // Check if quantity was adjusted
+                            if ($syncStmt->affected_rows > 0) {
+                                $logMessage .= " (Quantity auto-adjusted to match available_quantity)";
+                                
+                                // Update the log with the corrected message
+                                $updateLogStmt = $conn->prepare("
+                                    UPDATE deped_inventory_request_logs 
+                                    SET message = ? 
+                                    WHERE log_id = ?
+                                ");
+                                
+                                if ($updateLogStmt) {
+                                    $updateLogStmt->bind_param('ss', $logMessage, $logId);
+                                    $updateLogStmt->execute();
+                                    $updateLogStmt->close();
+                                }
+                            }
+                            $syncStmt->close();
+                        }
+                        
+                        // Update the log message to reflect that quantity was restored
+                        $logMessage .= " - Quantity restored: {$requestedQty}";
+                        $updateLogStmt = $conn->prepare("
+                            UPDATE deped_inventory_request_logs 
+                            SET message = ? 
+                            WHERE log_id = ?
+                        ");
+                        
+                        if ($updateLogStmt) {
+                            $updateLogStmt->bind_param('ss', $logMessage, $logId);
+                            $updateLogStmt->execute();
+                            $updateLogStmt->close();
+                        }
+                    } else {
+                        $errors[] = "Failed to restore quantity for voided item '{$itemName}': " . $restoreStmt->error;
                         $successCount--; // Decrement success count since inventory update failed
                     }
                     $restoreStmt->close();
@@ -270,6 +331,8 @@ try {
                 $overallStatus = 'Approved';
             } elseif (isset($statusCounts['Returned']) && $statusCounts['Returned'] === $totalItems) {
                 $overallStatus = 'Returned';
+            } elseif (isset($statusCounts['Void']) && $statusCounts['Void'] === $totalItems) {
+                $overallStatus = 'Void';
             }
             
             $updateReqStmt = $conn->prepare("
@@ -318,7 +381,7 @@ try {
     ]);
 }
 
-// ADDED: Logging functions
+// Logging functions
 function getLogMessage($actionType, $itemName, $oldStatus, $newStatus, $quantity) {
     $actionMessages = [
         'approve' => "Item '{$itemName}' was approved. Status changed from {$oldStatus} to {$newStatus}",

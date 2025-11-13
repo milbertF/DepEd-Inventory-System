@@ -372,8 +372,17 @@ function applyFiltersAndSort() {
     
     console.log('After filtering:', filteredRows.length, 'rows');
     
-    // Then apply current sort if exists
+    // Then apply current sort if exists - FIX: Force re-sort
     if (currentSort.field) {
+        console.log('Re-applying sort after filtering');
+        // Clear and reapply sort to ensure it works
+        const savedSort = { ...currentSort };
+        currentSort.field = null;
+        currentSort.order = null;
+        
+        // Now reapply the sort properly
+        currentSort.field = savedSort.field;
+        currentSort.order = savedSort.order;
         applyCurrentSort();
     }
 }
@@ -560,12 +569,16 @@ function updateTableDOM() {
 function displayPage(page = 1) {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
+    
+    const startTime = performance.now();
 
     requestAnimationFrame(() => {
-        // Hide all rows first
-        allRows.forEach(row => row.style.display = "none");
+        // Hide all rows first 
+        allRows.forEach(row => {
+            row.style.display = "none";
+        });
         
-        // Show only rows for current page
+        // Show only current page rows
         for (let i = start; i < Math.min(end, filteredRows.length); i++) {
             if (filteredRows[i]) {
                 filteredRows[i].style.display = "";
@@ -573,10 +586,12 @@ function displayPage(page = 1) {
         }
         
         updatePagination(page);
-        updatePageInfo();
+        updateRowNumbers(); // Add this line here
+        updatePageInfo();   // Add this line too if you have page info
+        
+        perf.renderTime = performance.now() - startTime;
     });
 }
-
 function updatePagination(page) {
     const totalPages = Math.ceil(filteredRows.length / rowsPerPage);
     
@@ -633,12 +648,19 @@ function attachPaginationEvents(page, totalPages) {
 }
 
 function updateRowNumbers() {
-    filteredRows.forEach((row, index) => {
-        const cell = row.cells[columnMap.rowNumber || 0];
+    const startIndex = (thisCurrentPage - 1) * rowsPerPage;
+    const endIndex = Math.min(startIndex + rowsPerPage, filteredRows.length);
+    
+    // Only update visible rows for better performance
+    for (let i = startIndex; i < endIndex; i++) {
+        const row = filteredRows[i];
+        const cell = row.cells[0]; // Row number is always in first cell
         if (cell) {
-            cell.textContent = index + 1;
+            // Calculate display number (1-based) for absolute position in filtered results
+            const displayNumber = i + 1;
+            cell.textContent = displayNumber;
         }
-    });
+    }
 }
 
 function showNoResultsMessage(show) {
@@ -655,15 +677,14 @@ function showNoResultsMessage(show) {
 }
 
 function updateDisplay() {
-    updateRowNumbers();
     showNoResultsMessage(filteredRows.length === 0);
     
     if (!isRedirectingToItem) {
         thisCurrentPage = 1;
     }
     
-    displayPage(thisCurrentPage);
-    updateItemCounts();
+    displayPage(thisCurrentPage); // This will call updateRowNumbers()
+    updateItemCounts(); 
 }
 
 // =============================================
@@ -716,10 +737,10 @@ function initFilterControls() {
     setupDateFilters();
     setupStatusFilters();
 
-    // Reset all filters
+  
     document.getElementById("resetAllFiltersBtn")?.addEventListener("click", resetAllFilters);
 
-    // Search functionality
+  
     domElements.searchInput?.addEventListener("input", () => {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => filterItems(), 150);
@@ -727,19 +748,31 @@ function initFilterControls() {
 
     function setupBrandFilters() {
         document.getElementById("filterByBrandBtn")?.addEventListener("click", () => {
+            
             filterItems();
-            closeAllFilters(); // Close filter after applying
+    
+            
+            applyFiltersAndSort();
+    
+         
+            updateTableDOM();
+            updateItemCounts();
+    
+            closeAllFilters(); 
         });
-
+    
         document.getElementById("resetBrandFilterBtn")?.addEventListener("click", () => {
             if (domElements.brandSelect) {
                 Array.from(domElements.brandSelect.options).forEach(option => option.selected = false);
                 filterItems();
+                applyFiltersAndSort();
+                updateTableDOM();
+                updateItemCounts();
             }
-            closeAllFilters(); // Close filter after resetting
+            closeAllFilters(); 
         });
     }
-
+    
     function setupQuantityFilters() {
         document.getElementById("sortLowToHigh")?.addEventListener("click", () => {
             sortByQuantity("asc");

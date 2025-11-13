@@ -20,6 +20,12 @@ require __DIR__ . '/../function/addQuantityFunction.php';
 
 </head>
 
+<style>
+  .sort-active {
+    background-color: #e3f2fd !important;
+    border-color: #2196f3 !important;
+}
+</style>
 <!-- For the last item deletion sweet alert-->
 <div id="deleteAlertData" 
      data-deleted-name="<?php echo htmlspecialchars($_SESSION['deleted_item_name'] ?? ''); ?>"

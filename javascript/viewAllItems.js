@@ -100,8 +100,8 @@ function buildColumnMap() {
     // Apply fallback mapping for required columns
     const fallbackMap = {
         rowNumber: 0, itemId: 1, image: 2, serialNumber: 3, itemName: 4,
-        description: 5, brand: 6, model: 7, unitCost: 8, totalQuantity: 9,
-        availableQuantity: 10, totalCost: 11, dateAcquired: 12, status: 13,
+        description: 5, brand: 6, model: 7, unitCost: 8, totalQuantity: 10,
+        availableQuantity: 11, totalCost: 11, dateAcquired: 12, status: 13,
         remarks: 14, actions: 15
     };
     
@@ -291,6 +291,7 @@ function displayPage(page = 1) {
         }
         
         updatePagination(page);
+        updateRowNumbers(); // ADD THIS LINE - it was missing!
         updatePageInfo();
         
         // Handle item highlighting if redirecting
@@ -387,13 +388,21 @@ function initializeTable() {
 }
 
 function updateRowNumbers() {
-    filteredRows.forEach((row, index) => {
-        const cell = row.cells[columnMap.rowNumber || 0];
+    const startIndex = (thisCurrentPage - 1) * rowsPerPage;
+    const endIndex = Math.min(startIndex + rowsPerPage, filteredRows.length);
+    
+    // Only update visible rows for better performance
+    for (let i = startIndex; i < endIndex; i++) {
+        const row = filteredRows[i];
+        const cell = row.cells[0]; // Row number is always in first cell
         if (cell) {
-            cell.textContent = index + 1;
+            // Calculate display number (1-based) for absolute position in filtered results
+            const displayNumber = i + 1;
+            cell.textContent = displayNumber;
         }
-    });
+    }
 }
+
 
 function showNoResultsMessage(show) {
     let noResultsRow = document.getElementById('noResultsMessage');
@@ -433,6 +442,7 @@ function filterItemsAll() {
 
 function applyFiltersAndSort() {
     const searchValue = (domElements.searchInput?.value || '').toLowerCase();
+    
     
     console.log('=== APPLYING FILTERS AND SORT ===');
     console.log('Current filters:', currentFiltersAll);
@@ -501,14 +511,13 @@ function generateFilterKey() {
 }
 
 function updateDisplay() {
-    updateRowNumbers();
     showNoResultsMessage(filteredRows.length === 0);
     
     if (!isRedirectingToItem) {
         thisCurrentPage = 1;
     }
     
-    displayPage(thisCurrentPage);
+    displayPage(thisCurrentPage); // This will call updateRowNumbers()
     updateItemCounts();
 }
 
@@ -570,14 +579,24 @@ function updateTableDOM() {
     console.log('Current sort:', currentSort);
     console.log('Current filters:', currentFiltersAll);
     
-    // Clear and rebuild table in correct order
+    // Store the _data from current rows before clearing
+    const rowDataMap = new Map();
+    filteredRows.forEach((row, index) => {
+        rowDataMap.set(index, row._data);
+    });
+    
+    // Clear and rebuild table
     tableBody.innerHTML = '';
-    filteredRows.forEach(row => tableBody.appendChild(row));
+    filteredRows.forEach((row, index) => {
+        tableBody.appendChild(row);
+        // Restore the _data property
+        row._data = rowDataMap.get(index);
+    });
     
     // Update display
     updateRowNumbers();
     displayPage(thisCurrentPage);
-}
+}   
 
 // =============================================
 // FILTER CONTROLS - OPTIMIZED
@@ -661,7 +680,13 @@ function initFilterControlsAll() {
             domElements.dateTo.value = "";
             currentFiltersAll.dateFrom = "";
             currentFiltersAll.dateTo = "";
+
+            
             filterItemsAll();
+
+            applyFiltersAndSort(); // <-- Add this
+            updateTableDOM();      // <-- Add this
+            updateItemCounts();    // <-- Add this
             closeAllFilters(); // Close filter after resetting
         });
     }
