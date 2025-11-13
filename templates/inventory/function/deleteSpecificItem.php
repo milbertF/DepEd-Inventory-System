@@ -41,7 +41,7 @@ if (isset($_GET['id'])) {
 
             $insertStmt = $conn->prepare("
                 INSERT INTO deped_inventory_items_deleted
-                (deleted_id, item_id, item_photo, item_name, category_id, category_name, description, brand, model, serial_number, quantity,initial_quantity, date_acquired, unit, unit_cost, total_cost, item_status, created_at, deleted_by_user_id, deleted_by_fname, deleted_by_lname)
+                (deleted_id, item_id, item_photo, item_name, category_id, category_name, description, brand, model, serial_number, total_quantity,available_quantity, date_acquired, unit, unit_cost, total_cost, item_status, created_at, deleted_by_user_id, deleted_by_fname, deleted_by_lname)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
 
@@ -59,8 +59,8 @@ if (isset($_GET['id'])) {
                 $item['brand'],
                 $item['model'],
                 $item['serial_number'],
-                $item['initial_quantity'],
-                $item['quantity'],
+                $item['available_quantity'],
+                $item['total_quantity'],
                 $item['date_acquired'],
                 $item['unit'],
                 $item['unit_cost'],
@@ -109,7 +109,7 @@ if (isset($_GET['id'])) {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
-        $old_quantity = $item['quantity'];
+        $old_quantity = $item['total_quantity'];
         $new_quantity = NULL;
         $quantity_added = NULL;
         $is_read = 0;

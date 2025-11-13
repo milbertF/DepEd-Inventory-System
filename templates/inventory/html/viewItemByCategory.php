@@ -132,11 +132,13 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <label><input type="checkbox" data-column="6" checked> Brand</label>
                   <label><input type="checkbox" data-column="7" checked> Model</label>
                   <label><input type="checkbox" data-column="8" checked> Unit Cost</label>
-                  <label><input type="checkbox" data-column="9" checked> Quantity</label>
-                  <label><input type="checkbox" data-column="10" checked> Total Cost</label>
-                  <label><input type="checkbox" data-column="11" checked> Date Acquired</label>
-                  <label><input type="checkbox" data-column="12" checked> Status</label>
-                  <label><input type="checkbox" data-column="13" checked> Actions</label>
+                  <label><input type="checkbox" data-column="9" checked>  Total Quantity</label>
+                  <label><input type="checkbox" data-column="10" checked>  Available Quantity</label>
+                  <label><input type="checkbox" data-column="11" checked> Total Cost</label>
+                  <label><input type="checkbox" data-column="12" checked> Date Acquired</label>
+                  <label><input type="checkbox" data-column="13" checked> Status</label>
+                  <label><input type="checkbox" data-column="14" checked> Remarks</label>
+                  <label><input type="checkbox" data-column="15" checked> Actions</label>
                 </div>
 
                 <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
@@ -182,15 +184,7 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <button id="sortHighToLow" class="quantity-option">
                     <i class="fas fa-sort-amount-down"></i> Sort: High to Low
                   </button>
-                  <button id="showAvailable" class="quantity-option">
-                    <i class="fas fa-box"></i> Available (Qty > 0)
-                  </button>
-                  <button id="showOutOfStock" class="quantity-option">
-                    <i class="fas fa-box-open"></i> Out of Stock (Qty = 0)
-                  </button>
-                  <button id="resetQuantityFilter" class="quantity-option">
-                    <i class="fas fa-times"></i> Show All Quantities
-                  </button>
+                
                 </div>
               </div>
 
@@ -220,7 +214,7 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <span>Filter by Status</span>
                 </div>
 
-                <div class="status-checkboxes">
+                <div class="status-checkboxes" >
                   <?php
                   // Get unique statuses from items
                   $allStatuses = array_column($items, 'item_status');
@@ -262,7 +256,7 @@ if (isset($_SESSION['deleted_item_name'])) {
           <?php require __DIR__ . '/exportModal.php'; ?>
           
           <?php require __DIR__ . '/addQuantityModal.php'; ?>
-
+          <div class="itemTable-wrapper">
           <table class="itemTable">
             <thead>
               <tr>
@@ -270,17 +264,19 @@ if (isset($_SESSION['deleted_item_name'])) {
                 <th>Item ID </th>
                 <th>Image</th>
                 <th>Serial Number</th>
-           
                 <th>Item Name</th>
                 <th>Description</th>
                 <th>Brand</th>
                 <th>Model</th>
                 <th>Unit Cost</th>
-                <th>Quantity</th>
+                <th> Total Quantity</th>
+                <th>Available Quantity</th>
                 <th>Total Cost</th>
                 <th>Date Acquired</th>
                 <th>Status</th>
+                <th>Remarks</th>
                 <th>Actions</th>
+             
               </tr>
             </thead>
             <tbody id="inventoryTableBody">
@@ -300,10 +296,12 @@ if (isset($_SESSION['deleted_item_name'])) {
                   <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
                   <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
                   <td>₱<?= number_format($item['unit_cost'], 2) ?></td>
-                  <td><?= htmlspecialchars($item['quantity']) ?></td>
+                  <td><?= htmlspecialchars($item['total_quantity']) ?></td>
+                  <td><?= htmlspecialchars($item['available_quantity']) ?></td>
                   <td>₱<?= number_format($item['total_cost'], 2) ?></td>
                   <td><?= isset($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00' ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
                   <td><?= htmlspecialchars($item['item_status']) ?></td>
+                  <td><?=  !empty($item['remarks']) ? htmlspecialchars($item['remarks']) :  '—' ?></td>
                   <td>
                     <button class="action-btn view" title="View Item"
                       data-id="<?= $item['item_id'] ?>"
@@ -314,9 +312,11 @@ if (isset($_SESSION['deleted_item_name'])) {
                       data-brand="<?= htmlspecialchars($item['brand']) ?>"
                       data-model="<?= htmlspecialchars($item['model']) ?>"
                       data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
-                      data-qty="<?= $item['quantity'] ?>"
+                      data-qty="<?= $item['total_quantity'] ?>"
+                      data-available-qty="<?= $item['available_quantity'] ?>"
                       data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
                       data-itemstatus="<?= $item['item_status'] ?>"
+                      data-remarks="<?= $item['remarks'] ?>"
                       data-unit="<?= $item['unit'] ?>"
                       data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
                       data-totalcost="<?= $item['total_cost'] ?? 0 ?>"
@@ -335,9 +335,11 @@ if (isset($_SESSION['deleted_item_name'])) {
                         data-brand="<?= $item['brand'] ?>"
                         data-model="<?= $item['model'] ?>"
                         data-serial="<?= $item['serial_number'] ?>"
-                        data-qty="<?= $item['quantity'] ?>"
+                        data-qty="<?= $item['total_quantity'] ?>"
+                        data-available-qty="<?= $item['available_quantity'] ?>"
                         data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
                         data-item-status="<?= $item['item_status'] ?>"
+                        data-remarks="<?= $item['remarks'] ?>"
                         data-unit="<?= $item['unit'] ?>"
                         data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
                         data-totalcost="<?= $item['total_cost'] ?? 0 ?>">
@@ -361,6 +363,7 @@ if (isset($_SESSION['deleted_item_name'])) {
   <i class="fas fa-plus"></i>
   <span class="tooltip">Add Quantity</span>
 </button>
+
 
 
                     <?php endif; ?>
@@ -399,6 +402,8 @@ if (isset($_SESSION['deleted_item_name'])) {
     </div>
   </div>
 </div>
+
+
     
 
         <?php endif; ?>
@@ -413,6 +418,7 @@ if (isset($_SESSION['deleted_item_name'])) {
     </div>
   </div>
 
+  </div>
 
   <script src="/javascript/header.js"></script>
   <script src="/javascript/sidebar.js"></script>

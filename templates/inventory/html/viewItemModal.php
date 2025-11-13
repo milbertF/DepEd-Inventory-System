@@ -44,8 +44,12 @@
           <span class="info-value" id="view-item-serial"></span>
         </div>
         <div class="info-item">
-          <span class="info-label">Quantity:</span>
+          <span class="info-label"> Total Quantity:</span>
           <span class="info-value" id="view-item-quantity"></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label"> Available Quantity:</span>
+          <span class="info-value" id="view-available-quantity"></span>
         </div>
         <div class="info-item">
           <span class="info-label">Unit:</span>
@@ -66,6 +70,10 @@
         <div class="info-item">
           <span class="info-label">Item Status:</span>
           <span class="info-value" id="view-item-status"></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Item Remarks:</span>
+          <span class="info-value" id="view-item-remarks"></span>
         </div>
         <div class="info-item">
           <span class="info-label">Created At:</span>

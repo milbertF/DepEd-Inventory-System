@@ -1,6 +1,8 @@
 <?php
 require __DIR__ . '/../function/fetchEmployees.php';
 require __DIR__ . '/../function/fetchItemsByCategoryDashboard.php';
+require __DIR__ . '/../function/addRequestItemFunction.php';
+
 ?>
 
 
@@ -23,7 +25,8 @@ require __DIR__ . '/../function/fetchItemsByCategoryDashboard.php';
   <div class="con" style="width:60rem;">
     <h4>Request Item</h4>
 
-    <form method="POST" enctype="multipart/form-data" id="request-form" autocomplete="off">
+    <form method="POST" action="" enctype="multipart/form-data" id="request-form" autocomplete="off">
+
   
       <div class="stage active" id="stage-2">
         <div class="btnSave"   >
@@ -43,6 +46,7 @@ require __DIR__ . '/../function/fetchItemsByCategoryDashboard.php';
               <th>Brand</th>
               <th>Model</th>
               <th>Quantity</th>
+              <th>Purpose</th>
               <th>Date Needed</th>
               <th>Remove</th>
             </tr>
@@ -52,7 +56,7 @@ require __DIR__ . '/../function/fetchItemsByCategoryDashboard.php';
 
         <div id="hidden-items"></div>
         <div class="btnSave">
-  <button type="submit" name="submit_request" id="submitRequestBtn" disabled>
+  <button type="submit" name="submit_item_request" id="submitRequestBtn" disabled>
     Submit Request
   </button>
 </div>

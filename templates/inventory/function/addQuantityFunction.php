@@ -8,7 +8,7 @@ function addQuantityToItem($conn, $item_id, $quantity_to_add, $user_id) {
     
     try {
        
-        $stmt = $conn->prepare("SELECT item_name, quantity, initial_quantity FROM deped_inventory_items WHERE item_id = ?");
+        $stmt = $conn->prepare("SELECT item_name, total_quantity, available_quantity FROM deped_inventory_items WHERE item_id = ?");
         $stmt->bind_param("s", $item_id);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -18,17 +18,17 @@ function addQuantityToItem($conn, $item_id, $quantity_to_add, $user_id) {
         }
         
         $item = $result->fetch_assoc();
-        $current_quantity = $item['quantity'];
-        $current_initial_quantity = $item['initial_quantity'];
+        $current_total_quantity = $item['total_quantity'];
+        $current_available_quantity = $item['available_quantity'];
         $item_name = $item['item_name'];
         
        
-        $new_quantity = $current_quantity + $quantity_to_add;
-        $new_initial_quantity = $current_initial_quantity + $quantity_to_add;
+        $new_total_quantity = $current_total_quantity + $quantity_to_add;
+        $new_available_quantity = $current_available_quantity + $quantity_to_add;
         
      
-        $update_stmt = $conn->prepare("UPDATE deped_inventory_items SET quantity = ?, initial_quantity = ? WHERE item_id = ?");
-        $update_stmt->bind_param("iis", $new_quantity, $new_initial_quantity, $item_id);
+        $update_stmt = $conn->prepare("UPDATE deped_inventory_items SET total_quantity = ?, available_quantity = ? WHERE item_id = ?");
+        $update_stmt->bind_param("iis", $new_total_quantity, $new_available_quantity, $item_id);
         
         if (!$update_stmt->execute()) {
             throw new Exception("Failed to update item quantity.");
@@ -41,8 +41,8 @@ function addQuantityToItem($conn, $item_id, $quantity_to_add, $user_id) {
             VALUES (?, ?, ?, 'quantity_added', ?, ?, ?, ?)
         ");
 
-        $message = "Item #{$item_id} ({$item_name}): Added {$quantity_to_add} quantity. Quantity changed from {$current_quantity} to {$new_quantity}.";
-        $notification_stmt->bind_param("issiiis", $user_id, $item_id, $item_name, $current_quantity, $new_quantity, $quantity_to_add, $message);
+        $message = "Item #{$item_id} ({$item_name}): Added {$quantity_to_add} quantity. Quantity changed from {$current_total_quantity} to {$new_total_quantity}.";
+        $notification_stmt->bind_param("issiiis", $user_id, $item_id, $item_name, $current_total_quantity, $new_total_quantity, $quantity_to_add, $message);
         
         if (!$notification_stmt->execute()) {
             throw new Exception("Failed to create notification.");
@@ -53,8 +53,8 @@ function addQuantityToItem($conn, $item_id, $quantity_to_add, $user_id) {
         
         return [
             'success' => true,
-            'old_quantity' => $current_quantity,
-            'new_quantity' => $new_quantity,
+            'old_quantity' => $current_total_quantity,
+            'new_quantity' => $new_total_quantity,
             'quantity_added' => $quantity_to_add,
             'item_name' => $item_name,
             'item_id' => $item_id
@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_quantity'])) {
     }
     
     $item_id = trim($_POST['item_id']);
-    $quantity_to_add = intval($_POST['quantity']);
+    $quantity_to_add = intval($_POST['total_quantity']);
     $user_id = $_SESSION['user']['user_id'];
     
     if ($quantity_to_add < 1) {

@@ -2,7 +2,6 @@
 require_once __DIR__ . '/../../../database/dbConnection.php';
 require_once __DIR__ . '/../../../sweetalert/sweetalert.php';
 
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) {
     $item_id = $_POST['item_id'] ?? '';
     $item_name = trim($_POST['item_name']);
@@ -12,26 +11,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
     $brand = !empty(trim($_POST['brand'] ?? '')) ? trim($_POST['brand']) : null;
     $model = !empty(trim($_POST['model'] ?? '')) ? trim($_POST['model']) : null;
     $serial_number = !empty(trim($_POST['serial_number'] ?? '')) ? trim($_POST['serial_number']) : null;
-    $quantity = intval($_POST['quantity']);
+    $total_quantity = intval($_POST['total_quantity']);
+    $available_quantity = intval($_POST['available_quantity']);
     $unit = !empty(trim($_POST['unit'] ?? '')) ? trim($_POST['unit']) : null;
-
     $unit_cost = floatval($_POST['unit_cost']);
     $date_acquired = (!empty($_POST['date_acquired']) && $_POST['date_acquired'] !== '0000-00-00')
         ? $_POST['date_acquired']
         : null;
     $item_status = trim($_POST['item_status']);
+    $remarks = !empty(trim($_POST['remarks'] ?? '')) ? trim($_POST['remarks']) : null;
 
-    // Get current user info
     $user_id = $_SESSION['user']['id'] ?? $_SESSION['user']['user_id'] ?? null;
-    
-    // Get old item data for comparison
-    $stmt_old = $conn->prepare("SELECT item_name, quantity, category_id FROM deped_inventory_items WHERE item_id = ?");
+
+    // 🔹 Get old item data for comparison
+    $stmt_old = $conn->prepare("
+        SELECT item_name, total_quantity, available_quantity, category_id, description, brand, model, serial_number, unit, unit_cost, date_acquired, item_status, remarks
+        FROM deped_inventory_items 
+        WHERE item_id = ?
+    ");
     $stmt_old->bind_param("s", $item_id);
     $stmt_old->execute();
-    $stmt_old->bind_result($old_item_name, $old_quantity, $old_category_id);
+    $stmt_old->bind_result(
+        $old_item_name, $old_total_quantity, $old_available_quantity, $old_category_id,
+        $old_description, $old_brand, $old_model, $old_serial_number,
+        $old_unit, $old_unit_cost, $old_date_acquired, $old_item_status, $old_remarks
+    );
     $stmt_old->fetch();
     $stmt_old->close();
 
+    // 🔹 Get existing photo
     $stmt_old_photo = $conn->prepare("SELECT item_photo FROM deped_inventory_items WHERE item_id = ?");
     $stmt_old_photo->bind_param("s", $item_id);
     $stmt_old_photo->execute();
@@ -41,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
 
     $photo_path = $existing_photo;
 
-    // Handle photo upload
+    // 🔹 Handle photo upload
     if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
         $photo_tmp = $_FILES['photo']['tmp_name'];
         $photo_name = basename($_FILES['photo']['name']);
@@ -53,9 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             $upload_dir = __DIR__ . '/../../../images/items/';
             $photo_path = 'images/items/' . $unique_name;
 
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0777, true);
-            }
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
 
             if (!move_uploaded_file($photo_tmp, $upload_dir . $unique_name)) {
                 showSweetAlert('error', 'Upload Error', 'Failed to upload new image.');
@@ -67,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
         }
     }
 
+    // 🔹 Update the item
     $stmt = $conn->prepare("
         UPDATE deped_inventory_items SET
             item_photo = ?,
@@ -76,17 +83,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             brand = ?,
             model = ?,
             serial_number = ?,
-            quantity = ?,
+            total_quantity = ?,
+            available_quantity = ?,
             unit = ?,
             unit_cost = ?,
             date_acquired = ?,
-            item_status = ?
+            item_status = ?,
+            remarks = ?
         WHERE item_id = ?
     ");
 
     if ($stmt) {
         $stmt->bind_param(
-            "ssissssisdssi",
+            "ssissssiisdsssi",
             $photo_path,
             $item_name,
             $category_id,
@@ -94,28 +103,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
             $brand,
             $model,
             $serial_number,
-            $quantity,
+            $total_quantity,
+            $available_quantity,
             $unit,
             $unit_cost,
             $date_acquired,
             $item_status,
+            $remarks,
             $item_id
         );
 
-        foreach (['description', 'brand', 'model', 'serial_number', 'unit', 'date_acquired'] as $field) {
-            if ($$field === null) {
-                $stmt->send_long_data(array_search($field, ['description', 'brand', 'model', 'serial_number', 'unit', 'date_acquired']), null);
-            }
-        }
-
         if ($stmt->execute()) {
-           
-            createItemUpdateNotification($conn, $user_id, $item_id, $item_name, $old_item_name, $quantity, $old_quantity);
-            
+            // 🔹 Create detailed notification
+            createItemUpdateNotification(
+                $conn,
+                $user_id,
+                $item_id,
+                $item_name,
+                compact(
+                    'old_item_name', 'old_total_quantity', 'old_available_quantity', 'old_category_id',
+                    'old_description', 'old_brand', 'old_model', 'old_serial_number',
+                    'old_unit', 'old_unit_cost', 'old_date_acquired', 'old_item_status', 'old_remarks'
+                ),
+                compact(
+                    'item_name', 'total_quantity', 'available_quantity', 'category_id',
+                    'description', 'brand', 'model', 'serial_number',
+                    'unit', 'unit_cost', 'date_acquired', 'item_status', 'remarks'
+                )
+            );
+
             showSweetAlert(
                 'success',
                 'Item Updated',
-                "Item <b>$item_name</b> has been updated.",
+                "Item <b>$item_name</b> has been successfully updated.",
                 $_SERVER['HTTP_REFERER']
             );
         } else {
@@ -126,61 +146,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_edit_item'])) 
     } else {
         showSweetAlert('error', 'Database Error', $conn->error);
     }
-
-    
 }
 
-
-function createItemUpdateNotification($conn, $user_id, $item_id, $new_item_name, $old_item_name, $new_quantity, $old_quantity) {
+/**
+ * 🔔 Creates a detailed notification listing all changed fields
+ */
+function createItemUpdateNotification($conn, $user_id, $item_id, $item_name, $oldData, $newData)
+{
     if (!$user_id) return;
-    
-    $action_type = 'item_updated';
-    $message = '';
-    
-  
+
     $changes = [];
-    
-    if ($new_item_name !== $old_item_name) {
-        $changes[] = "name from '$old_item_name' to '$new_item_name'";
-    }
-    
-    if ($new_quantity != $old_quantity) {
-        $quantity_diff = $new_quantity - $old_quantity;
-        if ($quantity_diff > 0) {
-            $changes[] = "quantity increased by $quantity_diff";
-        } else {
-            $changes[] = "quantity decreased by " . abs($quantity_diff);
+
+    foreach ($newData as $field => $newValue) {
+        $oldValue = $oldData['old_' . $field] ?? null;
+
+        // Normalize nulls
+        $oldValue = $oldValue === null ? '' : $oldValue;
+        $newValue = $newValue === null ? '' : $newValue;
+
+        if ($newValue != $oldValue) {
+            $fieldLabel = str_replace('_', ' ', $field);
+            if ($oldValue === '') {
+                $changes[] = "$fieldLabel set to '$newValue'";
+            } elseif ($newValue === '') {
+                $changes[] = "$fieldLabel removed (was '$oldValue')";
+            } else {
+                $changes[] = "$fieldLabel changed from '$oldValue' to '$newValue'";
+            }
         }
     }
-    
-    if (empty($changes)) {
-        $changes[] = "details";
-    }
-    
-    $change_text = implode(', ', $changes);
-    $message = "Item #$item_id ($new_item_name) was updated: $change_text";
-    
-  
+
+    $action_type = 'item_updated';
+    $message = empty($changes)
+        ? "Item #$item_id ($item_name) was updated with no visible changes"
+        : "Item #$item_id ($item_name) was updated: " . implode(', ', $changes);
+
+    $old_quantity = $oldData['old_total_quantity'] ?? null;
+    $new_quantity = $newData['total_quantity'] ?? null;
+
     $stmt = $conn->prepare("
         INSERT INTO deped_inventory_notifications 
         (user_id, item_id, item_name, action_type, old_quantity, new_quantity, message) 
         VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
-    
-    $stmt->bind_param("sisssis", 
-        $user_id, 
-        $item_id, 
-        $new_item_name, 
-        $action_type, 
-        $old_quantity, 
-        $new_quantity, 
+    $stmt->bind_param(
+        "sisssis",
+        $user_id,
+        $item_id,
+        $item_name,
+        $action_type,
+        $old_quantity,
+        $new_quantity,
         $message
     );
-    
     $stmt->execute();
     $stmt->close();
 }
-
-
-
 ?>

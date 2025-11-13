@@ -35,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
     $model = isset($_POST['model']) && trim($_POST['model']) !== '' ? trim($_POST['model']) : null;
     $unit  = isset($_POST['unit'])  && trim($_POST['unit'])  !== '' ? trim($_POST['unit'])  : null;
     $item_status = isset($_POST['item_status']) && trim($_POST['item_status']) !== '' ? trim($_POST['item_status']) : 'Good';
-
+    $remarks = trim($_POST['remarks'] ?? '');
     $unit_cost = floatval($_POST['unit_cost']);
     $date_acquired = !empty($_POST['date_acquired']) ? $_POST['date_acquired'] : null;
-    $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : 1;
+    $quantity = isset($_POST['total_quantity']) ? intval($_POST['total_quantity']) : 1;
 
     if ($quantity < 1) {
         showSweetAlert('error', 'Invalid Quantity', 'Quantity must be at least 1.');
@@ -102,14 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
         $stmt = $conn->prepare("
             INSERT INTO deped_inventory_items (
                 item_id, item_photo, item_name, category_id, description,
-                brand, model, serial_number, quantity, initial_quantity, unit,
-                unit_cost, date_acquired, item_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                brand, model, serial_number, total_quantity, available_quantity, unit,
+                unit_cost, date_acquired, item_status,remarks
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,?)
         ");
 
         if ($stmt) {
             $stmt->bind_param(
-                "sssissssiisdss",
+                "sssissssiisdsss",
                 $item_id,
                 $photo_path,
                 $item_name,
@@ -123,7 +123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_item'])) {
                 $unit,
                 $unit_cost,
                 $date_acquired,
-                $item_status
+                $item_status,
+                $remarks
             );
 
             if ($stmt->execute()) {

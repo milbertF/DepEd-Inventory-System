@@ -96,10 +96,24 @@
   </div>
 </div>
 
+<div class="inpart">
+        <label for="edit-item-qty">Remarks </label>
+        <div class="inputs">
+          <input type="text" id="edit-remarks" name="remarks"  />
+        </div>
+      </div>
+
       <div class="inpart">
         <label for="edit-item-qty">Quantity <span>*</span></label>
         <div class="inputs">
-          <input type="number" id="edit-item-qty" name="quantity" min="1" required />
+          <input type="number" id="edit-item-qty" name="total_quantity" min="0" required />
+        </div>
+      </div>
+
+      <div class="inpart">
+        <label for="edit-available-item-qty"> Available Quantity <span>*</span></label>
+        <div class="inputs">
+          <input type="number" id="edit-available-item-qty" name="available_quantity" min="0" required />
         </div>
       </div>
 

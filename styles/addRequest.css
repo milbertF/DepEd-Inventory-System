@@ -12,6 +12,8 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     transition: all 0.2s ease;
   }
+
+  
   
  
   .request-table th {
@@ -125,6 +127,34 @@
   background-color: #f1f5f9;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Purpose dropdown in table */
+.purpose-dropdown {
+  width: 100%;
+  padding: 0.4rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  background-color: white;
+  color: #334155;
+}
+
+.purpose-dropdown:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.other-purpose-input {
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.8rem;  
+}
+
+.other-purpose-input:focus {
+  border-color: #3b82f6;
+  outline: none;
 }
 
 

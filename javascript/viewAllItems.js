@@ -1,5 +1,4 @@
 let currentFiltersAll = {
-    quantity: "",
     dateFrom: "",
     dateTo: "",
     status: []
@@ -15,6 +14,8 @@ let isRedirectingToItem = false;
 let targetItemId = null;
 
 let domElements = {};
+let columnMap = {};
+let currentSort = { field: null, order: null }; // Track current sort state
 
 // =============================================
 // SCROLL & NAVIGATION VARIABLES
@@ -26,6 +27,7 @@ let isShowingItemNotFoundAlert = false;
 // =============================================
 document.addEventListener("DOMContentLoaded", function () {
     initializeDOMCache();
+    buildColumnMap();
     initializeTable();
     initFilterControlsAll();
     initSearchFunctionalityAll();
@@ -41,149 +43,182 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // =============================================
-// SCROLL TO ITEM FUNCTION
+// COLUMN MAPPING - OPTIMIZED VERSION
+// =============================================
+// =============================================
+// COLUMN MAPPING - FLEXIBLE VERSION FOR CATEGORY VIEW
+// =============================================
+function buildColumnMap() {
+    const headerRow = document.querySelector('.itemTable thead tr');
+    if (!headerRow) {
+        console.error('No table header found!');
+        return {};
+    }
+    
+    const headers = Array.from(headerRow.cells);
+    console.log('=== BUILDING COLUMN MAP (Category View) ===');
+    
+    const mappings = [
+        { keywords: ['#', 'number'], property: 'rowNumber' },
+        { keywords: ['item id', 'id'], property: 'itemId' },
+        { keywords: ['image', 'photo'], property: 'image' },
+        { keywords: ['serial'], property: 'serialNumber' },
+        { keywords: ['item name', 'name'], property: 'itemName' },
+        { keywords: ['description'], property: 'description' },
+        { keywords: ['brand'], property: 'brand' },
+        { keywords: ['model'], property: 'model' },
+        { keywords: ['unit cost'], property: 'unitCost' },
+        { keywords: ['total quantity', 'quantity'], property: 'totalQuantity' },
+        { keywords: ['available quantity', 'available'], property: 'availableQuantity' },
+        { keywords: ['total cost'], property: 'totalCost' },
+        { keywords: ['date acquired', 'acquired'], property: 'dateAcquired' },
+        { keywords: ['status'], property: 'status' },
+        { keywords: ['remarks'], property: 'remarks' },
+        { keywords: ['actions', 'action'], property: 'actions' }
+    ];
+    
+    columnMap = {};
+    
+    headers.forEach((header, index) => {
+        const headerText = header.textContent.trim().toLowerCase().replace(/\s+/g, ' ');
+        let matched = false;
+        
+        for (const mapping of mappings) {
+            if (mapping.keywords.some(keyword => headerText.includes(keyword.toLowerCase()))) {
+                columnMap[mapping.property] = index;
+                console.log(` Mapped "${mapping.property}" to column ${index}: "${header.textContent.trim()}"`);
+                matched = true;
+                break;
+            }
+        }
+        
+        if (!matched) {
+            console.log(` Unmapped column ${index}: "${header.textContent.trim()}"`);
+        }
+    });
+    
+    // Apply fallback mapping for required columns
+    const fallbackMap = {
+        rowNumber: 0, itemId: 1, image: 2, serialNumber: 3, itemName: 4,
+        description: 5, brand: 6, model: 7, unitCost: 8, totalQuantity: 9,
+        availableQuantity: 10, totalCost: 11, dateAcquired: 12, status: 13,
+        remarks: 14, actions: 15
+    };
+    
+    Object.keys(fallbackMap).forEach(key => {
+        if (columnMap[key] === undefined) {
+            columnMap[key] = fallbackMap[key];
+            console.log(`🔁 Fallback mapped "${key}" to column ${fallbackMap[key]}`);
+        }
+    });
+    
+    console.log('=== FINAL COLUMN MAP (Category View) ===', columnMap);
+    return columnMap;
+}
+function getCellData(row, property) {
+    const index = columnMap[property];
+    if (index === undefined || !row.cells[index]) {
+        return '';
+    }
+    return row.cells[index].textContent || '';
+}
+
+// =============================================
+// SCROLL TO ITEM FUNCTION - OPTIMIZED
 // =============================================
 window.scrollToItem = function(itemId) {
-    console.log('scrollToItem called for:', itemId);
-    
-    if (!itemId) {
-        console.warn('No itemId provided to scrollToItem');
-        return;
-    }
-    
-    if (isRedirectingToItem) {
-        console.log('Already redirecting to an item, skipping...');
-        return;
-    }
+    if (!itemId || isRedirectingToItem) return;
     
     isRedirectingToItem = true;
     targetItemId = itemId;
     
+    // Reset filters if function exists
     if (typeof resetAllFiltersAll === 'function') {
-        console.log('Resetting filters...');
         resetAllFiltersAll();
     }
     
-    function attemptScroll() {
-        console.log('Attempting to scroll to item:', itemId);
-        
-        const allItemRows = Array.from(document.querySelectorAll('#inventoryTableBody tr[data-item-id]'));
-        console.log(`Found ${allItemRows.length} total item rows in DOM`);
-        
-        const targetRow = allItemRows.find(row => row.getAttribute('data-item-id') === itemId);
-        const rowIndex = allItemRows.findIndex(row => row.getAttribute('data-item-id') === itemId);
-        
-        if (rowIndex !== -1 && targetRow) {
-            console.log(`Found item at row index: ${rowIndex}`);
-            
-            const itemsPerPage = rowsPerPage;
-            const targetPage = Math.floor(rowIndex / itemsPerPage) + 1;
-            const totalPages = Math.ceil(allItemRows.length / itemsPerPage);
-            
-            console.log(`Item is on page ${targetPage} of ${totalPages}`);
-            
-            if (thisCurrentPage !== targetPage) {
-                console.log(`Switching from page ${thisCurrentPage} to page ${targetPage}`);
-                thisCurrentPage = targetPage;
-                
-                setTimeout(() => {
-                    displayPage(targetPage);
-                    
-                    setTimeout(() => {
-                        scrollToItemOnCurrentPage(itemId);
-                    }, 300);
-                }, 100);
-            } else {
-                console.log('Already on correct page, scrolling directly');
-                scrollToItemOnCurrentPage(itemId);
-            }
-            
-        } else {
-            console.warn('Item not found in the table:', itemId);
-            showItemNotFoundMessage(itemId);
-        }
-    }
-    
-    function scrollToItemOnCurrentPage(itemId) {
-        console.log('scrollToItemOnCurrentPage for:', itemId);
-        
-        const targetRow = document.querySelector(`tr[data-item-id="${itemId}"]`);
-        
-        if (targetRow && targetRow.style.display !== 'none') {
-            console.log('Found visible row, scrolling and highlighting...');
-            
-            targetRow.classList.add('highlight-item');
-            void targetRow.offsetWidth;
-            
-            setTimeout(() => {
-                targetRow.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center',
-                    inline: 'nearest'
-                });
-            }, 100);
-            
-            setTimeout(() => {
-                targetRow.classList.add('highlight-item-strong');
-            }, 500);
-            
-            setTimeout(() => {
-                targetRow.classList.remove('highlight-item-strong');
-            }, 3000);
-            
-            setTimeout(() => {
-                targetRow.classList.remove('highlight-item');
-                isRedirectingToItem = false;
-                targetItemId = null;
-                
-                const url = new URL(window.location);
-                if (url.searchParams.get('item_id') === itemId) {
-                    url.searchParams.delete('item_id');
-                    window.history.replaceState({}, '', url);
-                }
-            }, 6000);
-            
-        } else {
-            console.warn('Item not visible on current page:', itemId);
-            showItemNotFoundMessage(itemId);
-        }
-    }
-    
-    setTimeout(attemptScroll, 500);
+    setTimeout(() => attemptScroll(itemId), 500);
 };
+
+function attemptScroll(itemId) {
+    const allItemRows = Array.from(document.querySelectorAll('#inventoryTableBody tr[data-item-id]'));
+    const targetRow = allItemRows.find(row => row.getAttribute('data-item-id') === itemId);
+    const rowIndex = allItemRows.findIndex(row => row.getAttribute('data-item-id') === itemId);
+    
+    if (rowIndex !== -1 && targetRow) {
+        const itemsPerPage = rowsPerPage;
+        const targetPage = Math.floor(rowIndex / itemsPerPage) + 1;
+        
+        if (thisCurrentPage !== targetPage) {
+            thisCurrentPage = targetPage;
+            setTimeout(() => {
+                displayPage(targetPage);
+                setTimeout(() => scrollToItemOnCurrentPage(itemId), 300);
+            }, 100);
+        } else {
+            scrollToItemOnCurrentPage(itemId);
+        }
+    } else {
+        showItemNotFoundMessage(itemId);
+    }
+}
+
+function scrollToItemOnCurrentPage(itemId) {
+    const targetRow = document.querySelector(`tr[data-item-id="${itemId}"]`);
+    
+    if (targetRow && targetRow.style.display !== 'none') {
+        targetRow.classList.add('highlight-item');
+        
+        setTimeout(() => {
+            targetRow.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center',
+                inline: 'nearest'
+            });
+            targetRow.classList.add('highlight-item-strong');
+        }, 100);
+        
+        setTimeout(() => {
+            targetRow.classList.remove('highlight-item-strong');
+        }, 3000);
+        
+        setTimeout(() => {
+            targetRow.classList.remove('highlight-item');
+            cleanupScrollState(itemId);
+        }, 6000);
+    } else {
+        showItemNotFoundMessage(itemId);
+    }
+}
+
+function cleanupScrollState(itemId) {
+    isRedirectingToItem = false;
+    targetItemId = null;
+    
+    const url = new URL(window.location);
+    if (url.searchParams.get('item_id') === itemId) {
+        url.searchParams.delete('item_id');
+        window.history.replaceState({}, '', url);
+    }
+}
 
 // =============================================
 // ALERT FUNCTIONS
 // =============================================
 function showItemNotFoundMessage(itemId) {
-    if (isShowingItemNotFoundAlert) {
-        console.log('Alert already showing, skipping...');
-        return;
-    }
+    if (isShowingItemNotFoundAlert) return;
     
     isShowingItemNotFoundAlert = true;
     
     Swal.fire({
         icon: 'warning',
         title: 'Item Not Found',
-        html: `
-            The item (ID: <b>${itemId}</b>) could not be found in the current view.<br>
-            It may have been <b>deleted</b>, filtered out, or no longer exists.
-        `,
+        html: `The item (ID: <b>${itemId}</b>) could not be found in the current view.`,
         confirmButtonText: 'OK',
         confirmButtonColor: '#3085d6',
-        allowOutsideClick: true,
-        allowEscapeKey: true,
         background: '#fff',
-    }).then((result) => {
-        const url = new URL(window.location);
-        if (url.searchParams.get('item_id') === itemId) {
-            url.searchParams.delete('item_id');
-            window.history.replaceState({}, '', url);
-        }
-        
-        isRedirectingToItem = false;
-        targetItemId = null;
+    }).then(() => {
+        cleanupScrollState(itemId);
         isShowingItemNotFoundAlert = false;
     });
 }
@@ -196,11 +231,7 @@ function initializeScrollFromURL() {
     const itemId = urlParams.get('item_id');
     
     if (itemId) {
-        console.log('Found item_id in URL, will scroll to:', itemId);
-        
-        setTimeout(() => {
-            scrollToItem(itemId);
-        }, 1000);
+        setTimeout(() => scrollToItem(itemId), 1000);
     }
 }
 
@@ -217,10 +248,8 @@ function initRowsPerPageSelector() {
         rowsPerPageSelect.addEventListener('change', function() {
             rowsPerPage = parseInt(this.value);
             thisCurrentPage = 1;
-            
             displayPage(thisCurrentPage);
             updateItemCounts();
-            
             localStorage.setItem('allItemsTableRowsPerPage', this.value);
         });
     }
@@ -244,17 +273,17 @@ function initializeDOMCache() {
 }
 
 // =============================================
-// TABLE DISPLAY & PAGINATION
+// TABLE DISPLAY & PAGINATION - OPTIMIZED
 // =============================================
 function displayPage(page = 1) {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
     requestAnimationFrame(() => {
-        allRows.forEach(row => {
-            row.style.display = "none";
-        });
+        // Hide all rows first
+        allRows.forEach(row => row.style.display = "none");
         
+        // Show only rows for current page
         for (let i = start; i < Math.min(end, filteredRows.length); i++) {
             if (filteredRows[i]) {
                 filteredRows[i].style.display = "";
@@ -264,11 +293,11 @@ function displayPage(page = 1) {
         updatePagination(page);
         updatePageInfo();
         
+        // Handle item highlighting if redirecting
         if (isRedirectingToItem && targetItemId && page === thisCurrentPage) {
             setTimeout(() => {
                 const targetRow = document.querySelector(`tr[data-item-id="${targetItemId}"]`);
                 if (targetRow && targetRow.style.display !== 'none') {
-                    console.log('Highlighting item on page change');
                     targetRow.classList.add('highlight-item');
                 }
             }, 200);
@@ -286,11 +315,9 @@ function updatePagination(page) {
     }
     
     domElements.pagination.style.display = "flex";
-    
-    const currentHTML = domElements.pagination.innerHTML;
     const newHTML = generatePaginationHTML(page, totalPages);
     
-    if (currentHTML !== newHTML) {
+    if (domElements.pagination.innerHTML !== newHTML) {
         domElements.pagination.innerHTML = newHTML;
         attachPaginationEvents(page, totalPages);
     }
@@ -300,24 +327,20 @@ function generatePaginationHTML(page, totalPages) {
     let html = '';
     const range = 2;
     
+    // First and previous buttons
     if (page > 1) {
         html += `<a href="#" class="prev-next" data-page="1" title="First page"><i class="fas fa-angle-double-left"></i></a>`;
-    }
-    
-    if (page > 1) {
         html += `<a href="#" class="prev-next" data-page="${page - 1}" title="Previous page"><i class="fas fa-chevron-left"></i></a>`;
     }
     
+    // Page numbers
     for (let i = Math.max(1, page - range); i <= Math.min(totalPages, page + range); i++) {
-        const activeClass = i === page ? "active" : "";
-        html += `<a href="#" class="${activeClass}" data-page="${i}">${i}</a>`;
+        html += `<a href="#" class="${i === page ? 'active' : ''}" data-page="${i}">${i}</a>`;
     }
     
+    // Next and last buttons
     if (page < totalPages) {
         html += `<a href="#" class="prev-next" data-page="${page + 1}" title="Next page"><i class="fas fa-chevron-right"></i></a>`;
-    }
-    
-    if (page < totalPages) {
         html += `<a href="#" class="prev-next" data-page="${totalPages}" title="Last page"><i class="fas fa-angle-double-right"></i></a>`;
     }
     
@@ -338,26 +361,23 @@ function attachPaginationEvents(page, totalPages) {
 }
 
 // =============================================
-// TABLE MANAGEMENT
+// TABLE MANAGEMENT - OPTIMIZED
 // =============================================
 function initializeTable() {
     allRows = Array.from(domElements.tableBody.querySelectorAll("tr"));
     
     allRows.forEach((row, index) => {
-        const dateCell = row.cells[12]?.textContent.trim(); // Fixed: Date is in column 12
-        const statusCell = row.cells[13]?.textContent.trim(); // Fixed: Status is in column 13
-        
         row._data = {
-            category: (row.cells[2]?.textContent || '').toLowerCase().trim(),
-            serialNumber: (row.cells[4]?.textContent || '').toLowerCase(),
-            itemName: (row.cells[5]?.textContent || '').toLowerCase(),
-            description: (row.cells[6]?.textContent || '').toLowerCase(),
-            brand: (row.cells[7]?.textContent || '').toLowerCase().trim(),
-            model: (row.cells[8]?.textContent || '').toLowerCase(),
-            quantity: parseInt(row.cells[10]?.textContent || 0), // Fixed: Quantity is in column 10
-            dateAcquired: dateCell,
-            status: statusCell, // Fixed: Store status properly
-            itemId: (row.cells[1]?.textContent || '').toLowerCase()
+            category: getCellData(row, 'category').toLowerCase().trim(),
+            serialNumber: getCellData(row, 'serialNumber').toLowerCase(),
+            itemName: getCellData(row, 'itemName').toLowerCase(),
+            description: getCellData(row, 'description').toLowerCase(),
+            brand: getCellData(row, 'brand').toLowerCase().trim(),
+            model: getCellData(row, 'model').toLowerCase(),
+            availableQuantity: parseInt(getCellData(row, 'availableQuantity') || 0),
+            dateAcquired: getCellData(row, 'dateAcquired').trim(),
+            status: getCellData(row, 'status').trim(),
+            itemId: getCellData(row, 'itemId').toLowerCase()
         };
     });
     
@@ -368,8 +388,8 @@ function initializeTable() {
 
 function updateRowNumbers() {
     filteredRows.forEach((row, index) => {
-        const cell = row.cells[0];
-        if (cell.textContent !== (index + 1).toString()) {
+        const cell = row.cells[columnMap.rowNumber || 0];
+        if (cell) {
             cell.textContent = index + 1;
         }
     });
@@ -381,7 +401,7 @@ function showNoResultsMessage(show) {
     if (show && !noResultsRow) {
         noResultsRow = document.createElement("tr");
         noResultsRow.id = 'noResultsMessage';
-        noResultsRow.innerHTML = `<td colspan="15" style="text-align:center; color:#666; padding:20px;">No items found matching your filters.</td>`;
+        noResultsRow.innerHTML = `<td colspan="17" style="text-align:center; color:#666; padding:20px;">No items found matching your filters.</td>`;
         domElements.tableBody.appendChild(noResultsRow);
     } else if (!show && noResultsRow) {
         noResultsRow.remove();
@@ -389,7 +409,7 @@ function showNoResultsMessage(show) {
 }
 
 // =============================================
-// FILTERING & SEARCH
+// FILTERING & SEARCH - FIXED VERSION
 // =============================================
 function filterItemsAll() {
     const filterKey = generateFilterKey();
@@ -400,66 +420,84 @@ function filterItemsAll() {
         return;
     }
     
-    const searchValue = (domElements.searchInput?.value || '').toLowerCase();
-   
     requestAnimationFrame(() => {
-        filteredRows = allRows.filter(row => {
-            const data = row._data;
-            
-            // Quantity filter
-            if (currentFiltersAll.quantity === "out" && data.quantity !== 0) return false;
-            if (currentFiltersAll.quantity === "available" && data.quantity <= 0) return false;
-            
-            // Date acquired filter - FIXED
-            if (currentFiltersAll.dateFrom || currentFiltersAll.dateTo) {
-                const itemDate = parseTableDate(data.dateAcquired);
-                
-                if (!itemDate) return false;
-                
-                if (currentFiltersAll.dateFrom) {
-                    const fromDate = new Date(currentFiltersAll.dateFrom);
-                    fromDate.setHours(0, 0, 0, 0);
-                    if (itemDate < fromDate) return false;
-                }
-                
-                if (currentFiltersAll.dateTo) {
-                    const toDate = new Date(currentFiltersAll.dateTo);
-                    toDate.setHours(23, 59, 59, 999);
-                    if (itemDate > toDate) return false;
-                }
-            }
-            
-            // Status filter - FIXED
-            if (currentFiltersAll.status.length > 0 && !currentFiltersAll.status.includes(data.status)) {
-                return false;
-            }
-            
-            // Search filter
-            if (searchValue && !(
-                data.itemId.includes(searchValue) ||
-                data.itemName.includes(searchValue) || 
-                data.model.includes(searchValue) || 
-                data.brand.includes(searchValue) ||
-                data.serialNumber.includes(searchValue) ||
-                data.description.includes(searchValue) ||
-                data.category.includes(searchValue)
-            )) {
-                return false;
-            }
-            
-            return true;
-        });
+        applyFiltersAndSort();
         
-        if (filterCache.size > 50) filterCache.clear(); 
+        // Cache management
+        if (filterCache.size > 50) filterCache.clear();
         filterCache.set(filterKey, filteredRows);
         
         updateDisplay();
     });
 }
 
+function applyFiltersAndSort() {
+    const searchValue = (domElements.searchInput?.value || '').toLowerCase();
+    
+    console.log('=== APPLYING FILTERS AND SORT ===');
+    console.log('Current filters:', currentFiltersAll);
+    console.log('Current sort:', currentSort);
+    
+    // First apply all filters from the full dataset
+    filteredRows = allRows.filter(row => {
+        const data = row._data;
+        
+        // Date filter
+        if (!passesDateFilter(data.dateAcquired)) return false;
+        
+        // Status filter
+        if (currentFiltersAll.status.length > 0 && !currentFiltersAll.status.includes(data.status)) {
+            return false;
+        }
+        
+        // Search filter
+        if (searchValue && !passesSearchFilter(data, searchValue)) return false;
+        
+        return true;
+    });
+    
+    console.log('After filtering:', filteredRows.length, 'rows');
+    
+    // Then apply current sort if exists
+    if (currentSort.field) {
+        applyCurrentSort();
+    }
+}
+
+function passesDateFilter(dateAcquired) {
+    if (!currentFiltersAll.dateFrom && !currentFiltersAll.dateTo) return true;
+    
+    const itemDate = parseTableDate(dateAcquired);
+    if (!itemDate) return false;
+    
+    if (currentFiltersAll.dateFrom) {
+        const fromDate = new Date(currentFiltersAll.dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        if (itemDate < fromDate) return false;
+    }
+    
+    if (currentFiltersAll.dateTo) {
+        const toDate = new Date(currentFiltersAll.dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        if (itemDate > toDate) return false;
+    }
+    
+    return true;
+}
+
+function passesSearchFilter(data, searchValue) {
+    return data.itemId.includes(searchValue) ||
+           data.itemName.includes(searchValue) || 
+           data.model.includes(searchValue) || 
+           data.brand.includes(searchValue) ||
+           data.serialNumber.includes(searchValue) ||
+           data.description.includes(searchValue) ||
+           data.category.includes(searchValue);
+}
+
 function generateFilterKey() {
     const searchValue = domElements.searchInput?.value || '';
-    return `${currentFiltersAll.quantity}|${currentFiltersAll.dateFrom}|${currentFiltersAll.dateTo}|${currentFiltersAll.status.sort().join(',')}|${searchValue}`;
+    return `${currentFiltersAll.dateFrom}|${currentFiltersAll.dateTo}|${currentFiltersAll.status.sort().join(',')}|${searchValue}|${currentSort.field}|${currentSort.order}`;
 }
 
 function updateDisplay() {
@@ -475,7 +513,77 @@ function updateDisplay() {
 }
 
 // =============================================
-// FILTER CONTROLS
+// SORTING FUNCTIONS - SIMPLIFIED VERSION
+// =============================================
+function sortByQuantityAll(order = "asc") {
+    console.log('=== SORTING BY QUANTITY ===');
+    console.log('Current filters:', currentFiltersAll);
+    console.log('Current sort:', currentSort);
+    
+    // Update sort state
+    currentSort.field = 'availableQuantity';
+    currentSort.order = order;
+    
+    // Clear cache since we're changing sort
+    filterCache.clear();
+    
+    // Re-apply current filters with new sort order
+    applyFiltersAndSort();
+    
+    // Reset to first page and update display
+    thisCurrentPage = 1;
+    updateTableDOM();
+    updateItemCounts();
+}
+
+function applyCurrentSort() {
+    if (!currentSort.field) return;
+    
+    console.log('Applying sort:', currentSort);
+    
+    filteredRows.sort((a, b) => {
+        const aVal = a._data[currentSort.field];
+        const bVal = b._data[currentSort.field];
+        
+        // Handle numeric sorting for quantities
+        if (currentSort.field === 'availableQuantity') {
+            const numA = parseInt(aVal) || 0;
+            const numB = parseInt(bVal) || 0;
+            const result = currentSort.order === "asc" ? numA - numB : numB - numA;
+            console.log(`Sorting: ${numA} vs ${numB} = ${result}`);
+            return result;
+        }
+        
+        // Default string sorting for other fields
+        if (aVal < bVal) return currentSort.order === "asc" ? -1 : 1;
+        if (aVal > bVal) return currentSort.order === "asc" ? 1 : -1;
+        return 0;
+    });
+    
+    console.log('First 5 items after sort:', filteredRows.slice(0, 5).map(r => r._data.availableQuantity));
+}
+
+function updateTableDOM() {
+    const tableBody = document.getElementById("inventoryTableBody");
+    
+    console.log('Updating table DOM with', filteredRows.length, 'rows');
+    console.log('Current sort:', currentSort);
+    console.log('Current filters:', currentFiltersAll);
+    
+    // Clear and rebuild table in correct order
+    tableBody.innerHTML = '';
+    filteredRows.forEach(row => tableBody.appendChild(row));
+    
+    // Update display
+    updateRowNumbers();
+    displayPage(thisCurrentPage);
+}
+
+// =============================================
+// FILTER CONTROLS - OPTIMIZED
+// =============================================
+// =============================================
+// FILTER CONTROLS - OPTIMIZED
 // =============================================
 function initFilterControlsAll() {
     const filterToggles = [
@@ -491,12 +599,13 @@ function initFilterControlsAll() {
         });
     }
 
+    // Global click handler for filter toggles
     document.addEventListener('click', function(e) {
         const toggle = e.target.closest('[id^="toggle"]');
         if (toggle) {
             e.stopPropagation();
             const filterConfig = filterToggles.find(f => f.id === toggle.id);
-            if (filterConfig && filterConfig.container) {
+            if (filterConfig?.container) {
                 const isHidden = filterConfig.container.classList.contains("hidden");
                 closeAllFilters();
                 if (isHidden) {
@@ -508,70 +617,15 @@ function initFilterControlsAll() {
         }
     });
 
+    // Prevent filter containers from closing when clicked
     filterToggles.forEach(({ container }) => {
         container?.addEventListener('click', e => e.stopPropagation());
     });
 
-    // Quantity filter handlers
-    document.getElementById("sortLowToHighAll")?.addEventListener("click", () => {
-        sortByQuantityAll("asc");
-        closeAllFilters();
-    });
-
-    document.getElementById("sortHighToLowAll")?.addEventListener("click", () => {
-        sortByQuantityAll("desc");
-        closeAllFilters();
-    });
-
-    document.getElementById("showAvailableAll")?.addEventListener("click", () => {
-        currentFiltersAll.quantity = "available";
-        filterItemsAll();
-        closeAllFilters();
-    });
-
-    document.getElementById("showOutOfStockAll")?.addEventListener("click", () => {
-        currentFiltersAll.quantity = "out";
-        filterItemsAll();
-        closeAllFilters();
-    });
-
-    document.getElementById("resetQuantityFilterAll")?.addEventListener("click", () => {
-        currentFiltersAll.quantity = "";
-        filterItemsAll();
-        closeAllFilters();
-    });
-
-    // Date filter handlers - FIXED
-    document.getElementById("filterByDateBtnAll")?.addEventListener("click", () => {
-        currentFiltersAll.dateFrom = domElements.dateFrom.value;
-        currentFiltersAll.dateTo = domElements.dateTo.value;
-        filterItemsAll();
-        closeAllFilters();
-    });
-
-    document.getElementById("resetDateFilterBtnAll")?.addEventListener("click", () => {
-        domElements.dateFrom.value = "";
-        domElements.dateTo.value = "";
-        currentFiltersAll.dateFrom = "";
-        currentFiltersAll.dateTo = "";
-        filterItemsAll();
-        closeAllFilters();
-    });
-
-    // Status filter handlers - FIXED
-    document.getElementById("filterByStatusBtn")?.addEventListener("click", () => {
-        const statusCheckboxes = document.querySelectorAll('input[name="statusFilter"]:checked');
-        currentFiltersAll.status = Array.from(statusCheckboxes).map(cb => cb.value);
-        filterItemsAll();
-        closeAllFilters();
-    });
-
-    document.getElementById("resetStatusFilterBtn")?.addEventListener("click", () => {
-        document.querySelectorAll('input[name="statusFilter"]').forEach(cb => cb.checked = false);
-        currentFiltersAll.status = [];
-        filterItemsAll();
-        closeAllFilters();
-    });
+    // Setup individual filter handlers
+    setupQuantityFilters();
+    setupDateFilters();
+    setupStatusFilters();
 
     // Reset all filters
     document.getElementById("resetAllFiltersBtn")?.addEventListener("click", resetAllFiltersAll);
@@ -579,25 +633,57 @@ function initFilterControlsAll() {
     // Search functionality
     domElements.searchInput?.addEventListener("input", () => {
         clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
+        debounceTimer = setTimeout(() => filterItemsAll(), 150);
+    });
+
+    function setupQuantityFilters() {
+        document.getElementById("sortLowToHighAll")?.addEventListener("click", () => {
+            sortByQuantityAll("asc");
+            closeAllFilters(); // Close filter after applying
+        });
+
+        document.getElementById("sortHighToLowAll")?.addEventListener("click", () => {
+            sortByQuantityAll("desc");
+            closeAllFilters(); // Close filter after applying
+        });
+    }
+
+    function setupDateFilters() {
+        document.getElementById("filterByDateBtnAll")?.addEventListener("click", () => {
+            currentFiltersAll.dateFrom = domElements.dateFrom.value;
+            currentFiltersAll.dateTo = domElements.dateTo.value;
             filterItemsAll();
-        }, 150);
-    });
-}
+            closeAllFilters(); // Close filter after applying
+        });
 
-function sortByQuantityAll(order = "asc") {
-    filteredRows.sort((a, b) => {
-        const qA = a._data.quantity;
-        const qB = b._data.quantity;
-        return order === "asc" ? qA - qB : qB - qA;
-    });
+        document.getElementById("resetDateFilterBtnAll")?.addEventListener("click", () => {
+            domElements.dateFrom.value = "";
+            domElements.dateTo.value = "";
+            currentFiltersAll.dateFrom = "";
+            currentFiltersAll.dateTo = "";
+            filterItemsAll();
+            closeAllFilters(); // Close filter after resetting
+        });
+    }
 
-    updateRowNumbers();
-    displayPage(thisCurrentPage);
+    function setupStatusFilters() {
+        document.getElementById("filterByStatusBtn")?.addEventListener("click", () => {
+            const statusCheckboxes = document.querySelectorAll('input[name="statusFilter"]:checked');
+            currentFiltersAll.status = Array.from(statusCheckboxes).map(cb => cb.value);
+            filterItemsAll();
+            closeAllFilters(); // Close filter after applying
+        });
+
+        document.getElementById("resetStatusFilterBtn")?.addEventListener("click", () => {
+            document.querySelectorAll('input[name="statusFilter"]').forEach(cb => cb.checked = false);
+            currentFiltersAll.status = [];
+            filterItemsAll();
+            closeAllFilters(); // Close filter after resetting
+        });
+    }
 }
 
 function resetAllFiltersAll() {
-    currentFiltersAll.quantity = "";
     domElements.dateFrom.value = "";
     domElements.dateTo.value = "";
     currentFiltersAll.dateFrom = "";
@@ -606,17 +692,20 @@ function resetAllFiltersAll() {
     currentFiltersAll.status = [];
     domElements.searchInput.value = "";
     
+    // Clear sort when resetting all filters
+    currentSort.field = null;
+    currentSort.order = null;
+    
     filterCache.clear();
     dateCache.clear();
     filterItemsAll();
 }
-
 function initSearchFunctionalityAll() {
-    // Already handled in initFilterControlsAll
+    // Handled in initFilterControlsAll
 }
 
 // =============================================
-// COLUMN FILTERING
+// COLUMN FILTERING - OPTIMIZED
 // =============================================
 const columnFilterKey = "columnFilterSettingsAll";
 
@@ -624,11 +713,7 @@ function restoreColumnSettings() {
     const savedSettings = JSON.parse(localStorage.getItem(columnFilterKey)) || {};
     document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
         const colIndex = cb.getAttribute("data-column");
-        if (savedSettings[colIndex] === false) {
-            cb.checked = false;
-        } else {
-            cb.checked = true;
-        }
+        cb.checked = savedSettings[colIndex] !== false;
         cb.dispatchEvent(new Event("change"));
     });
 }
@@ -642,34 +727,35 @@ function saveColumnSettings() {
     localStorage.setItem(columnFilterKey, JSON.stringify(settings));
 }
 
-document.querySelectorAll("#columnFilterContainer input[type='checkbox']")
-    .forEach(checkbox => {
+function initColumnFiltering() {
+    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(checkbox => {
         checkbox.addEventListener("change", function () {
             const colIndex = this.getAttribute("data-column");
             const table = document.querySelector(".itemTable");
 
-            table.querySelectorAll("thead th:nth-child(" + (parseInt(colIndex) + 1) + ")")
-                .forEach(th => th.style.display = this.checked ? "" : "none");
-
-            table.querySelectorAll("tbody tr td:nth-child(" + (parseInt(colIndex) + 1) + ")")
-                .forEach(td => td.style.display = this.checked ? "" : "none");
+            table.querySelectorAll(`thead th:nth-child(${parseInt(colIndex) + 1}), tbody tr td:nth-child(${parseInt(colIndex) + 1})`)
+                .forEach(element => element.style.display = this.checked ? "" : "none");
 
             saveColumnSettings();
         });
     });
 
-document.getElementById("resetColumnFilterBtn").addEventListener("click", () => {
-    document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
-        if (!cb.checked) {
-            cb.checked = true;
-            cb.dispatchEvent(new Event("change"));
-        }
+    document.getElementById("resetColumnFilterBtn")?.addEventListener("click", () => {
+        document.querySelectorAll("#columnFilterContainer input[type='checkbox']").forEach(cb => {
+            if (!cb.checked) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event("change"));
+            }
+        });
+        localStorage.removeItem(columnFilterKey);
     });
-    localStorage.removeItem(columnFilterKey);
-});
+}
+
+// Initialize column filtering
+initColumnFiltering();
 
 // =============================================
-// TABLE ACTIONS
+// TABLE ACTIONS - OPTIMIZED
 // =============================================
 function initTableActions() {
     document.querySelector('.itemTable')?.addEventListener('click', function(e) {
@@ -701,14 +787,15 @@ function handleDeleteItem(deleteBtn) {
     }).then(result => {
         if (result.isConfirmed) {
             sessionStorage.setItem('deletedItemAllName', itemName);
-            let url = `/templates/inventory/function/deleteSpecificItem.php?id=${itemId}&source=${source}`;
-            window.location.href = url;
+            window.location.href = `/templates/inventory/function/deleteSpecificItem.php?id=${itemId}&source=${source}`;
         }
     });
 }
 
 function handleEditItem(editBtn) {
     const getData = attr => editBtn.getAttribute(attr) || '';
+    
+    // Set form values
     document.getElementById('edit-item-id').value = getData('data-id');
     document.getElementById('edit-item-name').value = getData('data-name');
     document.getElementById('edit-item-description').value = getData('data-description');
@@ -719,16 +806,22 @@ function handleEditItem(editBtn) {
     document.getElementById('edit-item-unit-cost').value = getData('data-unitcost');
     document.getElementById('edit-item-total-cost').value = getData('data-totalcost');
     document.getElementById('edit-item-qty').value = getData('data-qty');
+    document.getElementById('edit-available-item-qty').value = getData('data-available-qty');
     document.getElementById('edit-item-status').value = getData('data-item-status');
+    document.getElementById('edit-remarks').value = getData('data-remarks');
     document.getElementById('edit-item-photo').value = '';
 
+    // Handle date
     const dateAcquired = getData('data-date-acquired');
-    document.getElementById('edit-item-date-acquired').value = dateAcquired && !isNaN(Date.parse(dateAcquired)) ? new Date(dateAcquired).toISOString().split('T')[0] : '';
+    document.getElementById('edit-item-date-acquired').value = dateAcquired && !isNaN(Date.parse(dateAcquired)) 
+        ? new Date(dateAcquired).toISOString().split('T')[0] : '';
 
+    // Handle category
     const categoryId = getData('data-category-id');
     const categorySelect = document.getElementById('edit-item-category-id');
     Array.from(categorySelect.options).forEach(opt => opt.selected = opt.value === categoryId);
 
+    // Handle photo
     const photoOutput = document.getElementById('edit-itemPhotoOutput');
     const photo = getData('data-photo');
     if (photo) {
@@ -745,32 +838,44 @@ function handleEditItem(editBtn) {
 let scrollPosition = 0;
 
 function handleViewItem(viewBtn) {
-    document.getElementById("view-item-name").textContent = viewBtn.dataset.name;
-    document.getElementById("view-item-category").textContent = viewBtn.dataset.category || 'None';
-    document.getElementById("view-item-description").textContent = viewBtn.dataset.description || 'None';
-    document.getElementById("view-item-brand").textContent = viewBtn.dataset.brand || 'None';
-    document.getElementById("view-item-model").textContent = viewBtn.dataset.model || 'None';
-    document.getElementById("view-item-serial").textContent = viewBtn.dataset.serial || 'None';
-    document.getElementById("view-item-quantity").textContent = viewBtn.dataset.qty;
-    document.getElementById("view-item-unit").textContent = viewBtn.dataset.unit || 'None';
-    document.getElementById("view-item-unit-cost").textContent = viewBtn.dataset.unitcost;
-    document.getElementById("view-item-total-cost").textContent = viewBtn.dataset.totalcost;
+    // Set all view modal content
+    const viewFields = {
+        "view-item-name": viewBtn.dataset.name,
+        "view-item-category": viewBtn.dataset.category || 'None',
+        "view-item-description": viewBtn.dataset.description || 'None',
+        "view-item-brand": viewBtn.dataset.brand || 'None',
+        "view-item-model": viewBtn.dataset.model || 'None',
+        "view-item-serial": viewBtn.dataset.serial || 'None',
+        "view-item-quantity": viewBtn.dataset.qty,
+        "view-available-quantity": viewBtn.dataset.availableQty || viewBtn.dataset.qty,
+        "view-item-unit": viewBtn.dataset.unit || 'None',
+        "view-item-unit-cost": viewBtn.dataset.unitcost,
+        "view-item-total-cost": viewBtn.dataset.totalcost,
+        "view-item-status": viewBtn.dataset.itemstatus,
+        "view-item-remarks": viewBtn.dataset.remarks || 'None'
+    };
 
-    document.getElementById("view-item-date-acquired").textContent =
-        viewBtn.dataset.dateAcquired
-            ? new Date(viewBtn.dataset.dateAcquired).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: '2-digit'
-            }).replace(',', '').replace(' ', '-')
-            : 'N/A';
+    Object.entries(viewFields).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+    });
+
+    // Format dates
+    const dateAcquired = viewBtn.dataset.dateAcquired;
+    document.getElementById("view-item-date-acquired").textContent = dateAcquired
+        ? new Date(dateAcquired).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: '2-digit'
+        }).replace(',', '').replace(' ', '-')
+        : 'N/A';
+
     document.getElementById("view-item-created-at").textContent = viewBtn.dataset.created || 'N/A';
-    document.getElementById("view-item-status").textContent = viewBtn.dataset.itemstatus;
 
+    // Handle photo
     const photo = viewBtn.dataset.photo;
     document.getElementById("view-item-photo").src =
         photo && photo !== '' ? '/' + photo : '/images/user-profile/default-image.jpg';
 
+    // Save scroll position and show modal
     scrollPosition = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollPosition}px`;
@@ -800,6 +905,7 @@ function escEditItemModal() {
 function previewItemEditPhoto(event) {
     const output = document.getElementById('edit-itemPhotoOutput');
     const file = event.target.files[0];
+    
     if (file) {
         output.src = URL.createObjectURL(file);
         output.style.display = "block";
@@ -811,21 +917,22 @@ function previewItemEditPhoto(event) {
 }
 
 // =============================================
-// UTILITY FUNCTIONS
+// UTILITY FUNCTIONS - OPTIMIZED
 // =============================================
 function updateItemCounts() {
     const totalItems = allRows.length;
     const filteredItems = filteredRows.length;
     const isFiltered = filteredItems !== totalItems;
     
-    updateCountElement('totalItemsCount', totalItems);
-    updateCountElement('totalItemsCount2', totalItems);
-    updateCountElement('visibleItemsCount', filteredItems);
-    updateCountElement('visibleCount', filteredItems);
-    updateCountElement('totalCount', totalItems);
-    updateCountElement('displayedCount', filteredItems);
-    updateCountElement('totalItems', totalItems);
+    // Update all count elements
+    const countElements = [
+        'totalItemsCount', 'totalItemsCount2', 'visibleItemsCount', 
+        'visibleCount', 'totalCount', 'displayedCount', 'totalItems'
+    ];
     
+    countElements.forEach(id => updateCountElement(id, isFiltered ? filteredItems : totalItems));
+    
+    // Handle filtered count display
     const filteredCountElement = document.getElementById('filteredItemsCount');
     if (filteredCountElement) {
         filteredCountElement.style.display = isFiltered ? 'inline' : 'none';
@@ -842,11 +949,9 @@ function updatePageInfo() {
     
     const pageInfoElement = document.getElementById('pageInfo');
     if (pageInfoElement) {
-        if (totalItems > 0) {
-            pageInfoElement.textContent = `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`;
-        } else {
-            pageInfoElement.textContent = 'No entries to show';
-        }
+        pageInfoElement.textContent = totalItems > 0 
+            ? `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`
+            : 'No entries to show';
     }
 }
 
@@ -863,17 +968,8 @@ function updateActiveFiltersDisplay() {
     
     const activeFilters = [];
     
-    if (currentFiltersAll.quantity === "out") {
-        activeFilters.push("Out of Stock");
-    } else if (currentFiltersAll.quantity === "available") {
-        activeFilters.push("Available");
-    }
-    
     if (currentFiltersAll.dateFrom || currentFiltersAll.dateTo) {
-        let dateFilter = "Date: ";
-        if (currentFiltersAll.dateFrom) dateFilter += `from ${currentFiltersAll.dateFrom}`;
-        if (currentFiltersAll.dateTo) dateFilter += ` to ${currentFiltersAll.dateTo}`;
-        activeFilters.push(dateFilter);
+        activeFilters.push(`Date: ${currentFiltersAll.dateFrom || 'any'} to ${currentFiltersAll.dateTo || 'any'}`);
     }
     
     if (currentFiltersAll.status.length > 0) {
@@ -883,6 +979,11 @@ function updateActiveFiltersDisplay() {
     const searchValue = domElements.searchInput?.value || '';
     if (searchValue) {
         activeFilters.push(`Search: "${searchValue}"`);
+    }
+    
+    if (currentSort.field) {
+        const sortDirection = currentSort.order === "asc" ? "Low to High" : "High to Low";
+        activeFilters.push(`Sorted by: Quantity (${sortDirection})`);
     }
     
     if (activeFilters.length > 0) {
@@ -895,11 +996,11 @@ function updateActiveFiltersDisplay() {
 }
 
 // =============================================
-// DATE PARSING
+// DATE PARSING - OPTIMIZED
 // =============================================
 const dateCache = new Map();
 function parseTableDate(dateString) {
-    if (!dateString || dateString === 'N/A' || dateString === '—' || dateString === '') {
+    if (!dateString || ['N/A', '—', ''].includes(dateString)) {
         return null;
     }
     
@@ -910,7 +1011,7 @@ function parseTableDate(dateString) {
     try {
         let result = null;
         
-        // Format 1: "Mar-15-2024" (M-d-Y) - FIXED VERSION
+        // Format: "Mar-15-2024"
         if (dateString.match(/^[A-Za-z]{3}-\d{1,2}-\d{4}$/)) {
             const monthNames = {
                 "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
@@ -923,17 +1024,17 @@ function parseTableDate(dateString) {
             
             if (month !== undefined && !isNaN(day) && !isNaN(year)) {
                 result = new Date(year, month, day);
-                // Validate the parsed date
+                // Validate date
                 if (result.getDate() !== day || result.getMonth() !== month || result.getFullYear() !== year) {
                     result = null;
                 }
             }
         }
-        // Format 2: "2024-03-15" (ISO)
+        // Format: "2024-03-15" (ISO)
         else if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
             result = new Date(dateString);
         }
-        // Try native parsing for other formats
+        // Try native parsing
         else {
             result = new Date(dateString);
         }
@@ -963,8 +1064,7 @@ function calculateEditTotalCost() {
     function updateTotalCost() {
         const qty = parseFloat(qtyInput.value) || 0;
         const unitCost = parseFloat(unitCostInput.value) || 0;
-        const total = qty * unitCost;
-        totalCostInput.value = total.toFixed(2);
+        totalCostInput.value = (qty * unitCost).toFixed(2);
     }
 
     qtyInput.addEventListener("input", updateTotalCost);
@@ -996,7 +1096,7 @@ function initDateValidation() {
 }
 
 // =============================================
-// PRINT FUNCTIONALITY
+// PRINT FUNCTIONALITY - OPTIMIZED
 // =============================================
 function printAllCurrentTableView() {
     const printWindow = window.open('', '_blank');
@@ -1008,173 +1108,65 @@ function printAllCurrentTableView() {
     const headers = Array.from(document.querySelectorAll('.itemTable thead th'))
         .map(th => th.textContent.trim())
         .filter((header, index) => {
-            if (index === 3 || index === 12) return false;
-            
+            if (index === columnMap.image || index === columnMap.actions) return false;
             const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
             return !colCheckbox || colCheckbox.checked;
         });
 
-    // Calculate total cost of all visible items
-    let totalCost = 0;
-    visibleRows.forEach(row => {
-        const cells = Array.from(row.cells);
-        cells.forEach((cell, index) => {
-            // Look for total cost in the data attributes or calculate from quantity and unit cost
-            if (index === 13) { // Actions column - skip
-                return;
-            }
-            
-            // Try to get total cost from data attributes if available
-            const actionBtn = row.querySelector('.action-btn.view');
-            if (actionBtn && actionBtn.dataset.totalcost) {
-                const itemTotalCost = parseFloat(actionBtn.dataset.totalcost) || 0;
-                totalCost += itemTotalCost;
-                return;
-            }
-            
-            // Alternative: Calculate from quantity and unit cost if available
-            if (actionBtn && actionBtn.dataset.qty && actionBtn.dataset.unitcost) {
-                const quantity = parseFloat(actionBtn.dataset.qty) || 0;
-                const unitCost = parseFloat(actionBtn.dataset.unitcost) || 0;
-                totalCost += quantity * unitCost;
-            }
-        });
-    });
+    // Calculate total cost
+    let totalCost = visibleRows.reduce((sum, row) => {
+        const actionBtn = row.querySelector('.action-btn.view');
+        if (actionBtn?.dataset.totalcost) {
+            return sum + (parseFloat(actionBtn.dataset.totalcost) || 0);
+        } else if (actionBtn?.dataset.qty && actionBtn?.dataset.unitcost) {
+            return sum + (parseFloat(actionBtn.dataset.qty) || 0) * (parseFloat(actionBtn.dataset.unitcost) || 0);
+        }
+        return sum;
+    }, 0);
 
-    // Format total cost with commas and 2 decimal places
     const formattedTotalCost = new Intl.NumberFormat('en-PH', {
         style: 'currency',
         currency: 'PHP'
     }).format(totalCost);
 
-    let tableHTML = `
+    const tableHTML = generatePrintHTML(headers, visibleRows, currentDate, formattedTotalCost);
+    
+    printWindow.document.write(tableHTML);
+    printWindow.document.close();
+}
+
+function generatePrintHTML(headers, visibleRows, currentDate, formattedTotalCost) {
+    return `
         <!DOCTYPE html>
         <html>
         <head>
             <title>All Items - Inventory Report</title>
             <style>
-                body { 
-                    font-family: Arial, sans-serif; 
-                    margin: 0; 
-                    padding: 20px; 
-                    color: #000; 
-                }
-                .header-container { 
-                    display: flex; 
-                    align-items: center; 
-                    margin-bottom: 20px; 
-                    border-bottom: 2px solid #000; 
-                    padding-bottom: 15px; 
-                }
-                .logo-container { 
-                    flex: 0 0 auto; 
-                    margin-left: 150px; 
-                }
-                .logo { 
-                    width: 120px; 
-                    height: 120px; 
-                    object-fit: contain; 
-                }
-                .header-content { 
-                    flex: 1; 
-                    text-align: center; 
-                }
-                .header-content h1 { 
-                    margin: 0 0 8px 0; 
-                    font-size: 24pt; 
-                    color: #2c3e50; 
-                }
-                .header-content .subtitle { 
-                    font-size: 14pt; 
-                    color: #666; 
-                    margin-bottom: 5px; 
-                }
-                .header-content .department { 
-                    font-size: 12pt; 
-                    color: #888; 
-                    font-weight: bold; 
-                }
-                .print-info { 
-                    display: flex; 
-                    justify-content: space-between; 
-                    margin-bottom: 20px; 
-                    padding: 12px; 
-                    background-color: #f8f9fa; 
-                    border: 1px solid #dee2e6; 
-                    border-radius: 4px; 
-                    font-size: 10pt; 
-                }
-                .info-item { 
-                    text-align: center; 
-                    flex: 1; 
-                }
-                .info-item strong { 
-                    display: block; 
-                    color: #2c3e50; 
-                    margin-bottom: 3px; 
-                }
-                .total-cost {
-                    color: #1d6f42;
-                    font-weight: bold;
-                    font-size: 11pt;
-                }
-                table { 
-                    width: 100%; 
-                    border-collapse: collapse; 
-                    font-size: 9pt; 
-                    page-break-inside: auto; 
-                    margin-bottom: 20px; 
-                }
-                th, td { 
-                    border: 1px solid #333; 
-                    padding: 8px; 
-                    text-align: center; 
-                    page-break-inside: avoid; 
-                }
-                th { 
-                    background-color: #2c3e50; 
-                    color: white; 
-                    font-weight: bold; 
-                    border-bottom: 2px solid #000; 
-                }
-                tr:nth-child(even) { 
-                    background-color: #f8f9fa; 
-                }
-                .number { 
-                    text-align: right; 
-                    font-family: "Courier New", monospace; 
-                }
-                .cost-cell {
-                    text-align: right;
-                    font-family: "Courier New", monospace;
-                    font-weight: bold;
-                }
-                .print-footer { 
-                    margin-top: 30px; 
-                    padding-top: 15px; 
-                    border-top: 1px solid #ddd; 
-                    font-size: 9pt; 
-                    color: #666; 
-                    text-align: center; 
-                }
-                .no-print { 
-                    display: none; 
-                }
-                @page { 
-                    size: landscape; 
-                    margin: 1cm; 
-                }
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #000; }
+                .header-container { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+                .logo-container { flex: 0 0 auto; margin-left: 150px; }
+                .logo { width: 120px; height: 120px; object-fit: contain; }
+                .header-content { flex: 1; text-align: center; }
+                .header-content h1 { margin: 0 0 8px 0; font-size: 24pt; color: #2c3e50; }
+                .header-content .subtitle { font-size: 14pt; color: #666; margin-bottom: 5px; }
+                .header-content .department { font-size: 12pt; color: #888; font-weight: bold; }
+                .print-info { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 12px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; font-size: 10pt; }
+                .info-item { text-align: center; flex: 1; }
+                .info-item strong { display: block; color: #2c3e50; margin-bottom: 3px; }
+                .total-cost { color: #1d6f42; font-weight: bold; font-size: 11pt; }
+                table { width: 100%; border-collapse: collapse; font-size: 9pt; page-break-inside: auto; margin-bottom: 20px; }
+                th, td { border: 1px solid #333; padding: 8px; text-align: center; page-break-inside: avoid; }
+                th { background-color: #2c3e50; color: white; font-weight: bold; border-bottom: 2px solid #000; }
+                tr:nth-child(even) { background-color: #f8f9fa; }
+                .number, .cost-cell { text-align: right; font-family: "Courier New", monospace; }
+                .cost-cell { font-weight: bold; }
+                .print-footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; font-size: 9pt; color: #666; text-align: center; }
+                .no-print { display: none; }
+                @page { size: landscape; margin: 1cm; }
                 @media print {
-                    body { 
-                        margin: 0; 
-                        padding: 15px; 
-                    }
-                    .header-container { 
-                        margin-bottom: 15px; 
-                    }
-                    .print-info { 
-                        background-color: #f8f9fa !important; 
-                    }
+                    body { margin: 0; padding: 15px; }
+                    .header-container { margin-bottom: 15px; }
+                    .print-info { background-color: #f8f9fa !important; }
                 }
             </style>
         </head>
@@ -1191,69 +1183,33 @@ function printAllCurrentTableView() {
             </div>
             
             <div class="print-info">
-                <div class="info-item">
-                    <strong>Generated Date</strong>
-                    <span>${currentDate}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Total Items</strong>
-                    <span>${visibleRows.length}</span>
-                </div>
-                <div class="info-item">
-                    <strong>Total Inventory Value</strong>
-                    <span class="total-cost">${formattedTotalCost}</span>
-                </div>
+                <div class="info-item"><strong>Generated Date</strong><span>${currentDate}</span></div>
+                <div class="info-item"><strong>Total Items</strong><span>${visibleRows.length}</span></div>
+                <div class="info-item"><strong>Total Inventory Value</strong><span class="total-cost">${formattedTotalCost}</span></div>
             </div>
             
             <table>
-                <thead>
-                    <tr>
-    `;
-
-    headers.forEach(header => {
-        tableHTML += `<th>${header}</th>`;
-    });
-
-    tableHTML += `
-                    </tr>
-                </thead>
+                <thead><tr>${headers.map(header => `<th>${header}</th>`).join('')}</tr></thead>
                 <tbody>
-    `;
-
-    visibleRows.forEach(row => {
-        const cells = Array.from(row.cells);
-        tableHTML += '<tr>';
-        
-        cells.forEach((cell, index) => {
-            if (index === 3 || index === 12) return;
-            
-            const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
-            if (colCheckbox && !colCheckbox.checked) {
-                return;
-            }
-            
-            let cellContent = cell.textContent.trim();
-            cellContent = cellContent.replace(/—/g, 'N/A').trim();
-            
-            let formattedContent = cellContent;
-            let cellClass = '';
-            
-            if (index === 9) {
-                cellClass = 'number';
-            }
-            
-            // Check if this is a cost-related column and format accordingly
-            if (cellContent.includes('₱') || cell.textContent.includes('PHP')) {
-                cellClass = 'cost-cell';
-            }
-            
-            tableHTML += `<td class="${cellClass}">${formattedContent || ''}</td>`;
-        });
-        
-        tableHTML += '</tr>';
-    });
-
-    tableHTML += `
+                    ${visibleRows.map(row => {
+                        const cells = Array.from(row.cells);
+                        return `<tr>${cells.map((cell, index) => {
+                            if (index === columnMap.image || index === columnMap.actions) return '';
+                            const colCheckbox = document.querySelector(`#columnFilterContainer input[data-column="${index}"]`);
+                            if (colCheckbox && !colCheckbox.checked) return '';
+                            
+                            let cellContent = cell.textContent.trim().replace(/—/g, 'N/A');
+                            let cellClass = '';
+                            
+                            if (index === columnMap.quantity || index === columnMap.availableQuantity) {
+                                cellClass = 'number';
+                            } else if (cellContent.includes('₱') || cell.textContent.includes('PHP')) {
+                                cellClass = 'cost-cell';
+                            }
+                            
+                            return `<td class="${cellClass}">${cellContent || ''}</td>`;
+                        }).join('')}</tr>`;
+                    }).join('')}
                 </tbody>
             </table>
             
@@ -1264,17 +1220,12 @@ function printAllCurrentTableView() {
             <script>
                 window.onload = function() {
                     window.print();
-                    setTimeout(function() {
-                        window.close();
-                    }, 500);
+                    setTimeout(() => window.close(), 500);
                 };
             </script>
         </body>
         </html>
     `;
-
-    printWindow.document.write(tableHTML);
-    printWindow.document.close();
 }
 
 // =============================================

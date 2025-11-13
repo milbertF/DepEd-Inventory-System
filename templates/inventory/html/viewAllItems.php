@@ -115,19 +115,19 @@ if (isset($_SESSION['deleted_all_item_name'])) {
             <div class="column-checkboxes">
             <label><input type="checkbox" data-column="1" > Item ID</label>
               <label><input type="checkbox" data-column="2" checked> Category</label>
-              <label><input type="checkbox" data-column="3" checked> Image</label>
+              <label><input type="checkbox" data-column="3" > Image</label>
               <label><input type="checkbox" data-column="4" checked> Serial Number</label>
-
               <label><input type="checkbox" data-column="5" checked> Item Name</label>
               <label><input type="checkbox" data-column="6" checked> Description</label>
-              <label><input type="checkbox" data-column="7" checked> Brand</label>
-              <label><input type="checkbox" data-column="8" checked> Model</label>
+              <label><input type="checkbox" data-column="7" > Brand</label>
+              <label><input type="checkbox" data-column="8" > Model</label>
               <label><input type="checkbox" data-column="9" checked> Unit Cost</label>
-              <label><input type="checkbox" data-column="10" checked> Quantity</label>
-              <label><input type="checkbox" data-column="11" checked> Total Cost</label>
-              <label><input type="checkbox" data-column="12" checked> Date Acquired</label>
-              <label><input type="checkbox" data-column="13" checked> Status</label>
-              <label><input type="checkbox" data-column="14" checked> Actions</label>
+              <label><input type="checkbox" data-column="10" checked> Total Quantity</label>
+              <label><input type="checkbox" data-column="11" checked> Available Quantity</label>
+              <label><input type="checkbox" data-column="12" checked> Total Cost</label>
+              <label><input type="checkbox" data-column="13" checked> Date Acquired</label>
+              <label><input type="checkbox" data-column="14" checked> Status</label>
+              <label><input type="checkbox" data-column="15" checked> Actions</label>
             </div>
             <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
           </div>
@@ -163,14 +163,12 @@ if (isset($_SESSION['deleted_all_item_name'])) {
           <div class="filterContainer hidden" id="quantityFilterContainerAll">
             <div class="filter-header">
               <i class="fas fa-sort-amount-up-alt"></i>
-              <span>Filter by Quantity</span>
+              <span>Filter by Available Quantity</span>
             </div>
             <div class="quantity-options">
               <button id="sortLowToHighAll" class="quantity-option"><i class="fas fa-sort-amount-up"></i> Low to High</button>
               <button id="sortHighToLowAll" class="quantity-option"><i class="fas fa-sort-amount-down"></i> High to Low</button>
-              <button id="showAvailableAll" class="quantity-option"><i class="fas fa-box"></i> Available (Qty > 0)</button>
-              <button id="showOutOfStockAll" class="quantity-option"><i class="fas fa-box-open"></i> Out of Stock (Qty = 0)</button>
-              <button id="resetQuantityFilterAll" class="quantity-option"><i class="fas fa-times"></i> Show All Quantities</button>
+           
             </div>
           </div>
 
@@ -215,16 +213,17 @@ if (isset($_SESSION['deleted_all_item_name'])) {
             <th>Category</th>
             <th>Image</th>
             <th>Serial Number</th>
-         
             <th>Item Name</th>
             <th>Description</th>
             <th>Brand</th>
             <th>Model</th>
             <th>Unit Cost</th>
-            <th>Quantity</th>
+            <th> Total Quantity</th>
+            <th> Available Quantity</th>
             <th>Total Cost</th>
             <th>Date Acquired</th>
             <th>Status</th>
+            <th>Remarks</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -244,10 +243,12 @@ if (isset($_SESSION['deleted_all_item_name'])) {
             <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
             <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
             <td>₱<?= number_format($item['unit_cost'], 2) ?></td>
-            <td><?= htmlspecialchars($item['quantity']) ?></td>
+            <td><?= htmlspecialchars($item['total_quantity']) ?></td>
+            <td><?= htmlspecialchars($item['available_quantity']) ?></td>
             <td>₱<?= number_format($item['total_cost'], 2) ?></td>
             <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
             <td><?= htmlspecialchars($item['item_status']) ?></td>
+            <td><?= !empty($item['remarks']) ? htmlspecialchars($item['remarks']) : '—' ?></td>
             <td>
               <button class="action-btn view" title="View Item"
                 data-id="<?= $item['item_id'] ?>"
@@ -258,12 +259,14 @@ if (isset($_SESSION['deleted_all_item_name'])) {
                 data-brand="<?= htmlspecialchars($item['brand']) ?>"
                 data-model="<?= htmlspecialchars($item['model']) ?>"
                 data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
-                data-qty="<?= $item['quantity'] ?>"
+                data-qty="<?= $item['total_quantity'] ?>"
+                data-available-qty="<?= $item['available_quantity'] ?>"
                 data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
                 data-unit="<?= $item['unit'] ?>"
                 data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
                 data-totalcost="<?= $item['total_cost'] ?? 0 ?>"
                 data-itemstatus="<?= $item['item_status'] ?? 0 ?>"
+                data-remarks="<?= htmlspecialchars($item['remarks']) ?>"
                 data-created="<?= $item['created_at'] ?>">
                 <i class="fas fa-eye"></i>
                 <span class="tooltip">View Item</span>
@@ -280,9 +283,13 @@ if (isset($_SESSION['deleted_all_item_name'])) {
                 data-brand="<?= $item['brand'] ?>"
                 data-model="<?= $item['model'] ?>"
                 data-serial="<?= $item['serial_number'] ?>"
-                data-qty="<?= $item['quantity'] ?>"
+             
+                data-qty="<?= $item['total_quantity'] ?>"
+                data-available-qty="<?= $item['available_quantity'] ?>"
+            
                 data-date-acquired="<?= (!empty($item['date_acquired']) && $item['date_acquired'] !== '0000-00-00') ? date('Y-m-d', strtotime($item['date_acquired'])) : '' ?>"
                 data-item-status="<?= $item['item_status'] ?>"
+                data-remarks="<?= $item['remarks'] ?>"
                 data-unit="<?= $item['unit'] ?>"
                 data-unitcost="<?= $item['unit_cost'] ?? 0 ?>"
                 data-totalcost="<?= $item['total_cost'] ?? 0 ?>">

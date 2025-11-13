@@ -33,7 +33,8 @@ $categoryResult = $categoryQuery->get_result();
 $categoryRow = $categoryResult->fetch_assoc();
 $categoryName = $categoryRow ? preg_replace('/[^a-zA-Z0-9_-]/', '_', $categoryRow['category_name']) : "Category_" . $categoryId;
 
-$query = "SELECT item_name, brand, model, serial_number, quantity, unit, unit_cost, total_cost, description, date_acquired, item_status 
+// MODIFIED: Added initial_quantity to the SELECT query
+$query = "SELECT item_name, brand, model, serial_number, total_quantity, available_quantity, unit, unit_cost, total_cost, description, date_acquired, item_status 
           FROM deped_inventory_items 
           WHERE category_id = ?";
 $params = [$categoryId];
@@ -52,12 +53,12 @@ if (!empty($modelFilter) && $modelFilter !== 'all') {
 }
 
 if ($minQty !== null) {
-    $query .= " AND quantity >= ?";
+    $query .= " AND total_quantity >= ?";
     $types .= 'i';
     $params[] = $minQty;
 }
 if ($maxQty !== null) {
-    $query .= " AND quantity <= ?";
+    $query .= " AND total_quantity <= ?";
     $types .= 'i';
     $params[] = $maxQty;
 }
@@ -83,7 +84,6 @@ if ($endDate) {
     $types .= 's';
     $params[] = $endDate;
 }
-
 
 if (!empty($statusFilter) && $statusFilter !== 'all') {
     $query .= " AND item_status = ?";
@@ -116,10 +116,12 @@ if ($endDate) $summary[] = "To Date = $endDate";
 if (!empty($statusFilter) && $statusFilter !== 'all') $summary[] = "Status = $statusFilter"; 
 $sheet->setCellValue('B1', $summary ? implode(', ', $summary) : 'None');
 
-$headers = ['Item Name', 'Brand', 'Model', 'Serial Number', 'Quantity', 'Unit', 'Unit Cost', 'Total Cost', 'Description', 'Date Acquired', 'Status'];
+// MODIFIED: Added "Available Quantity" to headers
+$headers = ['Item Name', 'Brand', 'Model', 'Serial Number', 'Total Quantity', 'Available Quantity', 'Unit', 'Unit Cost', 'Total Cost', 'Description', 'Date Acquired', 'Status'];
 $sheet->fromArray($headers, null, 'A2');
 
-$sheet->getStyle('A2:K2')->applyFromArray([ 
+// MODIFIED: Updated range from K2 to L2
+$sheet->getStyle('A2:L2')->applyFromArray([ 
     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4F81BD']],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -133,7 +135,8 @@ while ($row = $result->fetch_assoc()) {
         ucfirst($row['brand']),
         ucfirst($row['model']),
         $row['serial_number'],
-        $row['quantity'],
+        $row['total_quantity'], // Total Quantity
+        $row['available_quantity'], // Available Quantity
         ($row['unit'] == '0' || $row['unit'] === null || trim($row['unit']) === '') ? 'None' : ucfirst($row['unit']),
         $row['unit_cost'],
         $row['total_cost'],
@@ -142,15 +145,18 @@ while ($row = $result->fetch_assoc()) {
         ucfirst($row['item_status']) 
     ], null, "A$rowIndex");
 
-    $sheet->getStyle("A$rowIndex:K$rowIndex")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN); // Changed to K
+    // MODIFIED: Updated range from K to L
+    $sheet->getStyle("A$rowIndex:L$rowIndex")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
     $rowIndex++;
 }
 
-$sheet->getStyle("G3:G$rowIndex")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-$sheet->getStyle("H3:H$rowIndex")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00);
-$sheet->getStyle("J3:J$rowIndex")->getNumberFormat()->setFormatCode('yyyy-mm-dd');
+// MODIFIED: Updated column ranges for number formatting
+$sheet->getStyle("H3:H$rowIndex")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00); // Unit Cost
+$sheet->getStyle("I3:I$rowIndex")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00); // Total Cost
+$sheet->getStyle("K3:K$rowIndex")->getNumberFormat()->setFormatCode('yyyy-mm-dd'); // Date Acquired
 
-foreach (range('A', 'K') as $col) { 
+// MODIFIED: Updated range to include L column
+foreach (range('A', 'L') as $col) { 
     $sheet->getColumnDimension($col)->setAutoSize(true);
 }
 

@@ -10,7 +10,8 @@ $itemQuery = $conn->prepare("
         i.brand,
         i.model,
         i.serial_number,
-        i.quantity,
+        i.total_quantity,
+        i.available_quantity,
         i.unit,
         i.description,
         i.unit_cost,
@@ -18,6 +19,7 @@ $itemQuery = $conn->prepare("
         i.created_at,
         i.date_acquired,
         i.item_status,
+        i.remarks,
         i.item_photo
     FROM deped_inventory_items i
     LEFT JOIN deped_inventory_item_category c ON i.category_id = c.category_id
@@ -37,7 +39,8 @@ while ($row = $itemsResult->fetch_assoc()) {
         'brand' => ucfirst($row['brand'] ?? ''),
         'model' => ucfirst($row['model'] ?? ''),
         'serial_number' => $row['serial_number'] ?? '',
-        'quantity' => $row['quantity'] ?? 0,
+        'total_quantity' => $row['total_quantity'] ?? 0,
+        'available_quantity' => $row['available_quantity'] ?? 0,
         'unit' => ucfirst($row['unit'] ?? ''),
         'description' => $row['description'] ?? '',
         'unit_cost' => $row['unit_cost'] ?? 0,
@@ -45,6 +48,7 @@ while ($row = $itemsResult->fetch_assoc()) {
         'created_at' => $row['created_at'] ?? '',
         'date_acquired' => $row['date_acquired'] ?? '',
         'item_status' => $row['item_status'] ?? '',
+        'remarks' => $row['remarks'] ?? '',
         'item_photo' => $row['item_photo'] ?? ''
     ];
 }

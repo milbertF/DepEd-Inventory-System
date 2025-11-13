@@ -174,14 +174,14 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
     <label><input type="checkbox" data-column="5" checked> Item Name</label>
     <label><input type="checkbox" data-column="6" checked> Brand</label>
     <label><input type="checkbox" data-column="7" checked> Model</label>
-    <label><input type="checkbox" data-column="8" checked> Quantity</label>
-
-    <label><input type="checkbox" data-column="9" checked> Date Acquired</label>
-    <label><input type="checkbox" data-column="10" checked> Status</label>
-    <label><input type="checkbox" data-column="11" checked> Deleted By</label>
-    <label><input type="checkbox" data-column="12" checked> Deleted Date</label>
-    <label><input type="checkbox" data-column="13" > Deleted Time</label>
-    <label><input type="checkbox" data-column="14" checked> Actions</label>
+    <label><input type="checkbox" data-column="8" checked> Total Quantity</label>
+    <label><input type="checkbox" data-column="9" checked>  Available Quantity</label>
+    <label><input type="checkbox" data-column="10" checked> Date Acquired</label>
+    <label><input type="checkbox" data-column="11" checked> Status</label>
+    <label><input type="checkbox" data-column="12" checked> Deleted By</label>
+    <label><input type="checkbox" data-column="13" checked> Deleted Date</label>
+    <label><input type="checkbox" data-column="14" > Deleted Time</label>
+    <label><input type="checkbox" data-column="15" checked> Actions</label>
   </div>
   <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
 </div>
@@ -212,9 +212,7 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
               <div class="quantity-options">
                 <button id="sortLowToHigh" class="quantity-option"><i class="fas fa-sort-amount-up"></i> Low to High</button>
                 <button id="sortHighToLow" class="quantity-option"><i class="fas fa-sort-amount-down"></i> High to Low</button>
-                <button id="showAvailable" class="quantity-option"><i class="fas fa-box"></i> Available (Qty > 0)</button>
-                <button id="showOutOfStock" class="quantity-option"><i class="fas fa-box-open"></i> Out of Stock (Qty = 0)</button>
-                <button id="resetQuantityFilter" class="quantity-option"><i class="fas fa-times"></i> Show All</button>
+                
               </div>
             </div>
 
@@ -287,13 +285,13 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
               <th>#</th>
               <th>Item ID</th>
               <th>Category</th>
-               <th>Image</th>
+              <th>Image</th>
               <th>Serial Number</th>
-             
               <th>Item Name</th>
               <th>Brand</th>
               <th>Model</th>
-              <th>Quantity</th>
+              <th>Total Quantity</th>
+              <th>Available Quantity</th>
               <th>Date Acquired</th>
               <th>Item Status</th>
               <th>Deleted By</th>
@@ -316,7 +314,8 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
               <td><?= htmlspecialchars($item['item_name']) ?></td>
               <td><?= !empty($item['brand']) ? htmlspecialchars($item['brand']) : '—' ?></td>
               <td><?= !empty($item['model']) ? htmlspecialchars($item['model']) : '—' ?></td>
-              <td><?= htmlspecialchars($item['quantity']) ?></td>
+              <td><?= htmlspecialchars($item['total_quantity']) ?></td>
+              <td><?= htmlspecialchars($item['available_quantity']) ?></td>
               <td><?= isset($item['date_acquired']) ? date("M-d-Y", strtotime($item['date_acquired'])) : 'N/A' ?></td>
               <td><?= htmlspecialchars($item['item_status']) ?></td>
               <td><?= htmlspecialchars($item['deleted_by_fname'] . ' ' . $item['deleted_by_lname']) ?></td>
@@ -333,7 +332,8 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
                   data-brand="<?= htmlspecialchars($item['brand']) ?>"
                   data-model="<?= htmlspecialchars($item['model']) ?>"
                   data-serial="<?= htmlspecialchars($item['serial_number']) ?>"
-                  data-qty="<?= $item['quantity'] ?>"
+                  data-qty="<?= $item['total_quantity'] ?>"
+                  data-available-qty="<?= $item['available_quantity'] ?>"
                   data-deletedby="<?= htmlspecialchars($item['deleted_by_fname'] . ' ' . $item['deleted_by_lname']) ?>" 
                   data-deletedat="<?= (!empty($item['deleted_at']) ? date('Y-m-d H:i:s', strtotime($item['deleted_at'])) : '') ?>" 
                  

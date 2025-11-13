@@ -92,7 +92,7 @@ $isAdmin = isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Ad
 
           <div></div> <!-- div para ma punta sa right and total items kekw -->
           <div class="item-count-display" style="background: #f8f9fa; padding: 8px 16px; border-radius: 20px; font-weight: 500; color: #495057;">
-            <span id="totalItemsCount"><?= count($positions) ?></span> total items
+            <span id="totalItemsCount"><?= count($positions) ?></span> total positions
             <span id="filteredItemsCount" style="display: none;">
               | Showing <span id="visibleItemsCount">0</span> of <span id="totalItemsCount2"><?= count($positions) ?></span>
             </span>

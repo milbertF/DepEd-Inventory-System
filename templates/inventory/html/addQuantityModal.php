@@ -25,7 +25,7 @@
           <input 
             type="number" 
             id="quantity" 
-            name="quantity" 
+            name="total_quantity" 
             placeholder="Enter quantity to add" 
             min="1" 
             required 
