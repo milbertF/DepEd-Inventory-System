@@ -37,15 +37,15 @@ if (isset($_SESSION['deleted_all_item_name'])) {
     unset($_SESSION['deleted_all_is_last_item']);
 }
 ?>
-
-<body>
 <?php require __DIR__ . '/viewItemModal.php'; ?>
 <?php require __DIR__ . '/editItem.php'; ?>
+
+<body>
 
 <div class="wrapMain">
   <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
 
-  <div class="con">
+  <div class="con-items">
   <?php require __DIR__ . '/../../header/html/pageHeader.php'; ?>
     <?php require __DIR__ . '/../../quick-access/access.php'; ?>
 
@@ -127,7 +127,8 @@ if (isset($_SESSION['deleted_all_item_name'])) {
               <label><input type="checkbox" data-column="12" checked> Total Cost</label>
               <label><input type="checkbox" data-column="13" checked> Date Acquired</label>
               <label><input type="checkbox" data-column="14" checked> Status</label>
-              <label><input type="checkbox" data-column="15" checked> Actions</label>
+              <label><input type="checkbox" data-column="15" checked> Remarks</label>
+              <label><input type="checkbox" data-column="16" checked> Actions</label>
             </div>
             <button class="reset-btn" id="resetColumnFilterBtn">Reset Columns</button>
           </div>
@@ -205,6 +206,7 @@ if (isset($_SESSION['deleted_all_item_name'])) {
       <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
 
       <!-- Items Table -->
+      <div class="table-scroll-wrapper">
       <table class="itemTable">
         <thead>
           <tr>
@@ -310,6 +312,7 @@ if (isset($_SESSION['deleted_all_item_name'])) {
           <?php endforeach; ?>
         </tbody>
       </table>
+      </div>
 
       <!-- Pagination -->
      
@@ -323,6 +326,7 @@ if (isset($_SESSION['deleted_all_item_name'])) {
         <option value="20">20</option>
         <option value="30">30</option>
         <option value="50">50</option>
+        <option value="100">100</option>
       </select>
       <span>entries</span>
     </div>

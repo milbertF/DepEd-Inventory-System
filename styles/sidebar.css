@@ -10,8 +10,151 @@
   flex-direction: column;
   gap: 1rem;
   box-shadow: var(--boxShadow);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
+/* Hamburger Menu Button (Mobile Only) */
+.hamburger-menu {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid hsl(from var(--textColor) h s l / 0.2);
+  background-color: hsl(from var(--containerColor) h s l / 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 0.4rem;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  z-index: 1002;
+  transition: all 0.3s ease;
+}
+
+.hamburger-menu:hover {
+  background-color: hsl(from var(--containerColor) h s l / 0.98);
+  border-color: hsl(from var(--textColor) h s l / 0.3);
+  transform: scale(1.05);
+}
+
+.hamburger-menu.active {
+  background-color: hsl(from var(--containerColor) h s l / 0.98);
+  border-color: hsl(from var(--textColor) h s l / 0.4);
+}
+
+.hamburger-menu span {
+  width: 1.25rem;
+  height: 0.15rem;
+  background-color: var(--textColor);
+  border-radius: 0.1rem;
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger-menu.active span:nth-child(1) {
+  transform: rotate(45deg) translate(0.25rem, 0.25rem);
+  width: 1.1rem;
+}
+
+.hamburger-menu.active span:nth-child(2) {
+  opacity: 0;
+  transform: scale(0);
+}
+
+.hamburger-menu.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(0.25rem, -0.25rem);
+  width: 1.1rem;
+}
+
+/* Mobile Styles */
+@media screen and (max-width: 834px) {
+  .hamburger-menu {
+    display: flex;
+  }
+
+  /* Adjust header title for hamburger */
+  .header-title-row {
+    position: relative;
+    padding-left: 3.5rem;
+  }
+
+  .header-title {
+    margin-left: 0.5rem;
+    text-align: left;
+    font-size: 1.3rem;
+  }
+
+  .notif-bell {
+    margin-right: 1rem;
+  }
+}
+
+/* Small Mobile Devices */
+@media screen and (max-width: 480px) {
+  .hamburger-menu {
+    top: 0.8rem;
+    left: 0.8rem;
+    width: 2.3rem;
+    height: 2.3rem;
+  }
+
+  .hamburger-menu span {
+    width: 1.1rem;
+    height: 0.13rem;
+  }
+
+  .hamburger-menu.active span:nth-child(1) {
+    transform: rotate(45deg) translate(0.2rem, 0.2rem);
+    width: 1rem;
+  }
+
+  .hamburger-menu.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(0.2rem, -0.2rem);
+    width: 1rem;
+  }
+
+  .header-title-row {
+    padding-left: 3.2rem;
+  }
+
+  .header-title {
+    margin-left: 0.4rem;
+    font-size: 1.2rem;
+    max-width: calc(100% - 5rem);
+  }
+
+  .notif-bell {
+    margin-right: 0.8rem;
+  }
+}
+
+/* Very Small Mobile Devices */
+@media screen and (max-width: 360px) {
+  .hamburger-menu {
+    top: 0.6rem;
+    left: 0.6rem;
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+
+  .header-title-row {
+    padding-left: 2.8rem;
+  }
+
+  .header-title {
+    margin-left: 0.3rem;
+    font-size: 1.1rem;
+    max-width: calc(100% - 4rem);
+  }
+
+  .notif-bell {
+    margin-right: 0.5rem;
+  }
+}
 .sidebar .part,
 .set {
   all: unset;
@@ -21,6 +164,7 @@
   align-items: center;
   cursor: pointer;
   transition: scale 0.3s ease;
+  flex-shrink: 0;
 }
 
 .sidebar .part:focus {
@@ -32,20 +176,20 @@
 }
 
 .sidebar .part:hover label {
-
   opacity: 1;
   left: calc(100% + 0.5rem);
 }
 
 .sidebar .icon {
-  width: 100%;
-  aspect-ratio: 1 / 1;
+  width: 2.3rem;
+  height: 2.3rem; 
   background-color: var(--backgroundColor);
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: rgba(255, 255, 255, 0.05) solid 1px;
+  flex-shrink: 0; 
 }
 
 .sidebar .icon i {
@@ -55,7 +199,7 @@
 
 .sidebar .part label {
   font-size: 0.7rem;
-z-index: 1001;
+  z-index: 1001;
   pointer-events: none;
   background-color: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(1rem);
@@ -70,16 +214,17 @@ z-index: 1001;
   border-radius: 0.2rem;
   border: var(--border);
   box-shadow: var(--boxShadow);
+  white-space: nowrap; 
 }
 
 .sidebar .set {
-
   position: absolute;
   bottom: 1rem;
   width: calc(100% - 2rem);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex-shrink: 0; 
 }
 
 .sidebar .set button {
@@ -87,6 +232,7 @@ z-index: 1001;
   cursor: pointer;
   display: flex;
   justify-content: center;
+  flex-shrink: 0; 
 }
 
 .sidebar .set button i {
@@ -94,7 +240,8 @@ z-index: 1001;
 }
 
 .sidebar .set .acc {
-  aspect-ratio: 1/1;
+  width: 2.3rem;
+  height: 2.3rem; 
   border-radius: 50%;
   background-color: white;
   cursor: pointer;
@@ -102,11 +249,12 @@ z-index: 1001;
   border: var(--border);
   box-shadow: var(--boxShadow);
   position: relative;
+  flex-shrink: 0; 
 }
 
 .sidebar .set .acc img {
-  width: 34.44px;
-  height: 34.44px;
+  width: 100%; 
+  height: 100%; 
   object-fit: cover;
   border-radius: 50%;
 }
@@ -128,26 +276,22 @@ z-index: 1001;
 }
 
 .sidebar .icon img {
-  width: 120%;
-  height: 120%;
-
+  width: 2.8rem; 
+  height: 2.8rem;
   object-fit: contain;
   display: block;
   transition: transform 0.3s ease;
 }
 
 .sidebar .set .acc .tooltip > * {
-  
   color: black;
 }
 
 .sidebar .set .acc .tooltip p {
-
   font-size: 0.8rem;
 }
 
 .sidebar .set .acc .tooltip a {
-
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0.2rem;
@@ -159,105 +303,179 @@ z-index: 1001;
   text-decoration: none;
 }
 
-@media screen and (max-width: 600px) {
+/* Mobile Styles with Hamburger */
+@media screen and (max-width: 834px) {
+  .hamburger-menu {
+    display: flex;
+  }
+
   .sidebar {
     position: fixed;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.5rem;
+    top: 0;
+    left: -100%;
+    width: 16rem;
+    height: 100vh;
+    background-color: var(--containerColor);
     border-radius: 0;
-    gap: 0.5rem;
-    overflow-x: auto;
-    box-sizing: border-box;
+    border-right: var(--border);
+    z-index: 1001;
+    transition: left 0.3s ease;
+    overflow-y: auto;
+    padding: 5rem 1rem 1rem 1rem;
+  }
+
+  .sidebar.active {
+    left: 0;
   }
 
   .sidebar .part {
-    flex: 1;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: flex-start;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    transition: background-color 0.3s ease;
+  }
+
+  .sidebar .part:hover {
+    background-color: hsl(from var(--backgroundColor) h s l / 0.3);
+    scale: 1;
+  }
+
+  .sidebar .part label {
+    position: static;
+    opacity: 1;
+    background: none;
+    backdrop-filter: none;
+    padding: 0;
+    margin-left: 1rem;
+    font-size: 0.9rem;
+    transform: none;
+    box-shadow: none;
+    border: none;
   }
 
   .sidebar .icon {
     width: 2.5rem;
     height: 2.5rem;
+    flex-shrink: 0;
   }
 
   .sidebar .icon i {
     font-size: 1.2rem;
   }
 
-  .sidebar .part label {
-    display: none;
-  }
-
   .sidebar .set {
     position: static;
-    flex-direction: row;
-    justify-content: flex-end;
-    width: auto;
-    gap: 0.5rem;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: var(--border);
+  }
+
+  .sidebar .set button {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+  }
+
+  .sidebar .set button:hover {
+    background-color: hsl(from var(--backgroundColor) h s l / 0.3);
   }
 
   .sidebar .set button i {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
+    margin-right: 1rem;
   }
 
   .sidebar .set .acc {
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    padding: 0.8rem 1rem;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .sidebar .set .acc img {
     width: 2.5rem;
     height: 2.5rem;
+    margin-right: 1rem;
   }
 
   .sidebar .set .acc .tooltip {
-    position: absolute;
-    bottom: 3.5rem;
-    right: 0;
-    left: auto;
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    width: auto;
   }
 
-  @media screen and (min-width: 600px) and (max-width: 834px) {
-    .sidebar {
-      width: 4rem;
-      padding: 0.8rem 0.6rem;
-      gap: 0.8rem;
-    }
+  .sidebar .icon img {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
 
-    .sidebar .icon {
-      width: 2.8rem;
-      height: 2.8rem;
-    }
+  /* Overlay when sidebar is open */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+  }
 
-    .sidebar .icon i {
-      font-size: 1.1rem;
-    }
-
-    .sidebar .part label {
-      font-size: 0.65rem;
-      left: calc(100% + 0.4rem);
-    }
-
-    .sidebar .set {
-      width: 100%;
-      gap: 0.75rem;
-    }
-
-    .sidebar .set .acc {
-      width: 2.6rem;
-      height: 2.6rem;
-    }
-
-    .sidebar .set .acc .tooltip {
-      left: calc(100% + 0.4rem);
-      bottom: 0;
-    }
+  .sidebar-overlay.active {
+    display: block;
   }
 }
 
- 
+/* Small Mobile Devices */
+@media screen and (max-width: 480px) {
+  .sidebar {
+    width: 14rem;
+  }
+
+  .hamburger-menu {
+    z-index: 10;
+    top: 0.5rem;
+    left: 0.5rem;
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+
+  .sidebar .part {
+    padding: 0.7rem 0.8rem;
+  }
+
+  .sidebar .part label {
+    font-size: 0.85rem;
+  }
+
+  .sidebar .set button {
+    padding: 0.7rem 0.8rem;
+  }
+}
+
+/* Tablet Devices */
+@media screen and (min-width: 835px) and (max-width: 1024px) {
+  .sidebar {
+    width: 4.2rem;
+    padding: 0.9rem;
+    gap: 0.9rem;
+  }
+
+  .sidebar .icon {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .sidebar .set .acc {
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+}

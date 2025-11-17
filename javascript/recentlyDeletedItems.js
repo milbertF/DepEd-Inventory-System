@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
   checkForRecoveredItem();
   checkForMultipleRecoveredItems();
   
+  initDragToScroll();
   setTimeout(() => {
     initializeScrollFromURL();
   }, 500);
@@ -897,25 +898,129 @@ function showNoResultsMessage(show) {
 }
 
 function updateItemCounts() {
-  const totalItems = allRows.length;
-  const filteredItems = filteredRows.length;
-  const isFiltered = filteredItems !== totalItems;
-  
-  updateCountElement('totalItemsCount', totalItems);
-  updateCountElement('totalItemsCount2', totalItems);
-  updateCountElement('visibleItemsCount', filteredItems);
-  updateCountElement('visibleCount', filteredItems);
-  updateCountElement('totalCount', totalItems);
-  updateCountElement('displayedCount', filteredItems);
-  updateCountElement('totalItems', totalItems);
-  
-  const filteredCountElement = document.getElementById('filteredItemsCount');
-  if (filteredCountElement) {
-      filteredCountElement.style.display = isFiltered ? 'inline' : 'none';
-  }
-  
-  updateActiveFiltersDisplay();
-  updatePageInfo();
+    const totalItems = allRows.length;
+    const filteredItems = filteredRows.length;
+    const isFiltered = filteredItems !== totalItems;
+
+    // Show total items count
+    updateCountElement('totalItemsCount', totalItems);
+    updateCountElement('totalItemsCount2', totalItems);
+    updateCountElement('totalCount', totalItems);
+    updateCountElement('totalItems', totalItems);
+
+    // Show filtered items count with pipe separator (only when filtered)
+    const filteredCountElement = document.getElementById('filteredItemsCount');
+    if (filteredCountElement) {
+        if (isFiltered) {
+            const hasCategoryFilter = currentFilters.category.length > 0;
+            const hasQuantityFilter = currentFilters.quantity;
+            const hasDateFilter = currentFilters.dateFrom || currentFilters.dateTo;
+            const hasDeletedDateFilter = currentFilters.deletedDateFrom || currentFilters.deletedDateTo;
+            const hasDeletedByFilter = currentFilters.deletedBy.length > 0;
+            const hasSearchFilter = domElements.searchInput?.value;
+            const hasSort = currentSort.field;
+            
+            let filterDescription = '';
+            
+            // Get actual values
+            const searchTerm = domElements.searchInput?.value || '';
+            const dateFrom = currentFilters.dateFrom || '';
+            const dateTo = currentFilters.dateTo || '';
+            const deletedDateFrom = currentFilters.deletedDateFrom || '';
+            const deletedDateTo = currentFilters.deletedDateTo || '';
+            
+            // Format dates to "Mon DD YYYY" format
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+            };
+            
+            const fromDate = formatDate(dateFrom);
+            const toDate = formatDate(dateTo);
+            const deletedFromDate = formatDate(deletedDateFrom);
+            const deletedToDate = formatDate(deletedDateTo);
+            
+            // Handle complex combinations
+            const activeFilters = [];
+            
+            // Category filter
+            if (hasCategoryFilter) {
+                const categoryText = currentFilters.category.length === 1 ? 
+                    `category ${currentFilters.category[0]}` : 
+                    `${currentFilters.category.length} categories`;
+                activeFilters.push(categoryText);
+            }
+            
+            // Quantity filter
+            if (hasQuantityFilter) {
+                const quantityText = currentFilters.quantity === "out" ? 
+                    "out of stock" : "available";
+                activeFilters.push(quantityText);
+            }
+            
+            // Date acquired filter
+            if (hasDateFilter) {
+                const dateText = dateFrom && dateTo ? 
+                    `date acquired ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date acquired from ${fromDate}` : `date acquired until ${toDate}`);
+                activeFilters.push(dateText);
+            }
+            
+            // Deleted date filter
+            if (hasDeletedDateFilter) {
+                const deletedDateText = deletedDateFrom && deletedDateTo ? 
+                    `deleted date ${deletedFromDate} to ${deletedToDate}` : 
+                    (deletedDateFrom ? `deleted date from ${deletedFromDate}` : `deleted date until ${deletedToDate}`);
+                activeFilters.push(deletedDateText);
+            }
+            
+            // Deleted by filter
+            if (hasDeletedByFilter) {
+                const deletedByText = currentFilters.deletedBy.length === 1 ? 
+                    `deleted by ${currentFilters.deletedBy[0]}` : 
+                    `deleted by ${currentFilters.deletedBy.length} users`;
+                activeFilters.push(deletedByText);
+            }
+            
+            // Search filter
+            if (hasSearchFilter) {
+                activeFilters.push(`search "${searchTerm}"`);
+            }
+            
+            // Sort
+            if (hasSort) {
+                activeFilters.push(`sorted`);
+            }
+            
+            // Build the final description
+            if (activeFilters.length > 0) {
+                if (activeFilters.length === 1) {
+                    filterDescription = `items for ${activeFilters[0]}`;
+                } else if (activeFilters.length === 2) {
+                    filterDescription = `items for ${activeFilters[0]} and ${activeFilters[1]}`;
+                } else {
+                    const lastFilter = activeFilters.pop();
+                    filterDescription = `items for ${activeFilters.join(', ')}, and ${lastFilter}`;
+                }
+            } else {
+                filterDescription = `matching items`;
+            }
+            
+            filteredCountElement.innerHTML = `| ${filteredItems} ${filterDescription}`;
+            filteredCountElement.style.display = 'inline';
+            filteredCountElement.style.fontSize = '14px'; // Add custom font size
+        } else {
+            filteredCountElement.style.display = 'none';
+        }
+    }
+
+    updateActiveFiltersDisplay();
+    updatePageInfo();
 }
 
 function updateActiveFiltersDisplay() {
@@ -1337,3 +1442,65 @@ window.addEventListener('popstate', function() {
         setTimeout(() => scrollToDeletedItem(itemId), 800);
     }
 });
+
+
+// =============================================
+// DRAG TO SCROLL FUNCTIONALITY 
+// =============================================
+function initDragToScroll() {
+    const tableContainer = document.querySelector('.table-scroll-wrapper');
+    if (!tableContainer) return;
+
+    let isDragging = false;
+    let startX;
+    let scrollLeft;
+
+    function handleDragStart(e) {
+      
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+            return;
+        }
+        
+        isDragging = true;
+        startX = e.pageX;
+        scrollLeft = tableContainer.scrollLeft;
+        tableContainer.style.cursor = 'grabbing';
+        tableContainer.style.userSelect = 'none';
+        
+        e.preventDefault();
+    }
+
+    function handleDragEnd() {
+        isDragging = false;
+        tableContainer.style.cursor = 'grab';
+        tableContainer.style.userSelect = 'auto';
+    }
+
+    function handleDragMove(e) {
+        if (!isDragging) return;
+        
+        const x = e.pageX;
+        const walk = x - startX;
+        tableContainer.scrollLeft = scrollLeft - walk;
+    }
+
+    function handleMouseEnter() {
+        tableContainer.style.cursor = 'grab';
+    }
+
+    function handleMouseLeave() {
+        if (!isDragging) {
+            tableContainer.style.cursor = 'default';
+        }
+    }
+
+
+    tableContainer.addEventListener('mousedown', handleDragStart);
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    
+    tableContainer.addEventListener('mouseenter', handleMouseEnter);
+    tableContainer.addEventListener('mouseleave', handleMouseLeave);
+
+    tableContainer.style.cursor = 'grab';
+}

@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", function () {
     calculateEditTotalCost();
     restoreColumnSettings();
     initRowsPerPageSelector();
-    
+    initDragToScroll(); // Add this line
     setTimeout(() => {
         initializeScrollFromURL();
     }, 500);
@@ -948,38 +948,118 @@ function updateItemCounts() {
     const totalItems = allRows.length;
     const filteredItems = filteredRows.length;
     const isFiltered = filteredItems !== totalItems;
-    
-    // Update all count elements
-    const countElements = [
-        'totalItemsCount', 'totalItemsCount2', 'visibleItemsCount', 
-        'visibleCount', 'totalCount', 'displayedCount', 'totalItems'
-    ];
-    
-    countElements.forEach(id => updateCountElement(id, isFiltered ? filteredItems : totalItems));
-    
-    // Handle filtered count display
+
+    // Show total items count
+    updateCountElement('totalItemsCount', totalItems);
+    updateCountElement('totalItemsCount2', totalItems);
+    updateCountElement('totalCount', totalItems);
+    updateCountElement('totalItems', totalItems);
+
+    // Show filtered items count with pipe separator (only when filtered)
     const filteredCountElement = document.getElementById('filteredItemsCount');
     if (filteredCountElement) {
-        filteredCountElement.style.display = isFiltered ? 'inline' : 'none';
+        if (isFiltered) {
+            const hasStatusFilter = currentFiltersAll.status.length > 0;
+            const hasDateFilter = currentFiltersAll.dateFrom || currentFiltersAll.dateTo;
+            const hasSearchFilter = domElements.searchInput?.value;
+            const hasSort = currentSort.field;
+            
+            let filterDescription = '';
+            
+            // Get actual values
+            const searchTerm = domElements.searchInput?.value || '';
+            const dateFrom = currentFiltersAll.dateFrom || '';
+            const dateTo = currentFiltersAll.dateTo || '';
+            
+            // Format dates to "Mon DD YYYY" format (e.g., "Nov 25 2025")
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+            };
+            
+            const fromDate = formatDate(dateFrom);
+            const toDate = formatDate(dateTo);
+            
+            // Handle combinations with actual values
+            if (hasStatusFilter && hasDateFilter && hasSearchFilter) {
+                const statusText = currentFiltersAll.status.length === 1 ? 
+                    `status ${currentFiltersAll.status[0]}` : 
+                    `${currentFiltersAll.status.length} statuses`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${statusText}, ${dateText}, and search value "${searchTerm}"`;
+            }
+            else if (hasStatusFilter && hasDateFilter) {
+                const statusText = currentFiltersAll.status.length === 1 ? 
+                    `status ${currentFiltersAll.status[0]}` : 
+                    `${currentFiltersAll.status.length} statuses`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${statusText} and ${dateText}`;
+            }
+            else if (hasStatusFilter && hasSearchFilter) {
+                const statusText = currentFiltersAll.status.length === 1 ? 
+                    `status ${currentFiltersAll.status[0]}` : 
+                    `${currentFiltersAll.status.length} statuses`;
+                filterDescription = `items for ${statusText} and search "${searchTerm}"`;
+            }
+            else if (hasDateFilter && hasSearchFilter) {
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${dateText} and search "${searchTerm}"`;
+            }
+            else if (hasStatusFilter) {
+                const statusText = currentFiltersAll.status.length === 1 ? 
+                    `status ${currentFiltersAll.status[0]}` : 
+                    `${currentFiltersAll.status.length} statuses`;
+                filterDescription = `items for ${statusText}`;
+            }
+            else if (hasDateFilter) {
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${dateText}`;
+            }
+            else if (hasSearchFilter) {
+                filterDescription = `items for search value "${searchTerm}"`;
+            }
+            else if (hasSort) {
+                filterDescription = `items (sorted)`;
+            }
+            else {
+                filterDescription = `matching items`;
+            }
+            
+            filteredCountElement.innerHTML = `| ${filteredItems} ${filterDescription}`;
+            filteredCountElement.style.display = 'inline';
+        } else {
+            filteredCountElement.style.display = 'none';
+        }
     }
-    
+
     updateActiveFiltersDisplay();
     updatePageInfo();
 }
-
 function updatePageInfo() {
     const startIndex = (thisCurrentPage - 1) * rowsPerPage + 1;
     const endIndex = Math.min(thisCurrentPage * rowsPerPage, filteredRows.length);
-    const totalItems = filteredRows.length;
+    const filteredItems = filteredRows.length;
     
     const pageInfoElement = document.getElementById('pageInfo');
     if (pageInfoElement) {
-        pageInfoElement.textContent = totalItems > 0 
-            ? `Showing ${startIndex} to ${endIndex} of ${totalItems} entries`
+        pageInfoElement.textContent = filteredItems > 0 
+            ? `Showing ${startIndex} to ${endIndex} of ${filteredItems} entries`
             : 'No entries to show';
     }
 }
-
 function updateCountElement(elementId, count) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -993,24 +1073,39 @@ function updateActiveFiltersDisplay() {
     
     const activeFilters = [];
     
+    // Date filter details
     if (currentFiltersAll.dateFrom || currentFiltersAll.dateTo) {
-        activeFilters.push(`Date: ${currentFiltersAll.dateFrom || 'any'} to ${currentFiltersAll.dateTo || 'any'}`);
+        if (currentFiltersAll.dateFrom && currentFiltersAll.dateTo) {
+            activeFilters.push(`Date: ${currentFiltersAll.dateFrom} to ${currentFiltersAll.dateTo}`);
+        } else if (currentFiltersAll.dateFrom) {
+            activeFilters.push(`Date: from ${currentFiltersAll.dateFrom}`);
+        } else if (currentFiltersAll.dateTo) {
+            activeFilters.push(`Date: until ${currentFiltersAll.dateTo}`);
+        }
     }
     
+    // Status filter details
     if (currentFiltersAll.status.length > 0) {
-        activeFilters.push(`Status: ${currentFiltersAll.status.length} selected`);
+        if (currentFiltersAll.status.length === 1) {
+            activeFilters.push(`Status: ${currentFiltersAll.status[0]}`);
+        } else {
+            activeFilters.push(`Status: ${currentFiltersAll.status.length} selected`);
+        }
     }
     
+    // Search filter details
     const searchValue = domElements.searchInput?.value || '';
     if (searchValue) {
         activeFilters.push(`Search: "${searchValue}"`);
     }
     
+    // Sort details
     if (currentSort.field) {
         const sortDirection = currentSort.order === "asc" ? "Low to High" : "High to Low";
         activeFilters.push(`Sorted by: Quantity (${sortDirection})`);
     }
     
+    // Update the display
     if (activeFilters.length > 0) {
         activeFiltersElement.innerHTML = `<strong>Active filters:</strong> ${activeFilters.join(' • ')}`;
         activeFiltersElement.style.color = '#495057';
@@ -1019,7 +1114,6 @@ function updateActiveFiltersDisplay() {
         activeFiltersElement.style.color = '#6c757d';
     }
 }
-
 // =============================================
 // DATE PARSING - OPTIMIZED
 // =============================================
@@ -1271,3 +1365,65 @@ window.addEventListener('popstate', function() {
         setTimeout(() => scrollToItem(itemId), 800);
     }
 });
+
+
+// =============================================
+// DRAG TO SCROLL FUNCTIONALITY 
+// =============================================
+function initDragToScroll() {
+    const tableContainer = document.querySelector('.table-scroll-wrapper');
+    if (!tableContainer) return;
+
+    let isDragging = false;
+    let startX;
+    let scrollLeft;
+
+    function handleDragStart(e) {
+      
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+            return;
+        }
+        
+        isDragging = true;
+        startX = e.pageX;
+        scrollLeft = tableContainer.scrollLeft;
+        tableContainer.style.cursor = 'grabbing';
+        tableContainer.style.userSelect = 'none';
+        
+        e.preventDefault();
+    }
+
+    function handleDragEnd() {
+        isDragging = false;
+        tableContainer.style.cursor = 'grab';
+        tableContainer.style.userSelect = 'auto';
+    }
+
+    function handleDragMove(e) {
+        if (!isDragging) return;
+        
+        const x = e.pageX;
+        const walk = x - startX;
+        tableContainer.scrollLeft = scrollLeft - walk;
+    }
+
+    function handleMouseEnter() {
+        tableContainer.style.cursor = 'grab';
+    }
+
+    function handleMouseLeave() {
+        if (!isDragging) {
+            tableContainer.style.cursor = 'default';
+        }
+    }
+
+
+    tableContainer.addEventListener('mousedown', handleDragStart);
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    
+    tableContainer.addEventListener('mouseenter', handleMouseEnter);
+    tableContainer.addEventListener('mouseleave', handleMouseLeave);
+
+    tableContainer.style.cursor = 'grab';
+}

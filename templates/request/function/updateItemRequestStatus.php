@@ -59,7 +59,8 @@ try {
         $actionType = $action['action'];
         $currentUserId = $_SESSION['user']['user_id'] ?? 'system';
         
-        $validActions = ['approve', 'decline', 'release', 'return', 'void'];
+        // Remove void from valid actions
+        $validActions = ['approve', 'decline', 'release', 'return', 'cancel', 'received'];
         if (!in_array($actionType, $validActions)) {
             $errors[] = "Invalid action type: {$actionType} for req_item_id {$reqItemId}";
             continue;
@@ -116,13 +117,15 @@ try {
         
         $processedRequestId = $requestId;
         
+        // Remove void from valid transitions
         $validTransitions = [
-            'pending' => ['approve', 'decline'],
-            'approved' => ['release', 'decline','void'],
-            'released' => ['return', 'void'],
-            'returned' => ['release', 'void'],
-            'declined' => ['approve'],
-            'void' => ['approve']
+            'pending' => ['approve', 'decline', 'cancel'],
+            'approved' => ['release', 'decline', 'cancel'],
+            'released' => ['return', 'received', 'cancel'],
+            'returned' => ['release', 'cancel'],
+            'declined' => ['approve', 'cancel'],
+            'received' => ['return'],
+            'canceled' => [] // No actions for canceled items
         ];
         
         if (!isset($validTransitions[$currentStatus]) || !in_array($actionType, $validTransitions[$currentStatus])) {
@@ -130,12 +133,14 @@ try {
             continue;
         }
         
+        // Remove void from status map
         $statusMap = [
             'approve' => 'Approved',
             'decline' => 'Declined', 
             'release' => 'Released',
             'return' => 'Returned',
-            'void' => 'Void'
+            'cancel' => 'Canceled',
+            'received' => 'Received'
         ];
         
         $newStatus = $statusMap[$actionType] ?? 'Pending';
@@ -156,7 +161,6 @@ try {
         if ($updateStmt->execute()) {
             $successCount++;
             
-            // Generate 6-digit log ID and log the action
             $logId = generateLogID($conn);
             $logMessage = getLogMessage($actionType, $itemName, $currentStatus, $newStatus, $requestedQty);
             logAction($conn, $logId, $reqItemId, $requestId, $itemId, $itemName, $requesterUserId, $actionType, $logMessage, $currentUserId);
@@ -175,11 +179,11 @@ try {
                     if ($deductStmt->execute()) {
                         if ($deductStmt->affected_rows === 0) {
                             $errors[] = "Insufficient quantity for item '{$itemName}'. Available: {$currentInitialQuantity}, Requested: {$requestedQty}";
-                            $successCount--; // Decrement success count since inventory update failed
+                            $successCount--; 
                         }
                     } else {
                         $errors[] = "Failed to deduct quantity for item '{$itemName}': " . $deductStmt->error;
-                        $successCount--; // Decrement success count since inventory update failed
+                        $successCount--; 
                     }
                     $deductStmt->close();
                 }
@@ -204,12 +208,10 @@ try {
                         if ($syncStmt) {
                             $syncStmt->bind_param('i', $itemId);
                             $syncStmt->execute();
-                            
-                            // Check if quantity was adjusted
+                        
                             if ($syncStmt->affected_rows > 0) {
                                 $logMessage .= " (Quantity auto-adjusted to match available_quantity)";
-                                
-                                // Update the log with the corrected message
+                            
                                 $updateLogStmt = $conn->prepare("
                                     UPDATE deped_inventory_request_logs 
                                     SET message = ? 
@@ -226,12 +228,12 @@ try {
                         }
                     } else {
                         $errors[] = "Failed to restore quantity for item '{$itemName}': " . $restoreStmt->error;
-                        $successCount--; // Decrement success count since inventory update failed
+                        $successCount--; 
                     }
                     $restoreStmt->close();
                 }
-            } elseif ($actionType === 'void' && $currentStatus === 'released') {
-                // NEW: Handle void action when item was previously released - restore the quantity
+            } elseif ($actionType === 'cancel' && $currentStatus === 'released') {
+                // Handle cancel action when item was previously released - restore the quantity
                 $restoreStmt = $conn->prepare("
                     UPDATE deped_inventory_items 
                     SET available_quantity = available_quantity + ? 
@@ -252,11 +254,9 @@ try {
                             $syncStmt->bind_param('i', $itemId);
                             $syncStmt->execute();
                             
-                            // Check if quantity was adjusted
                             if ($syncStmt->affected_rows > 0) {
                                 $logMessage .= " (Quantity auto-adjusted to match available_quantity)";
                                 
-                                // Update the log with the corrected message
                                 $updateLogStmt = $conn->prepare("
                                     UPDATE deped_inventory_request_logs 
                                     SET message = ? 
@@ -286,8 +286,8 @@ try {
                             $updateLogStmt->close();
                         }
                     } else {
-                        $errors[] = "Failed to restore quantity for voided item '{$itemName}': " . $restoreStmt->error;
-                        $successCount--; // Decrement success count since inventory update failed
+                        $errors[] = "Failed to restore quantity for canceled item '{$itemName}': " . $restoreStmt->error;
+                        $successCount--; 
                     }
                     $restoreStmt->close();
                 }
@@ -323,16 +323,19 @@ try {
             $totalItems = array_sum($statusCounts);
             $overallStatus = 'Pending';
             
-            if (isset($statusCounts['Declined']) && $statusCounts['Declined'] > 0) {
+            // Remove Void from overall status calculation
+            if (isset($statusCounts['Canceled']) && $statusCounts['Canceled'] > 0) {
+                $overallStatus = 'Canceled';
+            } elseif (isset($statusCounts['Declined']) && $statusCounts['Declined'] > 0) {
                 $overallStatus = 'Declined';
+            } elseif (isset($statusCounts['Received']) && $statusCounts['Received'] === $totalItems) {
+                $overallStatus = 'Received';
             } elseif (isset($statusCounts['Released']) && $statusCounts['Released'] === $totalItems) {
                 $overallStatus = 'Released';
             } elseif (isset($statusCounts['Approved']) && $statusCounts['Approved'] === $totalItems) {
                 $overallStatus = 'Approved';
             } elseif (isset($statusCounts['Returned']) && $statusCounts['Returned'] === $totalItems) {
                 $overallStatus = 'Returned';
-            } elseif (isset($statusCounts['Void']) && $statusCounts['Void'] === $totalItems) {
-                $overallStatus = 'Void';
             }
             
             $updateReqStmt = $conn->prepare("
@@ -381,14 +384,15 @@ try {
     ]);
 }
 
-// Logging functions
+// Remove void from log messages
 function getLogMessage($actionType, $itemName, $oldStatus, $newStatus, $quantity) {
     $actionMessages = [
         'approve' => "Item '{$itemName}' was approved. Status changed from {$oldStatus} to {$newStatus}",
         'decline' => "Item '{$itemName}' was declined. Status changed from {$oldStatus} to {$newStatus}",
         'release' => "Item '{$itemName}' was released to requester. Status changed from {$oldStatus} to {$newStatus}. Quantity: {$quantity}",
         'return' => "Item '{$itemName}' was returned. Status changed from {$oldStatus} to {$newStatus}. Quantity: {$quantity}",
-        'void' => "Item '{$itemName}' was voided. Status changed from {$oldStatus} to {$newStatus}"
+        'cancel' => "Item '{$itemName}' was canceled. Status changed from {$oldStatus} to {$newStatus}",
+        'received' => "Item '{$itemName}' was marked as received. Status changed from {$oldStatus} to {$newStatus}. Quantity: {$quantity}"
     ];
     
     return $actionMessages[$actionType] ?? "Action '{$actionType}' performed on item '{$itemName}'. Status: {$oldStatus} → {$newStatus}";

@@ -225,25 +225,41 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalItems = allRows.length;
     const filteredItems = filteredRows.length;
     const isFiltered = filteredItems !== totalItems;
-    
-    // Update count displays
+
+    // Show total items count
     updateCountElement('totalItemsCount', totalItems);
     updateCountElement('totalItemsCount2', totalItems);
-    updateCountElement('visibleItemsCount', filteredItems);
-    updateCountElement('visibleCount', filteredItems);
     updateCountElement('totalCount', totalItems);
-    updateCountElement('displayedCount', filteredItems);
     updateCountElement('totalItems', totalItems);
-    
-    // Show/hide filtered count
+
+    // Show filtered items count with pipe separator (only when filtered)
     const filteredCountElement = document.getElementById('filteredItemsCount');
     if (filteredCountElement) {
-        filteredCountElement.style.display = isFiltered ? 'inline' : 'none';
+        if (isFiltered) {
+            const hasSearchFilter = searchInput?.value || '';
+            
+            let filterDescription = '';
+            
+            // Get search term
+            const searchTerm = searchInput?.value || '';
+            
+            // Handle search filter
+            if (hasSearchFilter) {
+                filterDescription = `positions for search value "${searchTerm}"`;
+            } else {
+                filterDescription = `matching positions`;
+            }
+            
+            filteredCountElement.innerHTML = `| ${filteredItems} ${filterDescription}`;
+            filteredCountElement.style.display = 'inline';
+        } else {
+            filteredCountElement.style.display = 'none';
+        }
     }
-    
-    // Update active filters display
+
     updateActiveFiltersDisplay();
-  }
+    updatePageInfo();
+}
 
   function updateCountElement(elementId, count) {
     const element = document.getElementById(elementId);

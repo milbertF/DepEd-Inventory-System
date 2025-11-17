@@ -46,8 +46,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initDateValidation();
     restoreColumnSettings();
     initRowsPerPageSelector();
-    
-    // Check for delete alerts
+    initDragToScroll();
+        
+
+ 
     
 });
 
@@ -94,20 +96,184 @@ function updateItemCounts() {
     const totalItems = allRows.length;
     const filteredItems = filteredRows.length;
     const isFiltered = filteredItems !== totalItems;
-    
+
+    // Show total items count
     updateCountElement('totalItemsCount', totalItems);
     updateCountElement('totalItemsCount2', totalItems);
-    updateCountElement('visibleItemsCount', filteredItems);
-    updateCountElement('visibleCount', filteredItems);
     updateCountElement('totalCount', totalItems);
-    updateCountElement('displayedCount', filteredItems);
     updateCountElement('totalItems', totalItems);
-    
+
+    // Show filtered items count with pipe separator (only when filtered)
     const filteredCountElement = document.getElementById('filteredItemsCount');
     if (filteredCountElement) {
-        filteredCountElement.style.display = isFiltered ? 'inline' : 'none';
+        if (isFiltered) {
+            const selectedBrands = domElements.brandSelect ? 
+                Array.from(domElements.brandSelect.selectedOptions).map(opt => opt.value) : [];
+            const hasBrandFilter = selectedBrands.length > 0;
+            const hasStatusFilter = currentFilters.status.length > 0;
+            const hasDateFilter = currentFilters.dateFrom || currentFilters.dateTo;
+            const hasSearchFilter = domElements.searchInput?.value;
+            const hasQuantityFilter = currentFilters.quantity;
+            const hasSort = currentSort.field;
+            
+            let filterDescription = '';
+            
+            // Get actual values
+            const searchTerm = domElements.searchInput?.value || '';
+            const dateFrom = currentFilters.dateFrom || '';
+            const dateTo = currentFilters.dateTo || '';
+            
+            // Format dates to "Mon DD YYYY" format (e.g., "Nov 25 2025")
+            const formatDate = (dateString) => {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                });
+            };
+            
+            const fromDate = formatDate(dateFrom);
+            const toDate = formatDate(dateTo);
+            
+            // Handle combinations with actual values
+            if (hasBrandFilter && hasStatusFilter && hasDateFilter && hasSearchFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${brandText}, ${statusText}, ${dateText}, and search "${searchTerm}"`;
+            }
+            else if (hasBrandFilter && hasStatusFilter && hasDateFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${brandText}, ${statusText}, and ${dateText}`;
+            }
+            else if (hasBrandFilter && hasStatusFilter && hasSearchFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                filterDescription = `items for ${brandText}, ${statusText}, and search "${searchTerm}"`;
+            }
+            else if (hasBrandFilter && hasDateFilter && hasSearchFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${brandText}, ${dateText}, and search "${searchTerm}"`;
+            }
+            else if (hasStatusFilter && hasDateFilter && hasSearchFilter) {
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${statusText}, ${dateText}, and search "${searchTerm}"`;
+            }
+            else if (hasBrandFilter && hasStatusFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                filterDescription = `items for ${brandText} and ${statusText}`;
+            }
+            else if (hasBrandFilter && hasDateFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${brandText} and ${dateText}`;
+            }
+            else if (hasBrandFilter && hasSearchFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                filterDescription = `items for ${brandText} and search "${searchTerm}"`;
+            }
+            else if (hasStatusFilter && hasDateFilter) {
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${statusText} and ${dateText}`;
+            }
+            else if (hasStatusFilter && hasSearchFilter) {
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                filterDescription = `items for ${statusText} and search "${searchTerm}"`;
+            }
+            else if (hasDateFilter && hasSearchFilter) {
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${dateText} and search "${searchTerm}"`;
+            }
+            else if (hasBrandFilter) {
+                const brandText = selectedBrands.length === 1 ? 
+                    `brand ${selectedBrands[0]}` : 
+                    `${selectedBrands.length} brands`;
+                filterDescription = `items for ${brandText}`;
+            }
+            else if (hasStatusFilter) {
+                const statusText = currentFilters.status.length === 1 ? 
+                    `status ${currentFilters.status[0]}` : 
+                    `${currentFilters.status.length} statuses`;
+                filterDescription = `items for ${statusText}`;
+            }
+            else if (hasDateFilter) {
+                const dateText = dateFrom && dateTo ? 
+                    `date ${fromDate} to ${toDate}` : 
+                    (dateFrom ? `date from ${fromDate}` : `date until ${toDate}`);
+                filterDescription = `items for ${dateText}`;
+            }
+            else if (hasQuantityFilter) {
+                const quantityText = currentFilters.quantity === "out" ? 
+                    "out of stock" : "available";
+                filterDescription = `items for ${quantityText}`;
+            }
+            else if (hasSearchFilter) {
+                filterDescription = `items for search "${searchTerm}"`;
+            }
+            else if (hasSort) {
+                filterDescription = `items (sorted)`;
+            }
+            else {
+                filterDescription = `matching items`;
+            }
+            
+            filteredCountElement.innerHTML = `| ${filteredItems} ${filterDescription}`;
+            filteredCountElement.style.display = 'inline';
+        } else {
+            filteredCountElement.style.display = 'none';
+        }
     }
-    
+
     updateActiveFiltersDisplay();
     updatePageInfo();
 }
@@ -1466,4 +1632,66 @@ if (typeof PerformanceObserver !== 'undefined') {
         });
     });
     observer.observe({entryTypes: ['measure']});
+}
+
+
+// =============================================
+// DRAG TO SCROLL FUNCTIONALITY 
+// =============================================
+function initDragToScroll() {
+    const tableContainer = document.querySelector('.table-scroll-wrapper');
+    if (!tableContainer) return;
+
+    let isDragging = false;
+    let startX;
+    let scrollLeft;
+
+    function handleDragStart(e) {
+      
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select') || e.target.closest('a')) {
+            return;
+        }
+        
+        isDragging = true;
+        startX = e.pageX;
+        scrollLeft = tableContainer.scrollLeft;
+        tableContainer.style.cursor = 'grabbing';
+        tableContainer.style.userSelect = 'none';
+        
+        e.preventDefault();
+    }
+
+    function handleDragEnd() {
+        isDragging = false;
+        tableContainer.style.cursor = 'grab';
+        tableContainer.style.userSelect = 'auto';
+    }
+
+    function handleDragMove(e) {
+        if (!isDragging) return;
+        
+        const x = e.pageX;
+        const walk = x - startX;
+        tableContainer.scrollLeft = scrollLeft - walk;
+    }
+
+    function handleMouseEnter() {
+        tableContainer.style.cursor = 'grab';
+    }
+
+    function handleMouseLeave() {
+        if (!isDragging) {
+            tableContainer.style.cursor = 'default';
+        }
+    }
+
+
+    tableContainer.addEventListener('mousedown', handleDragStart);
+    document.addEventListener('mousemove', handleDragMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    
+    tableContainer.addEventListener('mouseenter', handleMouseEnter);
+    tableContainer.addEventListener('mouseleave', handleMouseLeave);
+
+    tableContainer.style.cursor = 'grab';
 }

@@ -1,7 +1,9 @@
 @import url(itemModal.css);
 @import url(actionBtnToolTip.css);
 
-
+.con-items{
+  overflow-x: hidden;
+}
 
 .item-photo {
     width: 40px;
@@ -15,16 +17,21 @@
   
   .tableContainer {
     margin-top: 1.5rem;
+    
     border-radius: 0.75rem;
     background-color: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 1.5rem;
+  
     border: 1px solid #f0f0f0;
+    /* FIX: Prevent table from extending */
+    max-width: 100%;
+   
   }
   
-  
   .itemTable {
-    width: 100%;
+    width: max-content; 
+    min-width: 100%; 
     border-collapse: collapse;
     font-size: 0.875rem;
     line-height: 1.5;
@@ -34,6 +41,7 @@
     background-color: #f8fafc;
  
     top: 0;
+
   }
   
   .itemTable th {
@@ -43,14 +51,17 @@
     color: #334155;
     border-bottom: 2px solid #e2e8f0;
     white-space: nowrap;
+    position: relative;
+    background-color: #f8fafc; /* FIX: Ensure background covers */
   }
   
   .itemTable td {
     padding: 0.875rem 1rem;
     border-bottom: 1px solid #f1f5f9;
-    color: var(  --textColor);
+    color: var(--textColor);
     vertical-align: middle;
     text-align: center;
+    white-space: nowrap;
   }
   
   .itemTable tbody tr:nth-child(odd) {
@@ -64,8 +75,6 @@
   .itemTable tbody tr:hover {
     background-color: #f1f5f9 !important;
   }
-  
-
   
   .itemTable td:last-child {
     white-space: nowrap;
@@ -109,7 +118,6 @@
     border-color: #bbf7d0; 
   }
   
-  
   .action-btn:hover {
     background-color: #f1f5f9;
     transform: translateY(-1px);
@@ -122,6 +130,11 @@
     justify-content: flex-start;
     flex-grow: 1;
     min-width: 250px;
+   
+    left: 0;
+    background: white;
+    z-index: 5;
+    padding: 5px 0;
   }
   
   .searchFilterWrapper {
@@ -129,17 +142,23 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-
     gap: 10px;
     position: relative;
+
+    width: 100%;
+    max-width: 100%;
   }
   
   .filterControls {
     display: flex;
     gap: 10px;
-    position: relative; 
+    position: relative;
     align-items: center;
-    
+ 
+    left: 0;
+    background: white;
+    z-index: 5;
+    padding: 5px 0;
   }
   
   .filterToggles {
@@ -197,7 +216,8 @@
     padding: 12px 16px;
     width: 220px;
     box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-    z-index: 1000;
+    /* FIX: Higher z-index for dropdowns */
+    z-index: 1002;
   }
   
   .columnFilterContainer label {
@@ -211,7 +231,6 @@
   
   .columnFilterContainer input[type="checkbox"] {
     transform: scale(1.1);
- 
     cursor: pointer;
   }
   
@@ -231,15 +250,10 @@
   .columnFilterContainer .reset-btn:hover {
     background: #e0e0e0;
   }
-
- 
-  
- 
   
   .dateFilterContainer input[type="date"] {
     padding: 0.4rem;
     border: 1px solid #cbd5e1;
-    
     border-radius: 6px;
     font-size: 0.8rem;
     width: 95%;
@@ -268,6 +282,7 @@
     cursor: pointer;
     font-size: 0.85rem;
   }
+  
   #filterByBrandBtn,
   #filterByDateBtn,
   #filterByDateBtnAll,
@@ -292,6 +307,7 @@
     color: #64748b;
     border: 1px solid #e2e8f0;
   }
+  
   #resetDateFilterBtn:hover {
     background-color: #e2e8f0;
     transform: translateY(-1px);
@@ -341,6 +357,13 @@
     border: 1px solid #ccc;
     cursor: pointer;
     transition: all 0.2s ease;
+
+  
+    left: 0;
+    background: white;
+  
+    margin-bottom: 1rem;
+    align-self: flex-start;
   }
   
   .excel-export-btn i {
@@ -394,7 +417,6 @@
     color: #475569;
     cursor: pointer;
     transition: all 0.2s ease;
-
   }
   
   .calendar-btn:hover {
@@ -469,7 +491,7 @@
     color: #475569;
   }
   
-  .filterContainer,.statusFilterContainer {
+  .filterContainer, .statusFilterContainer {
     position: absolute;
     right: 0;
     top: 100%;
@@ -478,14 +500,12 @@
     border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+    /* FIX: Highest z-index for dropdowns */
+    z-index: 1003;
     width: 260px;
   }
 
-
-
-
-  .status-checkboxes,  .category-checkboxes {
+  .status-checkboxes, .category-checkboxes {
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -494,7 +514,7 @@
     overflow-y: auto;
   }
   
-  .status-checkboxes label , .category-checkboxes  label {
+  .status-checkboxes label, .category-checkboxes label {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -502,7 +522,7 @@
     padding: 4px 0;
   }
   
-  .status-checkboxes input[type="checkbox"] ,.category-checkboxes  input[type="checkbox"]  {
+  .status-checkboxes input[type="checkbox"], .category-checkboxes input[type="checkbox"] {
     transform: scale(1.1);
     cursor: pointer;
     margin: 0;
@@ -520,6 +540,11 @@
     margin-top: 2rem;
     flex-wrap: wrap;
     padding: 0.5rem 0;
+
+
+    left: 0;
+    background: white;
+    z-index: 5;
   }
   
   .pagination a {
@@ -585,7 +610,6 @@
     color: #e2e8f0;
   }
   
-
   .table-footer {
     display: flex;
     justify-content: space-between;
@@ -595,6 +619,9 @@
     border-top: 1px solid #dee2e6;
     flex-wrap: wrap;
     gap: 1rem;
+
+    width: 100%;
+    max-width: 100%;
   }
   
   .footer-center {
@@ -629,6 +656,19 @@
   .footer-right {
     display: flex;
     align-items: center;
+
+
+    left: 0;
+    background: white;
+  
+  }
+  
+  .footer-left {
+
+  
+    left: 0;
+    background: white;
+   
   }
   
   .item-count-display {
@@ -642,7 +682,6 @@
   #addQuantityModal {
     display: flex;
     align-items: center;
-
   }
 
   #addQuantityModal .con {
@@ -663,7 +702,14 @@
     background-color: #fff3cd !important;
     box-shadow: 0 0 10px #ffeb3b;
     transition: background-color 1s ease, box-shadow 1s ease;
-}
+  }
 
-  
-  
+
+  .table-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+
+    border-radius: 8px;
+  }
+
+

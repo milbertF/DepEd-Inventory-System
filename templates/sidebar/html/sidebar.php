@@ -1,11 +1,20 @@
-<div class="sidebar">
+<!-- Hamburger Menu Button -->
+<div class="hamburger-menu" id="hamburgerMenu">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
 
+<!-- Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
   <div class="part">
     <div class="icon dashboardlogo" style="background:transparent;">
       <img src="/images/assets/baliwasan.png" alt="">
     </div>
-
+    <label>Baliwasan</label>
   </div>
 
   <button class="part" onclick="redirect('dashboard')">
@@ -22,16 +31,14 @@
     <label>Inventory</label>
   </button>
 
-
   <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
-    
     <button class="part" onclick="redirect('employee')">
       <div class="icon iconEmployee">
         <i class="fas fa-user-tie"></i>
       </div>
       <label>Employee</label>
     </button>
-    <?php endif; ?>
+  <?php endif; ?>
 
   <button class="part" onclick="redirect('position')">
     <div class="icon iconPosition">
@@ -46,16 +53,24 @@
     </div>
     <label>Office</label>
   </button>
+
+  <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Employee'): ?>
+    <button class="part" onclick="redirect('my-request')">
+      <div class="icon iconMyRequest">
+        <i class="fa-solid fa-hand-holding-hand"></i>
+      </div>
+      <label>My Request</label>
+    </button>
+  <?php endif; ?>
+
   <?php if (isset($_SESSION['user']['role']) && 
          ($_SESSION['user']['role'] === 'Admin' || $_SESSION['user']['role'] === 'logisticsOfficer')): ?>
-    
-
-  <button class="part" onclick="redirect('request')">
-    <div class="icon iconRequest">
-      <i class="fa-solid fa-bullhorn"></i>
-    </div>
-    <label>Request</label>
-  </button>
+    <button class="part" onclick="redirect('request')">
+      <div class="icon iconRequest">
+        <i class="fa-solid fa-bullhorn"></i>
+      </div>
+      <label>Request</label>
+    </button>
   <?php endif; ?>
 
   <button class="part" onclick="redirect('report')">
@@ -68,6 +83,7 @@
   <div class="set">
     <button onclick="openSettings()">
       <i class="fa-solid fa-gear"></i>
+   
     </button>
     <button class="acc" title="<?php echo isset($_SESSION['user']['first_name'], $_SESSION['user']['last_name'])
                                   ? htmlspecialchars($_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'])
@@ -77,6 +93,7 @@
                 ? htmlspecialchars($_SESSION['user']['profile_photo'])
                 : '/images/user-profile/default-image.jpg'; ?>"
         alt="Profile">
+     
       <div id="sidebarAccountTooltip" class="tooltip" style="display: none;">
         <p>
           <?php
@@ -85,11 +102,37 @@
             : 'Unknown User';
           ?>
         </p>
-
         <a class="out" tabindex="1" href="/logout" type="button">Logout</a>
       </div>
     </button>
   </div>
-
 </div>
 
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+  const hamburgerMenu = document.getElementById('hamburgerMenu');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+
+  function toggleSidebar() {
+    hamburgerMenu.classList.toggle('active');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+  }
+
+  hamburgerMenu.addEventListener('click', toggleSidebar);
+  overlay.addEventListener('click', toggleSidebar);
+
+
+  sidebar.addEventListener('click', function(e) {
+    if (e.target.closest('.part') || e.target.closest('.set button')) {
+    
+      setTimeout(() => {
+        toggleSidebar();
+      }, 300);
+    }
+  });
+});
+</script>

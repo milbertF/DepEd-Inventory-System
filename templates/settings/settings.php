@@ -1,7 +1,7 @@
 
 
 <style>
-    .settings {
+.settings {
   display: none; 
   position: fixed;
   top: 0;
@@ -13,6 +13,9 @@
   z-index: 999;
   flex-direction: column;
   padding: 1rem;
+
+  /* ensure panel doesn’t affect body scroll */
+  overflow-y: auto;
 }
 
 </style>
@@ -44,10 +47,17 @@
 </div>
 
 <script>
-  function escSetting() {
-    const settings = document.getElementById('settings');
-    settings.style.display = settings.style.display === 'none' ? 'flex' : 'none';
+function escSetting() {
+  const settings = document.getElementById('settings');
+  if (settings.style.display === 'none' || settings.style.display === '') {
+    settings.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; 
+  } else {
+    settings.style.display = 'none';
+    document.body.style.overflow = '';
   }
+}
+
 
   function openSettings() {
     const settings = document.getElementById('settings');

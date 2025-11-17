@@ -18,6 +18,9 @@ $statusCounts = [
     'received' => 0
 ];
 
+// Get the logged-in user's ID
+$user_id = $_SESSION['user']['user_id'];
+
 $requestQuery = "
     SELECT 
         r.request_id,
@@ -32,11 +35,11 @@ $requestQuery = "
     LEFT JOIN deped_inventory_user_info ui ON r.user_id = ui.user_id
     LEFT JOIN deped_inventory_employee_position pos ON ui.position_id = pos.position_id
     LEFT JOIN deped_inventory_employee_office off ON ui.office_id = off.office_id
-    WHERE 1=1
+    WHERE r.user_id = ?
 ";
 
-$params = [];
-$types = '';
+$params = [$user_id];
+$types = 's';
 
 // Add search filter if provided
 if (!empty($search)) {
@@ -56,9 +59,7 @@ $requestQuery .= " ORDER BY r.created_at DESC";
 
 $stmt = $conn->prepare($requestQuery);
 if ($stmt) {
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -106,7 +107,7 @@ if ($stmt) {
                 'returned' => 0,
                 'void' => 0,
                 'canceled' => 0,
-                'received' => 0,
+                'received' => 0
             ];
             
             while ($itemRow = $itemsResult->fetch_assoc()) {
@@ -126,19 +127,17 @@ if ($stmt) {
                 ];
                 
                 $items_count++;
-                
-                // Only add to sample items if we have less than 3 for display
+
                 if (count($sample_items) < 3) {
                     $sample_items[] = $itemRow['item_name'];
                 }
                 
-                // Count item status for THIS request
                 $itemStatus = strtolower($itemRow['item_status']);
                 if (isset($itemStatusCounts[$itemStatus])) {
                     $itemStatusCounts[$itemStatus]++;
                 }
                 
-                // Count item status for GLOBAL filter counts
+             
                 if (isset($statusCounts[$itemStatus])) {
                     $statusCounts[$itemStatus]++;
                 }
@@ -149,15 +148,18 @@ if ($stmt) {
             }
             $itemsStmt->close();
             
+          
+            $requester_name = trim(
+                decryptData($row['first_name'], APP_ENCRYPTION_KEY) . ' ' .
+                (!empty($row['middle_name']) ? decryptData($row['middle_name'], APP_ENCRYPTION_KEY) . ' ' : '') .
+                decryptData($row['last_name'], APP_ENCRYPTION_KEY)
+            );
+            
             $requests[] = [
                 'request_id' => $requestId,
                 'status' => $row['status'],
                 'created_at' => $row['created_at'],
-                'requester_name' => trim(
-                    decryptData($row['first_name'], APP_ENCRYPTION_KEY) . ' ' .
-                    (!empty($row['middle_name']) ? decryptData($row['middle_name'], APP_ENCRYPTION_KEY) . ' ' : '') .
-                    decryptData($row['last_name'], APP_ENCRYPTION_KEY)
-                ),
+                'requester_name' => $requester_name,
                 'position_title' => $row['position_title'] ?? '',
                 'office_name' => $row['office_name'] ?? '',
                 'items_count' => $items_count,

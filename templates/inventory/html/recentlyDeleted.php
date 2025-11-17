@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const msgType = "<?= $_SESSION['msg_type'] ?>";
     
     if (msgType === 'success' && <?= isset($_SESSION['recovered_items']) ? 'true' : 'false' ?>) {
-        // Multiple items recovered
+ 
         const count = <?= $_SESSION['recovered_count'] ?? 0 ?>;
         let htmlMessage = `Successfully recovered ${count} item${count > 1 ? 's' : ''}!`;
         
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmButtonColor: '#3085d6'
         });
     } else {
-        // Single item or other message
+   
         Swal.fire({
             icon: msgType,
             title: msgType.charAt(0).toUpperCase() + msgType.slice(1),
@@ -56,18 +56,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Clear the session - ADD recovery_message here too
+   
     <?php
     unset($_SESSION['message']);
     unset($_SESSION['msg_type']);
     unset($_SESSION['recovered_items']);
-    unset($_SESSION['recovery_message']); // Add this line
+    unset($_SESSION['recovery_message']); 
     ?>
 });
 </script>
 <?php endif; ?>
 
-<!-- Add this in your recentlyDeleted.php file -->
+
 <div id="permanentDeleteAlertData" 
      data-permanent-deleted-name="<?php echo htmlspecialchars($_SESSION['permanent_deleted_item_name'] ?? ''); ?>"
      data-permanent-is-last-item="<?php echo isset($_SESSION['permanent_deleted_is_last_item']) && $_SESSION['permanent_deleted_is_last_item'] ? 'true' : 'false'; ?>"
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <?php
-// Clear the session after setting the data attributes
+
 if (isset($_SESSION['permanent_deleted_item_name'])) {
     unset($_SESSION['permanent_deleted_item_name']);
     unset($_SESSION['permanent_deleted_is_last_item']);
@@ -90,7 +90,7 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
 <div class="wrapMain">
   <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
 
-  <div class="con">
+  <div class="con-items">
   <?php require __DIR__ . '/../../header/html/pageHeader.php'; ?>
     
     <?php require __DIR__ . '/../../quick-access/access.php'; ?>
@@ -278,7 +278,7 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
 
 
         <?php require __DIR__ . '/exportModalforViewAll.php'; ?>
-
+        <div class="table-scroll-wrapper">
         <table class="itemTable">
           <thead>
             <tr>
@@ -366,6 +366,7 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
             <?php endforeach; ?>
           </tbody>
         </table>
+        </div>
 
         <div class="pagination" id="pagination"></div>
 
@@ -378,6 +379,7 @@ if (isset($_SESSION['permanent_deleted_item_name'])) {
                 <option value="20">20</option>
                 <option value="30">30</option>
                 <option value="50">50</option>
+                <option value="100">100</option>
               </select>
               <span>entries</span>
             </div>
@@ -457,7 +459,7 @@ function checkForPermanentDeletedItem() {
     }
 }
 
-// Multiple event listeners to ensure it runs
+
 document.addEventListener('DOMContentLoaded', function() {
     checkForPermanentDeletedItem();
 });

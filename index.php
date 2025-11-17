@@ -54,6 +54,10 @@ switch ($request) {
         require __DIR__ . '/templates/request/html/request.php';
         break;
 
+        case '/my-request':
+            require __DIR__ . '/templates/request/html/myRequest.php';
+            break; 
+
     case '/forgot':
         require __DIR__ . '/templates/auth/html/forgot.html';
         break;

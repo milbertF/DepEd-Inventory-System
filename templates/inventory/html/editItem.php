@@ -5,7 +5,7 @@
     </button>
   </div>
 
-  <div class="con">
+  <div class="container">
     <h4>Edit Item</h4>
 
     <form method="POST" enctype="multipart/form-data" id="edit-item-form" autocomplete="off">

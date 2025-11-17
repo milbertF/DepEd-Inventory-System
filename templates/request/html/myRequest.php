@@ -1,10 +1,9 @@
 <?php
-require_once __DIR__ . '/../../../config/restrictRoles.php';
 
-restrictRoles(['Employee']);
+
 
 require  __DIR__ . '/../../header/html/header.php';
-require __DIR__ . '/../function/fetchRequest.php';
+require __DIR__ . '/../function/fetchMyRequest.php';
 
 ?>
 
@@ -20,6 +19,9 @@ require __DIR__ . '/../function/fetchRequest.php';
     <link rel="stylesheet" href="/styles/viewRequestItemModal.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+<style>
+    
+</style>
 
 
 
@@ -73,8 +75,7 @@ require __DIR__ . '/../function/fetchRequest.php';
                             <span class="status-count">(<?= $statusCounts['returned'] ?>)</span>
                         </label>
                     </div>
-                    
-
+                   
                     <div class="status-filter-checkbox">
                         <input type="checkbox" id="filter-canceled" class="status-checkbox" data-status="canceled">
                         <label for="filter-canceled">
@@ -226,14 +227,7 @@ require __DIR__ . '/../function/fetchRequest.php';
       </select>
       <span>entries</span>
     </div>
-
-    
   </div>
-
-  
-
-
-  
   
   <div class="footer-right-req">
     <div class="item-count-display" style="background: #f8f9fa; padding: 8px 16px; border-radius: 20px; font-weight: 500; color: #495057;">
@@ -245,14 +239,15 @@ require __DIR__ . '/../function/fetchRequest.php';
     <div id="pageInfo" style="margin-top: 8px; font-size: 14px; color: #6c757d;"></div>
   </div>
 </div>
-<div class="viewRequestContainer">
-    <a href="/my-request" class="viewRequest">      <i class="fa-solid fa-hand-holding-hand"></i> View My Request</a>
-    <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+
+<div class="viewRequestContainer">   <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'Admin'): ?>
+
+    <a href="/request" class="viewRequest">      <i class="fa-solid fa-hand-holding-hand"></i> Back to Request</a>
+
     
     <?php endif; ?>
 </div>
- 
-  
+
                 
             </div>
             <!-- Pagination -->
@@ -260,11 +255,7 @@ require __DIR__ . '/../function/fetchRequest.php';
             
 
         </div>
-
-        
     </div>
-
-    
 
 
     
@@ -272,6 +263,6 @@ require __DIR__ . '/../function/fetchRequest.php';
     <script src="/javascript/header.js"></script>
     <script src="/javascript/sidebar.js"></script>
     <script src="/javascript/script.js"></script>
-    <script src="/javascript/request.js"></script>
+    <script src="/javascript/myRequest.js"></script>
 </body>
 </html>

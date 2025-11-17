@@ -48,7 +48,7 @@ if (isset($_SESSION['deleted_item_name'])) {
   <div class="wrapMain">
     <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
 
-    <div class="con">
+    <div class="con-items">
     <?php require __DIR__ . '/../../header/html/pageHeader.php'; ?>
       
       
@@ -262,7 +262,7 @@ if (isset($_SESSION['deleted_item_name'])) {
           <?php require __DIR__ . '/exportModal.php'; ?>
           
           <?php require __DIR__ . '/addQuantityModal.php'; ?>
-          <div class="itemTable-wrapper">
+          <div class="table-scroll-wrapper">
           <table class="itemTable">
             <thead>
               <tr>
@@ -378,6 +378,7 @@ if (isset($_SESSION['deleted_item_name'])) {
               <?php endforeach; ?>
             </tbody>
           </table>
+          </div>
 
      <!-- Updated Table Footer -->
 
@@ -393,6 +394,7 @@ if (isset($_SESSION['deleted_item_name'])) {
         <option value="20">20</option>
         <option value="30">30</option>
         <option value="50">50</option>
+        <option value="100">100</option>
       </select>
       <span>entries</span>
     </div>

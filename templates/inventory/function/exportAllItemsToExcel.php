@@ -11,19 +11,27 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 ob_end_clean();
 
-
 $minQty = isset($_GET['min_quantity']) && $_GET['min_quantity'] !== '' ? (int)$_GET['min_quantity'] : null;
 $maxQty = isset($_GET['max_quantity']) && $_GET['max_quantity'] !== '' ? (int)$_GET['max_quantity'] : null;
 $minCost = isset($_GET['min_cost']) && $_GET['min_cost'] !== '' ? (float)$_GET['min_cost'] : null;
 $maxCost = isset($_GET['max_cost']) && $_GET['max_cost'] !== '' ? (float)$_GET['max_cost'] : null;
 $startDate = $_GET['start_date'] ?? null;
 $endDate = $_GET['end_date'] ?? null;
+$statuses = isset($_GET['status']) ? (array)$_GET['status'] : [];
 
-
-$query = "SELECT item_name, brand, model, serial_number, total_quantity, available_quantity, unit, unit_cost, total_cost, description, date_acquired
+// Build query
+$query = "SELECT item_name, brand, model, serial_number, total_quantity, available_quantity, unit, unit_cost, total_cost, description, date_acquired, item_status
           FROM deped_inventory_items WHERE 1=1";
 $params = [];
 $types = '';
+
+// Status filter
+if (!empty($statuses)) {
+    $placeholders = str_repeat('?,', count($statuses) - 1) . '?';
+    $query .= " AND item_status IN ($placeholders)";
+    $types .= str_repeat('s', count($statuses));
+    $params = array_merge($params, $statuses);
+}
 
 // Quantity filter
 if ($minQty !== null) { $query .= " AND total_quantity >= ?"; $types .= 'i'; $params[] = $minQty; }
@@ -48,6 +56,7 @@ $sheet = $spreadsheet->getActiveSheet();
 
 $sheet->setCellValue('A1', 'Filter Summary:');
 $summary = [];
+if (!empty($statuses)) $summary[] = "Status: " . implode(', ', $statuses);
 if ($minQty !== null) $summary[] = "Min Qty = $minQty";
 if ($maxQty !== null) $summary[] = "Max Qty = $maxQty";
 if ($minCost !== null) $summary[] = "Min Cost = $minCost";
@@ -56,12 +65,12 @@ if ($startDate) $summary[] = "From Date = $startDate";
 if ($endDate) $summary[] = "To Date = $endDate";
 $sheet->setCellValue('B1', $summary ? implode(', ', $summary) : 'None');
 
-// MODIFIED: Added "Available Quantity" to headers
-$headers = ['Item Name','Brand','Model','Serial Number','Total Quantity','Available Quantity','Unit','Unit Cost','Total Cost','Description','Date Acquired'];
+// Headers - Added "Status" column
+$headers = ['Item Name','Brand','Model','Serial Number','Total Quantity','Available Quantity','Unit','Unit Cost','Total Cost','Description','Date Acquired','Status'];
 $sheet->fromArray($headers, null, 'A2');
 
-// MODIFIED: Updated range from J2 to K2
-$sheet->getStyle('A2:K2')->applyFromArray([
+// Updated range from K2 to L2 to include Status column
+$sheet->getStyle('A2:L2')->applyFromArray([
     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
     'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4F81BD']],
     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
@@ -83,20 +92,21 @@ while ($row = $result->fetch_assoc()) {
         $row['total_cost'],
         $row['description'],
         $row['date_acquired'],
+        $row['item_status'] // Status
     ], null, "A$rowIndex");
 
-    // MODIFIED: Updated range from J to K
-    $sheet->getStyle("A$rowIndex:K$rowIndex")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+    // Updated range from K to L to include Status column
+    $sheet->getStyle("A$rowIndex:L$rowIndex")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
     $rowIndex++;
 }
 
-// MODIFIED: Updated column ranges for number formatting
+// Updated column ranges for number formatting
 $sheet->getStyle("H3:H$rowIndex")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00); // Unit Cost
 $sheet->getStyle("I3:I$rowIndex")->getNumberFormat()->setFormatCode(NumberFormat::FORMAT_NUMBER_00); // Total Cost
 $sheet->getStyle("K3:K$rowIndex")->getNumberFormat()->setFormatCode('yyyy-mm-dd'); // Date Acquired
 
-// MODIFIED: Updated range to include K column
-foreach (range('A','K') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
+// Updated range to include L column
+foreach (range('A','L') as $col) $sheet->getColumnDimension($col)->setAutoSize(true);
 
 $filename = "All_Items_Inventory_" . date("Y-m-d") . ".xlsx";
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -106,3 +116,4 @@ header('Cache-Control: max-age=0');
 $writer = new Xlsx($spreadsheet);
 $writer->save('php://output');
 exit;
+?>

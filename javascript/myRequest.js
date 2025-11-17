@@ -707,37 +707,28 @@ function getActionDisplayText(action) {
         'decline': 'Decline',
         'release': 'Release',
         'return': 'Return',
-      
+        'void': 'Void'
     };
     return texts[action] || action;
 }
 
-
-    
 function getItemActionButtons(currentStatus, itemId) {
     const status = currentStatus ? currentStatus.toLowerCase() : 'pending';
     
     const actionConfigs = {
         'pending': [
-            { action: 'approve', icon: 'fa-check', class: 'approve', title: 'Approve' },
-            { action: 'decline', icon: 'fa-times', class: 'decline', title: 'Decline' }
+            { action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel' }
         ],
         'approved': [
-            { action: 'release', icon: 'fa-box-open', class: 'release', title: 'Released' }
+            { action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel ' }
         ],
         'released': [
-            { action: 'return', icon: 'fa-undo', class: 'return', title: 'Returned' }
+            { action: 'received', icon: 'fa-check-circle', class: 'received', title: ' Received' },
+            { action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel ' }
         ],
-        'returned': [
-            { action: 'release', icon: 'fa-box-open', class: 'release', title: 'Release ' }
-        ],
-        'declined': [
-            { action: 'approve', icon: 'fa-check', class: 'approve', title: 'Approve' }
-        ],
-        'cancelled': [], 
-        'received': [
-            { action: 'return', icon: 'fa-undo', class: 'return', title: 'Returned' }
-        ]
+        'returned': [],
+        'declined': [],
+        'void': []
     };
     
     const actions = actionConfigs[status] || [];

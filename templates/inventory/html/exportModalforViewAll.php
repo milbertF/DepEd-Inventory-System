@@ -1,8 +1,161 @@
 <style>
-  #exportModal { display: flex; align-items: center; }
-  #exportModal .con { max-height: fit-content; margin: 0; transform: none; top: auto; position: relative; }
-  .err-text { color: #e11d48; font-size: 0.9rem; margin: 0.35rem 0 0.25rem; }
-  .btnSave button[disabled] { opacity: .6; cursor: not-allowed; }
+  #exportModal { 
+    display: flex; 
+    align-items: center; 
+  }
+
+  #exportModal .con { 
+    max-height: fit-content; 
+    margin: 0; 
+    transform: none; 
+    top: auto; 
+    position: relative; 
+  }
+
+  .err-text { 
+    color: #e11d48; 
+    font-size: 0.9rem; 
+    margin: 0.35rem 0 0.25rem; 
+  }
+
+  .btnSave button[disabled] { 
+    opacity: .6; 
+    cursor: not-allowed; 
+  }
+
+
+  .export-check-options {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.75rem 1.25rem !important;
+    margin-top: 0.75rem !important;
+    padding: 0.5rem !important;
+    background: #f8fafc !important;
+    border-radius: 8px !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .export-check-item {
+    display: flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    user-select: none !important;
+    padding: 0.5rem 0.75rem !important;
+    transition: color 0.2s ease !important;
+    height: 2rem !important;
+    position: relative !important;
+  }
+
+  .export-check-item input[type="checkbox"] {
+    appearance: none !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    border: 2px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    background: white !important;
+    cursor: pointer !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+    position: absolute !important;
+    left: 0.75rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+
+  .check-label {
+    font-size: 0.95rem !important;
+    color: var(--textColor, #333) !important;
+    transition: 0.2s ease !important;
+    white-space: nowrap !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: 3rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    line-height: 1 !important;
+  }
+
+  .export-check-item:hover .check-label {
+    color: var(--accentColor, #c40000) !important;
+  }
+
+  .export-check-item input[type="checkbox"]:hover {
+    border-color: var(--accentColor, #c40000) !important;
+  }
+
+  .export-check-item input[type="checkbox"]:checked {
+    background: var(--accentColor, #c40000) !important;
+    border-color: var(--accentColor, #c40000) !important;
+  }
+
+  .export-check-item input[type="checkbox"]:checked::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 3px !important;
+    left: 6px !important;
+    width: 4px !important;
+    height: 8px !important;
+    border: solid #fff !important;
+    border-width: 0 2px 2px 0 !important;
+    transform: rotate(45deg) !important;
+  }
+
+  .btnSave button {
+    width: 100% !important;
+    padding: 0.75rem !important;
+    background-color: var(--accentColor, #c40000) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 4px !important;
+    font-size: 1rem !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+  }
+
+  .btnSave button:hover {
+    background-color: #a30000 !important;
+  }
+
+  @media screen and (max-width: 480px) {
+    .export-check-options {
+      grid-template-columns: 1fr !important;
+      gap: 0.5rem !important;
+    }
+    
+    .export-check-item {
+      height: 2.2rem !important;
+      padding: 0.6rem 0.75rem !important;
+    }
+    
+    .export-check-item input[type="checkbox"] {
+      width: 1.3rem !important;
+      height: 1.3rem !important;
+    }
+    
+    .export-check-item input[type="checkbox"]:checked::before {
+      top: 4px !important;
+      left: 7px !important;
+      width: 4px !important;
+      height: 8px !important;
+    }
+    
+    .check-label {
+      font-size: 0.9rem !important;
+      left: 3.2rem !important;
+    }
+  }
+</style>
+
+
+
 </style>
 
 <div class="addEmployee" id="exportModal" style="display:none;">
@@ -17,6 +170,30 @@
 
     <!-- All-items export -->
     <form id="exportForm" action="/templates/inventory/function/exportAllItemsToExcel.php" method="GET" novalidate>
+
+      <!-- Status Filter -->
+     <!-- Status Filter -->
+<div class="inpart">
+  <label>Status:</label>
+  <div class="export-check-options">
+    <label class="export-check-item">
+      <input type="checkbox" name="status[]" value="Good">
+      <span class="check-label" style>Good</span>
+    </label>
+    <label class="export-check-item">
+      <input type="checkbox" name="status[]" value="For Repair">
+      <span class="check-label">For Repair</span>
+    </label>
+    <label class="export-check-item">
+      <input type="checkbox" name="status[]" value="Damaged">
+      <span class="check-label">Damaged</span>
+    </label>
+    <label class="export-check-item">
+      <input type="checkbox" name="status[]" value="Lost">
+      <span class="check-label">Lost</span>
+    </label>
+  </div>
+</div>
 
       <!-- Quantity Range -->
       <div class="inpart">
@@ -75,6 +252,5 @@
     </form>
   </div>
 </div>
-
 
 <script src="/javascript/exportModal.js"></script>
