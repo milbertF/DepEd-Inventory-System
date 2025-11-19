@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize everything
+    // Initialize everything when DOM is loaded
     initializeRequestTable();
     initRequestPaginationEventListeners();
     initViewRequestModal();
@@ -9,17 +9,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchTerm = urlParams.get('search');
     if (searchTerm && document.getElementById('searchRequest')) {
         document.getElementById('searchRequest').value = searchTerm;
-        // Trigger filter to apply the search term
         setTimeout(() => filterRequests(), 100);
     }
+
+    // Initialize scroll from URL
+    initializeRequestScrollFromURL();
 });
 
-// =============================================
-// REQUEST TABLE PAGINATION, SEARCH AND ENTRIES
-// =============================================
-
+// Global variables for request table management
 let requestCurrentFilters = {
-    status: ['pending'], // Default to showing pending
+    status: ['pending'],
     search: ''
 };
 
@@ -29,60 +28,195 @@ let requestCurrentPage = 1;
 let requestRowsPerPage = parseInt(localStorage.getItem('requestTableRowsPerPage')) || 10;
 let requestDebounceTimer = null;
 
-// Initialize request table
-function initializeRequestTable() {
-    console.log('Initializing request table...');
+// Scroll functionality variables
+let isRedirectingToRequest = false;
+let targetRequestId = null;
+let isShowingRequestNotFoundAlert = false;
+
+// Scroll to specific request function
+window.scrollToRequest = function(requestId) {
+    if (!requestId || isRedirectingToRequest) return;
     
-    // Get all request rows
-    allRequestRows = Array.from(document.querySelectorAll('.requestTable tbody tr'));
-    console.log(`Found ${allRequestRows.length} request rows`);
+    isRedirectingToRequest = true;
+    targetRequestId = requestId;
     
-    // Remove any existing no results message
-    const existingNoResults = document.getElementById('noRequestsMessage');
-    if (existingNoResults) {
-        existingNoResults.remove();
+    resetRequestFiltersForScroll(requestId);
+};
+
+// Reset filters to show all requests for scrolling
+function resetRequestFiltersForScroll(requestId) {
+    const searchInput = document.getElementById('searchRequest');
+    if (searchInput) searchInput.value = '';
+    
+    const statusCheckboxes = document.querySelectorAll('.status-checkbox');
+    statusCheckboxes.forEach(checkbox => checkbox.checked = true);
+    
+    requestCurrentFilters.status = ['pending', 'approved', 'declined', 'released', 'returned', 'canceled', 'received'];
+    requestCurrentFilters.search = '';
+    
+    saveStatusFilters();
+    filterRequests();
+    
+    setTimeout(() => attemptRequestScroll(requestId), 300);
+}
+
+// Attempt to scroll to request after filters are applied
+function attemptRequestScroll(requestId) {
+    const allVisibleRows = Array.from(document.querySelectorAll('.requestTable tbody tr[data-status]'));
+    const searchId = String(requestId).trim();
+    
+    let foundRow = null;
+    let foundIndex = -1;
+    
+    allVisibleRows.forEach((row, index) => {
+        try {
+            const requestData = JSON.parse(row.getAttribute('data-request'));
+            const rowId = String(requestData.request_id).trim();
+            
+            if (rowId === searchId) {
+                foundRow = row;
+                foundIndex = index;
+            }
+        } catch (e) {}
+    });
+    
+    if (foundIndex !== -1 && foundRow) {
+        const targetPage = Math.floor(foundIndex / requestRowsPerPage) + 1;
+        
+        if (requestCurrentPage !== targetPage) {
+            requestCurrentPage = targetPage;
+            setTimeout(() => {
+                displayRequestPage(targetPage);
+                setTimeout(() => scrollToRequestOnCurrentPage(requestId), 500);
+            }, 200);
+        } else {
+            scrollToRequestOnCurrentPage(requestId);
+        }
+    } else {
+        showRequestNotFoundMessage(requestId);
+    }
+}
+
+// Scroll to request on current page and highlight it
+function scrollToRequestOnCurrentPage(requestId) {
+    const searchId = String(requestId).trim();
+    let targetRow = document.querySelector(`tr[data-request*='"request_id":"${searchId}"']`);
+    
+    if (!targetRow) {
+        const allRows = Array.from(document.querySelectorAll('.requestTable tbody tr[data-request]'));
+        for (const row of allRows) {
+            try {
+                const requestData = JSON.parse(row.getAttribute('data-request'));
+                const rowId = String(requestData.request_id).trim();
+                if (rowId === searchId) {
+                    targetRow = row;
+                    break;
+                }
+            } catch (e) {}
+        }
     }
     
-    // Initialize rows per page selector
+    if (targetRow && targetRow.style.display !== 'none') {
+        document.querySelectorAll('.highlight-request, .highlight-request-strong').forEach(row => {
+            row.classList.remove('highlight-request', 'highlight-request-strong');
+        });
+        
+        targetRow.classList.add('highlight-request');
+        
+        setTimeout(() => {
+            targetRow.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center',
+                inline: 'nearest'
+            });
+            targetRow.classList.add('highlight-request-strong');
+        }, 100);
+        
+        setTimeout(() => targetRow.classList.remove('highlight-request-strong'), 3000);
+        setTimeout(() => {
+            targetRow.classList.remove('highlight-request');
+            cleanupRequestScrollState(requestId);
+        }, 6000);
+    } else {
+        showRequestNotFoundMessage(requestId);
+    }
+}
+
+// Clean up scroll state after completion
+function cleanupRequestScrollState(requestId) {
+    isRedirectingToRequest = false;
+    targetRequestId = null;
+    
+    const url = new URL(window.location);
+    if (url.searchParams.get('request_id') === requestId) {
+        url.searchParams.delete('request_id');
+        window.history.replaceState({}, '', url);
+    }
+}
+
+// Show notification when request is not found
+function showRequestNotFoundMessage(requestId) {
+    if (isShowingRequestNotFoundAlert) return;
+    
+    isShowingRequestNotFoundAlert = true;
+    
+    Swal.fire({
+        icon: 'warning',
+        title: 'Request Not Found',
+        html: `The request (ID: <b>${requestId}</b>) could not be found in the current view.`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+        background: '#fff',
+    }).then(() => {
+        cleanupRequestScrollState(requestId);
+        isShowingRequestNotFoundAlert = false;
+    });
+}
+
+// Initialize scroll from URL parameters
+function initializeRequestScrollFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('request_id');
+    
+    if (requestId) {
+        setTimeout(() => scrollToRequest(requestId), 1000);
+    }
+}
+
+// Initialize the request table
+function initializeRequestTable() {
+    allRequestRows = Array.from(document.querySelectorAll('.requestTable tbody tr'));
+    
+    const existingNoResults = document.getElementById('noRequestsMessage');
+    if (existingNoResults) existingNoResults.remove();
+    
     initRequestRowsPerPageSelector();
-    
-    // Load saved status filters from localStorage
     loadStatusFilters();
-    
-    // Apply initial filters
     filterRequests();
 }
 
-// Load status filters from localStorage
+// Load saved status filters from localStorage
 function loadStatusFilters() {
     const savedFilters = localStorage.getItem('requestStatusFilters');
     if (savedFilters) {
         const savedStatuses = JSON.parse(savedFilters);
         requestCurrentFilters.status = savedStatuses;
         
-        // Update checkboxes to match saved state
         const statusCheckboxes = document.querySelectorAll('.status-checkbox');
         statusCheckboxes.forEach(checkbox => {
             const status = checkbox.getAttribute('data-status');
             checkbox.checked = savedStatuses.includes(status);
         });
-        
-        console.log('Loaded saved status filters:', savedStatuses);
     } else {
-        // Default to pending only
         const pendingCheckbox = document.querySelector('.status-checkbox[data-status="pending"]');
-        if (pendingCheckbox) {
-            pendingCheckbox.checked = true;
-        }
+        if (pendingCheckbox) pendingCheckbox.checked = true;
         requestCurrentFilters.status = ['pending'];
-        console.log('Using default status filter: pending only');
     }
 }
 
 // Save status filters to localStorage
 function saveStatusFilters() {
     localStorage.setItem('requestStatusFilters', JSON.stringify(requestCurrentFilters.status));
-    console.log('Saved status filters:', requestCurrentFilters.status);
 }
 
 // Initialize rows per page selector
@@ -106,7 +240,7 @@ function initRequestRowsPerPageSelector() {
     }
 }
 
-// Filter requests based on current filters
+// Filter requests based on current search and status filters
 function filterRequests() {
     const searchValue = (document.getElementById('searchRequest')?.value || '').toLowerCase().trim();
     const statusCheckboxes = document.querySelectorAll('.status-checkbox:checked');
@@ -114,19 +248,10 @@ function filterRequests() {
     
     requestCurrentFilters.status = selectedStatuses;
     requestCurrentFilters.search = searchValue;
-    
-    // Save the current status filters
     saveStatusFilters();
     
-    console.log('Filtering requests:', {
-        status: selectedStatuses,
-        search: searchValue
-    });
-    
-    // Reset filtered rows
     filteredRequestRows = [];
     
-    // Filter rows
     allRequestRows.forEach(row => {
         const requestData = JSON.parse(row.getAttribute('data-request'));
         const rowData = {
@@ -136,13 +261,11 @@ function filterRequests() {
             officeName: String(requestData.office_name || '').toLowerCase(),
             items: requestData.items || [],
             status: String(requestData.status || '').toLowerCase(),
-            // Create searchable text from all items
             itemsSearchText: (requestData.items || []).map(item => 
                 `${item.item_name || ''} ${item.item_id || ''} ${item.serial_number || ''} ${item.category_name || ''} ${item.brand || ''} ${item.model || ''} ${item.description || ''}`
             ).join(' ').toLowerCase()
         };
         
-        // Check status filter
         let statusMatch = true;
         if (selectedStatuses.length > 0) {
             statusMatch = rowData.items.some(item => {
@@ -151,7 +274,6 @@ function filterRequests() {
             });
         }
         
-        // Check search filter
         let searchMatch = true;
         if (searchValue) {
             const searchableText = `
@@ -166,37 +288,53 @@ function filterRequests() {
             searchMatch = searchableText.includes(searchValue);
         }
         
-        if (statusMatch && searchMatch) {
-            filteredRequestRows.push(row);
-        }
+        if (statusMatch && searchMatch) filteredRequestRows.push(row);
     });
-    
-    console.log(`Filtered to ${filteredRequestRows.length} requests`);
     
     requestCurrentPage = 1;
     updateRequestDisplay();
 }
 
-// Display specific page
+// Display specific page of requests
 function displayRequestPage(page = 1) {
     const start = (page - 1) * requestRowsPerPage;
     const end = start + requestRowsPerPage;
 
-    // Hide all rows first
-    allRequestRows.forEach(row => {
-        row.style.display = "none";
-    });
-    
-    // Show only rows for current page
-    for (let i = start; i < Math.min(end, filteredRequestRows.length); i++) {
-        if (filteredRequestRows[i]) {
-            filteredRequestRows[i].style.display = "";
+    requestAnimationFrame(() => {
+        allRequestRows.forEach(row => row.style.display = "none");
+        
+        for (let i = start; i < Math.min(end, filteredRequestRows.length); i++) {
+            if (filteredRequestRows[i]) filteredRequestRows[i].style.display = "";
         }
-    }
-    
-    updateRequestPagination(page);
-    updateRequestCounts();
-    updateRequestRowNumbers();
+        
+        updateRequestPagination(page);
+        updateRequestCounts();
+        updateRequestRowNumbers();
+        
+        if (isRedirectingToRequest && targetRequestId && page === requestCurrentPage) {
+            setTimeout(() => {
+                const searchId = String(targetRequestId).trim();
+                let targetRow = document.querySelector(`tr[data-request*='"request_id":"${searchId}"']`);
+                if (!targetRow) {
+                    const allRows = Array.from(document.querySelectorAll('.requestTable tbody tr[data-request]'));
+                    for (const row of allRows) {
+                        try {
+                            const requestData = JSON.parse(row.getAttribute('data-request'));
+                            const rowId = String(requestData.request_id).trim();
+                            if (rowId === searchId) {
+                                targetRow = row;
+                                break;
+                            }
+                        } catch (e) {}
+                    }
+                }
+                
+                if (targetRow && targetRow.style.display !== 'none') {
+                    targetRow.classList.add('highlight-request');
+                }
+            }, 200);
+        }
+    });
 }
 
 // Update pagination controls
@@ -220,18 +358,15 @@ function generateRequestPaginationHTML(page, totalPages) {
     let html = '';
     const range = 2;
     
-    // First and previous buttons
     if (page > 1) {
         html += `<a href="#" class="prev-next" data-page="1" title="First page"><i class="fas fa-angle-double-left"></i></a>`;
         html += `<a href="#" class="prev-next" data-page="${page - 1}" title="Previous page"><i class="fas fa-chevron-left"></i></a>`;
     }
     
-    // Page numbers
     for (let i = Math.max(1, page - range); i <= Math.min(totalPages, page + range); i++) {
         html += `<a href="#" class="${i === page ? 'active' : ''}" data-page="${i}">${i}</a>`;
     }
     
-    // Next and last buttons
     if (page < totalPages) {
         html += `<a href="#" class="prev-next" data-page="${page + 1}" title="Next page"><i class="fas fa-chevron-right"></i></a>`;
         html += `<a href="#" class="prev-next" data-page="${totalPages}" title="Last page"><i class="fas fa-angle-double-right"></i></a>`;
@@ -255,62 +390,35 @@ function attachRequestPaginationEvents(page, totalPages) {
     });
 }
 
-// Update request counts display - FIXED LOGIC
+// Update request counts display
 function updateRequestCounts() {
     const totalRequests = allRequestRows.length;
     const filteredRequests = filteredRequestRows.length;
-    
-    // Check if we should show simple count or "X of Y" format
     const shouldShowSimpleCount = shouldShowSimpleCountDisplay();
     
-    console.log('Count update:', {
-        totalRequests,
-        filteredRequests,
-        shouldShowSimpleCount,
-        currentFilters: requestCurrentFilters
-    });
-    
-    // Update the main display text
-    updateMainCountDisplay(totalRequests, filteredRequests, shouldShowSimpleCount);
-    
-    // Remove the redundant page info entirely
-    const pageInfoElement = document.getElementById('pageInfo');
-    if (pageInfoElement) {
-        pageInfoElement.textContent = '';
-    }
-}
-
-// Check if we should show simple count - FIXED LOGIC
-function shouldShowSimpleCountDisplay() {
-    const searchValue = requestCurrentFilters.search;
-    const statusFilters = requestCurrentFilters.status;
-    
-    // Show simple count ONLY when:
-    // 1. NO search AND 
-    // 2. NO status filters selected (showing all items)
-    const hasNoSearch = !searchValue || searchValue === '';
-    const hasNoStatusFilters = statusFilters.length === 0;
-    
-    return hasNoSearch && hasNoStatusFilters;
-}
-
-// Update the main count display text - FIXED LOGIC
-function updateMainCountDisplay(totalRequests, filteredRequests, shouldShowSimpleCount) {
     const itemCountDisplay = document.querySelector('.item-count-display');
     if (itemCountDisplay) {
         if (shouldShowSimpleCount) {
-            // When showing ALL items with NO search: Just "X total requests"
-            itemCountDisplay.innerHTML = `
-                <span id="totalRequestsCount">${filteredRequests}</span> total requests
-            `;
+            itemCountDisplay.innerHTML = `<span id="totalRequestsCount">${filteredRequests}</span> total requests`;
         } else {
-            // When searching OR any status filter selected: "X total requests | Showing Y of X"
             itemCountDisplay.innerHTML = `
                 <span id="totalRequestsCount">${totalRequests}</span> total requests
                 | Showing <span id="visibleRequestsCount">${filteredRequests}</span> of <span id="totalRequestsCount2">${totalRequests}</span>
             `;
         }
     }
+    
+    const pageInfoElement = document.getElementById('pageInfo');
+    if (pageInfoElement) pageInfoElement.textContent = '';
+}
+
+// Check if we should show simple count display
+function shouldShowSimpleCountDisplay() {
+    const searchValue = requestCurrentFilters.search;
+    const statusFilters = requestCurrentFilters.status;
+    const hasNoSearch = !searchValue || searchValue === '';
+    const hasNoStatusFilters = statusFilters.length === 0;
+    return hasNoSearch && hasNoStatusFilters;
 }
 
 // Update row numbers based on filtered results
@@ -336,9 +444,7 @@ function showNoRequestsMessage(show) {
         noResultsRow.id = 'noRequestsMessage';
         noResultsRow.innerHTML = `<td colspan="9" style="text-align:center; color:#666; padding:20px;">No requests found matching your filters.</td>`;
         tableBody.appendChild(noResultsRow);
-    } else if (!show && noResultsRow) {
-        noResultsRow.remove();
-    }
+    } else if (!show && noResultsRow) noResultsRow.remove();
 }
 
 // Update entire request display
@@ -350,18 +456,13 @@ function updateRequestDisplay() {
 
 // Initialize event listeners for pagination and search
 function initRequestPaginationEventListeners() {
-    // Search input with debouncing
     const searchInput = document.getElementById('searchRequest');
     if (searchInput) {
         searchInput.addEventListener('input', () => {
             clearTimeout(requestDebounceTimer);
-            requestDebounceTimer = setTimeout(() => {
-                console.log('Search triggered:', searchInput.value);
-                filterRequests();
-            }, 300);
+            requestDebounceTimer = setTimeout(() => filterRequests(), 300);
         });
         
-        // Also allow Enter key for immediate search
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 clearTimeout(requestDebounceTimer);
@@ -370,53 +471,36 @@ function initRequestPaginationEventListeners() {
         });
     }
     
-    // Status filter checkboxes
     const statusCheckboxes = document.querySelectorAll('.status-checkbox');
     statusCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            console.log('Status filter changed:', checkbox.getAttribute('data-status'), checkbox.checked);
-            filterRequests();
-        });
+        checkbox.addEventListener('change', () => filterRequests());
     });
 }
 
-// Reset all filters
+// Reset all filters to default state
 function resetRequestFilters() {
-    // Reset search
     const searchInput = document.getElementById('searchRequest');
-    if (searchInput) {
-        searchInput.value = '';
-    }
+    if (searchInput) searchInput.value = '';
     
-    // Reset status checkboxes to default (only pending checked)
     const statusCheckboxes = document.querySelectorAll('.status-checkbox');
-    statusCheckboxes.forEach(checkbox => {
-        checkbox.checked = checkbox.getAttribute('data-status') === 'pending';
-    });
+    statusCheckboxes.forEach(checkbox => checkbox.checked = checkbox.getAttribute('data-status') === 'pending');
     
-    // Reset pagination
     requestCurrentPage = 1;
     requestRowsPerPage = 10;
     
     const rowsPerPageSelect = document.getElementById("requestRowsPerPage");
-    if (rowsPerPageSelect) {
-        rowsPerPageSelect.value = '10';
-    }
+    if (rowsPerPageSelect) rowsPerPageSelect.value = '10';
     
     localStorage.setItem('requestTableRowsPerPage', '10');
-    localStorage.removeItem('requestStatusFilters'); // Clear saved status filters
-    
-    // Re-apply filters
+    localStorage.removeItem('requestStatusFilters');
     filterRequests();
 }
 
-// =============================================
-// REQUEST MODAL FUNCTIONS
-// =============================================
-
+// Modal functionality variables
 let selectedActions = new Map();
 let currentRequestData = null;
 
+// Open view modal for specific request
 function openViewModal(requestId) {
     const button = document.querySelector(`button[data-request-id="${requestId}"]`);
     if (!button) {
@@ -431,12 +515,12 @@ function openViewModal(requestId) {
     }
     
     const requestData = JSON.parse(row.getAttribute('data-request'));
-    
     populateRequestDetails(requestData);
     document.getElementById('viewRequestModal').style.display = 'flex';
     document.body.classList.add('modal-open');
 }
 
+// Close view modal
 function closeViewModal() {
     document.getElementById('viewRequestModal').style.display = 'none';
     document.body.classList.remove('modal-open');
@@ -444,13 +528,12 @@ function closeViewModal() {
     selectedActions.clear();
 }
 
+// Populate request details in modal
 function populateRequestDetails(request) {
     requestAnimationFrame(() => {
-        // Reset selection when opening new modal
         selectedActions.clear();
         currentRequestData = request;
         
-        // Basic request info
         document.getElementById('viewRequestId').textContent = request.request_id;
         
         const statusElement = document.getElementById('viewRequestStatus');
@@ -463,24 +546,16 @@ function populateRequestDetails(request) {
         document.getElementById('viewRequesterOffice').textContent = request.office_name;
         document.getElementById('viewDateRequested').textContent = formatDate(request.created_at);
         
-        // Populate items with status and action buttons
         const itemsBody = document.getElementById('viewRequestItemsBody');
         itemsBody.innerHTML = '';
         
         if (request.items && request.items.length > 0) {
             request.items.forEach((item, index) => {
-                // Use the actual req_item_id from database
                 const itemId = item.req_item_id;
-                
-                if (!itemId) {
-                    console.error('Missing req_item_id for item:', item);
-                    return;
-                }
+                if (!itemId) return;
                 
                 const row = document.createElement('tr');
                 row.setAttribute('data-item-id', itemId);
-                
-                // Get appropriate action buttons based on item status
                 const actionButtons = getItemActionButtons(item.status, itemId);
                 
                 row.innerHTML = `
@@ -508,42 +583,29 @@ function populateRequestDetails(request) {
                 itemsBody.appendChild(row);
             });
             
-            // Initialize action buttons
             initItemActionButtons();
         } else {
             itemsBody.innerHTML = '<tr><td colspan="12" style="text-align: center; padding: 20px;">No items found in this request</td></tr>';
         }
         
-        // Add bulk confirm section
         addBulkConfirmSection();
     });
 }
 
-// Initialize action buttons with selection functionality
+// Initialize action buttons in modal
 function initItemActionButtons() {
     document.querySelectorAll('.item-action-btn').forEach(button => {
         button.addEventListener('click', function() {
             const itemId = this.closest('.item-action-buttons').getAttribute('data-item-id');
             const action = this.getAttribute('data-action');
             
-            console.log('Button clicked:', { itemId, action });
-            
-            // Toggle selection
             if (selectedActions.get(itemId) === action) {
-                // Deselect if already selected
                 selectedActions.delete(itemId);
                 this.classList.remove('selected');
             } else {
-                // Select this action
                 selectedActions.set(itemId, action);
-                
-                // Remove selected class from other buttons in same group
                 const buttonGroup = this.closest('.item-action-buttons');
-                buttonGroup.querySelectorAll('.item-action-btn').forEach(btn => {
-                    btn.classList.remove('selected');
-                });
-                
-                // Add selected class to clicked button
+                buttonGroup.querySelectorAll('.item-action-btn').forEach(btn => btn.classList.remove('selected'));
                 this.classList.add('selected');
             }
             
@@ -554,11 +616,8 @@ function initItemActionButtons() {
 
 // Add bulk confirm section to modal
 function addBulkConfirmSection() {
-    // Remove existing bulk section if any
     const existingBulkSection = document.querySelector('.bulk-confirm-section');
-    if (existingBulkSection) {
-        existingBulkSection.remove();
-    }
+    if (existingBulkSection) existingBulkSection.remove();
     
     const bulkSection = document.createElement('div');
     bulkSection.className = 'bulk-confirm-section';
@@ -573,22 +632,16 @@ function addBulkConfirmSection() {
         </div>
     `;
     
-    // Insert after the items table
     const itemsTable = document.querySelector('.items-table-container');
     itemsTable.parentNode.insertBefore(bulkSection, itemsTable.nextSibling);
-    
-    // Initialize bulk confirm handler
     initBulkConfirmHandler();
 }
 
 // Initialize bulk confirm handler
 function initBulkConfirmHandler() {
     const confirmBulkBtn = document.getElementById('confirmBulkActions');
-    
     if (confirmBulkBtn) {
-        confirmBulkBtn.addEventListener('click', function() {
-            confirmAllSelectedActions();
-        });
+        confirmBulkBtn.addEventListener('click', confirmAllSelectedActions);
     }
 }
 
@@ -597,20 +650,13 @@ function updateBulkConfirmButton() {
     const confirmBulkBtn = document.getElementById('confirmBulkActions');
     const selectedCount = document.getElementById('selectedActionsCount');
     
-    if (selectedCount) {
-        selectedCount.textContent = selectedActions.size;
-    }
-    
-    if (confirmBulkBtn) {
-        confirmBulkBtn.disabled = selectedActions.size === 0;
-    }
+    if (selectedCount) selectedCount.textContent = selectedActions.size;
+    if (confirmBulkBtn) confirmBulkBtn.disabled = selectedActions.size === 0;
 }
 
+// Confirm all selected actions in modal
 function confirmAllSelectedActions() {
     const actionsArray = Array.from(selectedActions.entries());
-    
-    console.log('Confirming actions:', actionsArray);
-    console.log('Current request data:', currentRequestData);
     
     Swal.fire({
         title: `Confirm ${selectedActions.size} Actions`,
@@ -618,7 +664,6 @@ function confirmAllSelectedActions() {
                <div class="swal-items-container">
                    <div class="swal-items-grid">
                    ${actionsArray.map(([itemId, action]) => {
-                       // Find the actual item data using req_item_id
                        const item = currentRequestData.items.find(item => item.req_item_id == itemId);
                        const itemName = item ? item.item_name : `Item ID: ${itemId}`;
                        return `
@@ -636,39 +681,29 @@ function confirmAllSelectedActions() {
         width: '500px'
     }).then((result) => {
         if (result.isConfirmed) {
-       
             Swal.fire({
                 title: 'Processing...',
                 text: 'Please wait while we update the items',
                 allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                didOpen: () => Swal.showLoading()
             });
             
-           
-fetch('/templates/request/function/updateItemRequestStatus.php', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        request_id: currentRequestData.request_id,
-        actions: actionsArray.map(([itemId, action]) => ({
-            req_item_id: itemId,  
-            action: action
-        }))
-    })
-})
+            fetch('/templates/request/function/updateItemRequestStatus.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    request_id: currentRequestData.request_id,
+                    actions: actionsArray.map(([itemId, action]) => ({
+                        req_item_id: itemId,  
+                        action: action
+                    }))
+                })
+            })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                console.log('Response data:', data);
-                
                 if (data.success) {
                     Swal.fire({
                         title: 'Success!',
@@ -680,16 +715,12 @@ fetch('/templates/request/function/updateItemRequestStatus.php', {
                         location.reload();
                     });
                 } else {
-                    // Show detailed error message
                     let errorMessage = data.message || 'Failed to update items';
-                    if (data.errors && data.errors.length > 0) {
-                        errorMessage += '\n\nErrors:\n' + data.errors.join('\n');
-                    }
+                    if (data.errors && data.errors.length > 0) errorMessage += '\n\nErrors:\n' + data.errors.join('\n');
                     throw new Error(errorMessage);
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
                 Swal.fire({
                     title: 'Error!',
                     text: error.message || 'An unexpected error occurred',
@@ -701,6 +732,7 @@ fetch('/templates/request/function/updateItemRequestStatus.php', {
     });
 }
 
+// Get display text for actions
 function getActionDisplayText(action) {
     const texts = {
         'approve': 'Approve',
@@ -712,16 +744,13 @@ function getActionDisplayText(action) {
     return texts[action] || action;
 }
 
+// Get action buttons based on item status
 function getItemActionButtons(currentStatus, itemId) {
     const status = currentStatus ? currentStatus.toLowerCase() : 'pending';
     
     const actionConfigs = {
-        'pending': [
-            { action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel' }
-        ],
-        'approved': [
-            { action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel ' }
-        ],
+        'pending': [{ action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel' }],
+        'approved': [{ action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel ' }],
         'released': [
             { action: 'received', icon: 'fa-check-circle', class: 'received', title: ' Received' },
             { action: 'cancel', icon: 'fa-ban', class: 'cancel', title: 'Cancel ' }
@@ -747,6 +776,8 @@ function getItemActionButtons(currentStatus, itemId) {
     
     return buttonsHTML;
 }
+
+// Format date for display
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     try {
@@ -761,6 +792,7 @@ function formatDate(dateString) {
     }
 }
 
+// Escape HTML to prevent XSS
 function escapeHtml(unsafe) {
     if (unsafe === null || unsafe === undefined) return '';
     return unsafe
@@ -772,6 +804,7 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
+// Show error message
 function showError(message) {
     Swal.fire({
         icon: 'error',
@@ -781,6 +814,7 @@ function showError(message) {
     });
 }
 
+// Initialize view request modal
 function initViewRequestModal() {
     document.querySelectorAll('.action-btn.view').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -798,15 +832,14 @@ function initViewRequestModal() {
     });
     
     document.getElementById('viewRequestModal')?.addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeViewModal();
-        }
+        if (e.target === this) closeViewModal();
     });
 }
 
-// Export functions for global access if needed
+// Export functions for global access
 window.requestTable = {
     filterRequests,
     resetRequestFilters,
-    displayRequestPage
+    displayRequestPage,
+    scrollToRequest
 };

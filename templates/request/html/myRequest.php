@@ -28,7 +28,7 @@ require __DIR__ . '/../function/fetchMyRequest.php';
 <body>
     <div class="wrapMain">
         <?php require __DIR__ . '/../../sidebar/html/sidebar.php'; ?>
-        <div class="con">
+        <div class="con-request">
             <?php require __DIR__ . '/../../header/html/pageHeader.php'; ?>
             <?php require __DIR__ . '/../../quick-access/access.php'; ?>
             <?php require __DIR__ . '/viewRequestItemModal.php'; ?>
@@ -93,7 +93,7 @@ require __DIR__ . '/../function/fetchMyRequest.php';
                     </div>
 
                   
-
+                    <div class="table-scroll-wrapper">
                 <table class="requestTable">
                     <thead>
                         <tr>
@@ -212,6 +212,7 @@ require __DIR__ . '/../function/fetchMyRequest.php';
                         <?php endif; ?>
                     </tbody>
                 </table>
+                </div>
                 <div class="pagination" id="requestPagination"></div>
 
 <!-- Table Footer with Items Per Page Selector -->
@@ -250,7 +251,7 @@ require __DIR__ . '/../function/fetchMyRequest.php';
 
                 
             </div>
-            <!-- Pagination -->
+         
 
             
 

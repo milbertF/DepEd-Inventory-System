@@ -24,85 +24,75 @@
   }
 
 
-  .export-check-options {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem 1.25rem !important;
-    margin-top: 0.75rem !important;
-    padding: 0.5rem !important;
-    background: #f8fafc !important;
-    border-radius: 8px !important;
-    border: 1px solid #e2e8f0 !important;
-  }
+  .export-check-options.clean {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 15px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
 
-  .export-check-item {
-    display: flex !important;
-    align-items: center !important;
-    cursor: pointer !important;
-    user-select: none !important;
-    padding: 0.5rem 0.75rem !important;
-    transition: color 0.2s ease !important;
-    height: 2rem !important;
-    position: relative !important;
-  }
+.clean-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  cursor: pointer;
+  user-select: none;
+}
 
-  .export-check-item input[type="checkbox"] {
-    appearance: none !important;
-    width: 1.2rem !important;
-    height: 1.2rem !important;
-    border: 2px solid #cbd5e1 !important;
-    border-radius: 4px !important;
-    background: white !important;
-    cursor: pointer !important;
-    position: relative !important;
-    transition: all 0.2s ease !important;
-    flex-shrink: 0 !important;
-    margin: 0 !important;
-    position: absolute !important;
-    left: 0.75rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-  }
+.clean-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  appearance: none;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+}
 
-  .check-label {
-    font-size: 0.95rem !important;
-    color: var(--textColor, #333) !important;
-    transition: 0.2s ease !important;
-    white-space: nowrap !important;
-    font-weight: 500 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    position: absolute !important;
-    left: 3rem !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    line-height: 1 !important;
-  }
 
-  .export-check-item:hover .check-label {
-    color: var(--accentColor, #c40000) !important;
-  }
+.clean-checkbox input[type="checkbox"]:hover {
+  border-color: var(--accentColor, #c40000);
+}
 
-  .export-check-item input[type="checkbox"]:hover {
-    border-color: var(--accentColor, #c40000) !important;
-  }
 
-  .export-check-item input[type="checkbox"]:checked {
-    background: var(--accentColor, #c40000) !important;
-    border-color: var(--accentColor, #c40000) !important;
-  }
+.clean-checkbox input[type="checkbox"]:checked {
+  background: var(--accentColor, #c40000);
+  border-color: var(--accentColor, #c40000);
+}
 
-  .export-check-item input[type="checkbox"]:checked::before {
-    content: "" !important;
-    position: absolute !important;
-    top: 3px !important;
-    left: 6px !important;
-    width: 4px !important;
-    height: 8px !important;
-    border: solid #fff !important;
-    border-width: 0 2px 2px 0 !important;
-    transform: rotate(45deg) !important;
-  }
+
+.clean-checkbox input[type="checkbox"]:checked::before {
+  content: "";
+  position: absolute;
+ 
+  left: 5px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+
+.clean-checkbox span {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.export-label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #1e293b;
+}
+
+
 
   .btnSave button {
     width: 100% !important;
@@ -172,28 +162,30 @@
     <form id="exportForm" action="/templates/inventory/function/exportAllItemsToExcel.php" method="GET" novalidate>
 
       <!-- Status Filter -->
-     <!-- Status Filter -->
-<div class="inpart">
-  <label>Status:</label>
-  <div class="export-check-options">
-    <label class="export-check-item">
-      <input type="checkbox" name="status[]" value="Good">
-      <span class="check-label" style>Good</span>
-    </label>
-    <label class="export-check-item">
-      <input type="checkbox" name="status[]" value="For Repair">
-      <span class="check-label">For Repair</span>
-    </label>
-    <label class="export-check-item">
-      <input type="checkbox" name="status[]" value="Damaged">
-      <span class="check-label">Damaged</span>
-    </label>
-    <label class="export-check-item">
-      <input type="checkbox" name="status[]" value="Lost">
-      <span class="check-label">Lost</span>
-    </label>
-  </div>
+      <label class="export-label"> Item Status:</label>
+
+<div class="export-check-options clean">
+  <label class="clean-checkbox">
+    <input type="checkbox" name="status[]" value="Good">
+    <span>Good</span>
+  </label>
+
+  <label class="clean-checkbox">
+    <input type="checkbox" name="status[]" value="For Repair">
+    <span>For Repair</span>
+  </label>
+
+  <label class="clean-checkbox">
+    <input type="checkbox" name="status[]" value="Damaged">
+    <span>Damaged</span>
+  </label>
+
+  <label class="clean-checkbox">
+    <input type="checkbox" name="status[]" value="Lost">
+    <span>Lost</span>
+  </label>
 </div>
+
 
       <!-- Quantity Range -->
       <div class="inpart">

@@ -92,7 +92,7 @@ require __DIR__ . '/../function/fetchRequest.php';
                     </div>
 
                   
-
+                    <div class="table-scroll-wrapper">
                 <table class="requestTable">
                     <thead>
                         <tr>
@@ -111,6 +111,8 @@ require __DIR__ . '/../function/fetchRequest.php';
                         <?php if (!empty($requests)): ?>
                             <?php foreach ($requests as $index => $request): ?>
                                 <tr data-status="<?= strtolower($request['status']) ?>" 
+                                
+                                
                                     data-request='<?= htmlspecialchars(json_encode([
                                         'request_id' => $request['request_id'],
                                         'status' => $request['status'],
@@ -121,6 +123,7 @@ require __DIR__ . '/../function/fetchRequest.php';
                                         'items' => $request['items']
                                     ]), ENT_QUOTES, 'UTF-8') ?>'>
                                     <td><?= $index + 1 ?></td>
+                                    
                                     <td><?= htmlspecialchars($request['request_id']) ?></td>
                                     <td>
                                         <div class="requester-info">
@@ -211,6 +214,10 @@ require __DIR__ . '/../function/fetchRequest.php';
                         <?php endif; ?>
                     </tbody>
                 </table>
+                </div>
+
+
+                
                 <div class="pagination" id="requestPagination"></div>
 
 <!-- Table Footer with Items Per Page Selector -->
@@ -267,11 +274,13 @@ require __DIR__ . '/../function/fetchRequest.php';
     
 
 
-    
 
     <script src="/javascript/header.js"></script>
     <script src="/javascript/sidebar.js"></script>
     <script src="/javascript/script.js"></script>
     <script src="/javascript/request.js"></script>
+
+
+
 </body>
 </html>

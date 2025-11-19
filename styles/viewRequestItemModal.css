@@ -494,6 +494,13 @@ body.modal-open {
     background: #dc3545 !important;
 }
 
+
+.swal-action-cancel {
+    background-color: #f3f4f6;
+    color: #6b7280;
+   
+}
+
 .swal-action-release {
     background: #17a2b8 !important;
 }

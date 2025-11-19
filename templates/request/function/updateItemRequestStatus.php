@@ -397,18 +397,35 @@ function getLogMessage($actionType, $itemName, $oldStatus, $newStatus, $quantity
     
     return $actionMessages[$actionType] ?? "Action '{$actionType}' performed on item '{$itemName}'. Status: {$oldStatus} → {$newStatus}";
 }
-
 function logAction($conn, $logId, $reqItemId, $requestId, $itemId, $itemName, $userId, $actionType, $message, $performedBy) {
-    $logStmt = $conn->prepare("
+    
+
+    $logStmt1 = $conn->prepare("
         INSERT INTO deped_inventory_request_logs 
-        (log_id, req_item_id, request_id, item_id, item_name, user_id, action_type, message, created_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        (log_id, req_item_id, request_id, item_id, item_name, user_id, action_type, message, performed_by, created_at, for_admin, for_emp) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), FALSE, TRUE)
     ");
     
-    if ($logStmt) {
-        $logStmt->bind_param('siiissss', $logId, $reqItemId, $requestId, $itemId, $itemName, $userId, $actionType, $message);
-        $logStmt->execute();
-        $logStmt->close();
+    if ($logStmt1) {
+        $logStmt1->bind_param('siiisssss', $logId, $reqItemId, $requestId, $itemId, $itemName, $userId, $actionType, $message, $performedBy);
+        $logStmt1->execute();
+        $logStmt1->close();
+    }
+    
+ 
+    $logId2 = generateLogID($conn);
+    
+
+    $logStmt2 = $conn->prepare("
+        INSERT INTO deped_inventory_request_logs 
+        (log_id, req_item_id, request_id, item_id, item_name, user_id, action_type, message, performed_by, created_at, for_admin, for_emp) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), TRUE, FALSE)
+    ");
+    
+    if ($logStmt2) {
+        $logStmt2->bind_param('siiisssss', $logId2, $reqItemId, $requestId, $itemId, $itemName, $userId, $actionType, $message, $performedBy);
+        $logStmt2->execute();
+        $logStmt2->close();
     }
 }
 ?>

@@ -1,3 +1,9 @@
+.con-request{
+  overflow-x: hidden;
+}
+
+
+
 
 .tableContainer {
     margin-top: 1.5rem;
@@ -381,11 +387,6 @@
     border-color: #adb5bd;
 }
 
-.status-checkbox:checked + label {
-    background: var(--accentColor);
-    color: white;
-    border-color: var(--accentColor);
-}
 
 .status-count {
     font-size: 0.8em;
@@ -541,6 +542,20 @@
   border-color: #aaa;
 }
 
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+
+  border-radius: 8px;
+}
+
+.highlight-request {
+  background-color: #fff3cd !important;
+  box-shadow: 0 0 10px #ffeb3b;
+  transition: background-color 1s ease, box-shadow 1s ease;
+}
+
+
   @media (max-width: 768px) {
     .tableContainer {
       padding: 1rem;
@@ -590,7 +605,7 @@
       font-size: 0.85rem;
     }
     
-    /* Hide tooltips on mobile */
+   
     .action-btn .tooltip {
       display: none !important;
     }

@@ -1,8 +1,5 @@
-<!-- Hamburger Menu Button -->
-<div class="hamburger-menu" id="hamburgerMenu">
-  <span></span>
-  <span></span>
-  <span></span>
+<div class="arrow-toggle" id="arrowToggle">
+  <div class="chevron"></div>
 </div>
 
 <!-- Overlay -->
@@ -83,7 +80,6 @@
   <div class="set">
     <button onclick="openSettings()">
       <i class="fa-solid fa-gear"></i>
-   
     </button>
     <button class="acc" title="<?php echo isset($_SESSION['user']['first_name'], $_SESSION['user']['last_name'])
                                   ? htmlspecialchars($_SESSION['user']['first_name'] . ' ' . $_SESSION['user']['last_name'])
@@ -109,30 +105,20 @@
 </div>
 
 <script>
+  const arrowToggle = document.getElementById("arrowToggle");
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
 
-document.addEventListener('DOMContentLoaded', function() {
-  const hamburgerMenu = document.getElementById('hamburgerMenu');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('sidebarOverlay');
+arrowToggle.addEventListener("click", () => {
+  arrowToggle.classList.toggle("active");
+  sidebar.classList.toggle("active");
+  sidebarOverlay.classList.toggle("active");
+});
 
-  function toggleSidebar() {
-    hamburgerMenu.classList.toggle('active');
-    sidebar.classList.toggle('active');
-    overlay.classList.toggle('active');
-    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
-  }
-
-  hamburgerMenu.addEventListener('click', toggleSidebar);
-  overlay.addEventListener('click', toggleSidebar);
-
-
-  sidebar.addEventListener('click', function(e) {
-    if (e.target.closest('.part') || e.target.closest('.set button')) {
-    
-      setTimeout(() => {
-        toggleSidebar();
-      }, 300);
-    }
-  });
+// Close sidebar when clicking on overlay
+sidebarOverlay.addEventListener("click", () => {
+  arrowToggle.classList.remove("active");
+  sidebar.classList.remove("active");
+  sidebarOverlay.classList.remove("active");
 });
 </script>
